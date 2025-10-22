@@ -1,0 +1,10 @@
+{
+  "name": "@ajdrew/shared",
+  "version": "1.0.0",
+  "description": "Shared types and DTOs for AJDREW project",
+  "main": "index.js",
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

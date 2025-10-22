@@ -1,0 +1,40 @@
+# Etapa de construcción
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+# Instalar pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# Copiar archivos necesarios
+COPY pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json ./
+COPY app/frontend/package.json ./app/frontend/
+COPY packages/shared/package.json ./packages/shared/
+
+# Instalar dependencias
+RUN pnpm install --frozen-lockfile
+
+# Copiar el resto del código
+COPY . .
+
+# Construir la aplicación
+RUN pnpm --filter frontend build
+
+# Etapa de producción
+FROM node:20-alpine
+WORKDIR /app
+
+# Variables de entorno
+ENV NODE_ENV=production
+ENV PORT=3001
+
+# Copiar solo lo necesario
+COPY --from=builder /app/app/frontend/.next/standalone ./
+COPY --from=builder /app/app/frontend/.next/static ./.next/static
+COPY --from=builder /app/app/frontend/public ./public
+
+# Puerto expuesto
+EXPOSE 3001
+
+# Comando para iniciar
+CMD ["node", "server.js"]

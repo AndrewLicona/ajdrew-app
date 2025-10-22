@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+
+/* Definiciones de temas unificadas */
+:root {
+  /* TEMA VERDE (por defecto) */
+  --color-primary: #067506;
+  --color-primary-dark: #1b5e20;
+  --color-primary-light: #4caf50;
+  --color-text-on-primary: #ffffff;
+
+  --color-background: #001100;
+  --color-card: #152015;
+  --color-text: #e0f0e0;
+  --color-text-secondary: #90a090;
+
+  --color-success: #B9FBC0;
+  --color-on-success: #205C3B;
+  --color-danger: #FFD6D6;
+  --color-on-danger: #6B1B1B;
+  
+  --color-hover: rgba(21, 86, 24, 0.1);
+  --color-active: rgba(46, 125, 50, 0.2);
+
+  --color-card-border: #2e7d32;
+}
+
+.plata {
+  /* TEMA PLATA */
+  --color-primary: #c0c0c0;
+  --color-primary-dark: #a8a8a8;
+  --color-primary-light: #d8d8d8;
+  --color-text-on-primary: #181818;
+  
+  --color-background: #1e1e1e;
+  --color-card: #252525;
+  --color-text: #e0e0e0;
+  --color-text-secondary: #a0a0a0;
+  
+  --color-success: #A7F3D0;
+  --color-on-success: #065F46;
+  --color-danger: #FECACA;
+  --color-on-danger: #7F1D1D;
+  
+  --color-hover: rgba(192, 192, 192, 0.1);
+  --color-active: rgba(192, 192, 192, 0.2);
+
+  --color-card-border: #444;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.svg-primary {
+  filter: invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%);
+}
+
+.svg-primary:hover {
+  filter: invert(100%) sepia(100%) saturate(0%) hue-rotate(0deg) brightness(100%) contrast(100%);
+}

@@ -1,0 +1,24 @@
+#Peticiones
+###
+$headers = @{
+      " x-device-id" = "73840bd1-5852-478a-a4f9-1847d6a88b3b" # Tu
+  deviceId real
+  }
+  $categoryId = "cmghk1y7l000mmo3sbrs7nu0y" # ID de la categoría
+  "Juegos"
+  $deviceId = "73840bd1-5852-478a-a4f9-1847d6a88b3b" # Tu deviceId
+  real
+
+  Invoke-RestMethod -Uri "http://localhost:3000/api/items-calificables?categoryId=73840bd1-5852-478a-a4f9-1847d6a88b3b&deviceId=$deviceId" -Method GET -Headers
+  $headers
+
+###
+
+POST http://localhost:3000/api/calificaciones
+Content-Type: application/json
+x-device-id: b0c687c1-7de0-447c-b1cc-ee9322837781
+
+{
+    "itemId": "cmghnma1m000ymv3smmvqin4k",
+    "puntuacion": 5
+}

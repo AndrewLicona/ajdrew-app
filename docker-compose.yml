@@ -1,0 +1,118 @@
+services:
+  # 🌐 NGINX — Proxy inverso
+  nginx:
+    build: ./app/nginx
+    container_name: ajdrew-nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped
+    networks:
+      - ajdrew-net
+
+  # 🗃️ Base de datos PostgreSQL
+  db:
+    image: postgres:16-alpine
+    container_name: ajdrew-db
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${DB_USER:-user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      POSTGRES_DB: ${DB_NAME:-ajdrew_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-user} -d ${DB_NAME:-ajdrew_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - ajdrew-net
+
+  # ⚙️ Backend (NestJS)
+  backend:
+    build:
+      context: .
+      dockerfile: app/backend/Dockerfile
+    container_name: ajdrew-backend-dev
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - CI=true
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://${DB_USER:-user}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-ajdrew_db}
+      - FRONTEND_URL=http://localhost:3001
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/app/backend/node_modules
+    command: sh -c "pnpm prisma migrate deploy && pnpm start:dev"
+    networks:
+      - ajdrew-net
+
+  # 💻 Frontend (Next.js)
+  frontend:
+    build:
+      context: .
+      dockerfile: app/frontend/Dockerfile
+    container_name: ajdrew-frontend-dev
+    restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_API_URL=/api
+      - INTERNAL_API_URL=http://backend:3000/api
+      - PORT=3001
+      - CI=true
+    depends_on:
+      - backend
+    ports:
+      - "3002:3001"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/app/frontend/node_modules
+    command: sh -c "pnpm install && pnpm build && pnpm start"    
+    networks:
+      - ajdrew-net
+
+  # 🧭 Prisma Studio (opcional)
+  prisma-studio:
+    image: node:20-alpine
+    container_name: prisma-studio-dev
+    working_dir: /app/app/backend
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER:-user}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-ajdrew_db}
+    command: >
+      sh -c "corepack enable && corepack prepare pnpm@latest --activate &&
+             pnpm install &&
+             pnpm exec prisma studio --hostname 0.0.0.0 --port 5555"
+    ports:
+      - "5555:5555"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - ajdrew-net
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+# 🗂️ Volúmenes y redes
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  ajdrew-net:
+    driver: bridge

@@ -1,0 +1,25 @@
+:root {
+  --calificar-card-min-width-mobile: 80px;
+  --calificar-card-max-width-mobile: 150px;
+  --calificar-card-min-width-tablet: 100px;
+  --calificar-card-max-width-tablet: 180px;
+  --calificar-card-min-width-desktop: 150px;
+  --calificar-card-max-width-desktop: 180px;
+}
+
+.calificar-card-min {
+  min-width: var(--calificar-card-min-width-mobile);
+  max-width: var(--calificar-card-max-width-mobile);
+}
+@media (min-width: 640px) {
+  .calificar-card-min {
+    min-width: var(--calificar-card-min-width-tablet);
+    max-width: var(--calificar-card-max-width-tablet);
+  }
+}
+@media (min-width: 1024px) {
+  .calificar-card-min {
+    min-width: var(--calificar-card-min-width-desktop);
+    max-width: var(--calificar-card-max-width-desktop);
+  }
+}

@@ -1,0 +1,41 @@
+
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Categoria {
+  id        String            @id @default(cuid())
+  nombre    String
+  activa    Boolean           @default(true)
+  tipo      String
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  items     ItemCalificable[]
+}
+
+model ItemCalificable {
+  id             String         @id @default(cuid())
+  nombre         String
+  categoriaId    String
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  image          String?
+  calificaciones Calificacion[]
+  categoria      Categoria      @relation(fields: [categoriaId], references: [id])
+}
+
+model Calificacion {
+  id         String          @id @default(cuid())
+  puntuacion Int
+  ip         String?
+  deviceId   String?
+  itemId     String
+  createdAt  DateTime        @default(now())
+  item       ItemCalificable @relation(fields: [itemId], references: [id], onDelete: Cascade)
+}

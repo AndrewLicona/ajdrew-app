@@ -1,0 +1,111 @@
+.my-swal-container {
+  z-index: 999999;
+}
+
+.my-swal-popup {
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.my-swal-header {
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.my-swal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.my-swal-content {
+  padding: 1rem;
+  color: #4b5563;
+}
+
+.my-swal-actions {
+  padding: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.my-swal-confirm-button {
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.my-swal-confirm-button:hover {
+  background-color: var(--primary-dark);
+}
+
+.my-swal-cancel-button {
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.my-swal-cancel-button:hover {
+  background-color: #b91c1c;
+}
+
+/* Estilos para los botones de CardActions */
+.card-actions {
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.card-actions .button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.card-actions .button.primary {
+  background-color: var(--primary);
+  color: white;
+}
+
+.card-actions .button.primary:hover {
+  background-color: var(--primary-dark);
+}
+
+.card-actions .button.secondary {
+  background-color: var(--secondary);
+  color: white;
+}
+
+.card-actions .button.secondary:hover {
+  background-color: var(--secondary-dark);
+}
+
+.card-actions .button.outline {
+  border: 1px solid var(--gray-300);
+  color: var(--gray-700);
+}
+
+.card-actions .button.outline:hover {
+  background-color: var(--gray-100);
+}
+
+.card-actions .button.text {
+  background: none;
+  padding: 0;
+}
+
+.card-actions .button.text:hover {
+  color: var(--primary);
+}
+
+.card-actions .button.loading {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
