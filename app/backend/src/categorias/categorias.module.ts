@@ -8,6 +8,7 @@ import { PrismaModule } from './../prisma/prisma.module';
 @Module({
   imports: [PrismaModule],
   controllers: [CategoriasController],
-  providers: [CategoriasService, CategoriaRepository]
+  providers: [CategoriasService, CategoriaRepository],
+  exports: [CategoriasService]
 })
-export class CategoriasModule {}
+export class CategoriasModule { }

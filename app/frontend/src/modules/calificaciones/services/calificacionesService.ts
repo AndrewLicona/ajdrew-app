@@ -7,7 +7,7 @@ const getApiUrl = () => {
 };
 
 // Opciones de fetch con caché (para categorías, por ejemplo)
-const fetchOptions: RequestInit & { next?: { revalidate: number } } = { 
+const fetchOptions: RequestInit & { next?: { revalidate: number } } = {
   next: { revalidate: 30 },
   cache: 'force-cache' as RequestCache
 };
@@ -21,7 +21,7 @@ const noCacheOptions: RequestInit = {
 export function getOrCreateDeviceId(): string {
   let deviceId = localStorage.getItem('deviceId');
   if (!deviceId) {
-    deviceId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    deviceId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
       const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
       return v.toString(16);
     });
@@ -30,10 +30,24 @@ export function getOrCreateDeviceId(): string {
   return deviceId;
 }
 
-// ✅ Obtener categorías (puede usar caché)
+// ✅ Obtener juegos
+export async function fetchJuegos(): Promise<any[]> {
+  try {
+    const response = await fetch(`${getApiUrl()}/juegos`, { cache: 'no-store' });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to fetch juegos:", error);
+    return [];
+  }
+}
+
+// ✅ Obtener categorías (SIN caché para reflejar cambios de seed al instante)
 export async function fetchCategories(): Promise<Categoria[]> {
   try {
-    const response = await fetch(`${getApiUrl()}/categorias`, fetchOptions);
+    const response = await fetch(`${getApiUrl()}/categorias`, { cache: 'no-store' });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -66,7 +80,9 @@ export async function fetchItemsForCategory(categoryId: string, deviceId?: strin
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    return await response.json();
+    const data = await response.json();
+    // El backend devuelve { items: [], total: 0 }, extraemos solo los items
+    return Array.isArray(data) ? data : (data.items || []);
   } catch (error) {
     console.error(`Error fetching items for category ${categoryId}:`, error);
     return [];
@@ -74,11 +90,16 @@ export async function fetchItemsForCategory(categoryId: string, deviceId?: strin
 }
 
 // ✅ Obtener ranking (SIN caché para ver cambios al instante)
-export async function fetchRanking(categoryId?: string): Promise<RankingItem[]> {
+export async function fetchRanking(categoryId?: string, limit?: number): Promise<RankingItem[]> {
   try {
-    const url = categoryId 
+    let url = categoryId
       ? `${getApiUrl()}/calificaciones/ranking-list?categoryId=${categoryId}`
       : `${getApiUrl()}/calificaciones/ranking-list`;
+
+    // Agregar parámetro limit si existe
+    if (limit) {
+      url += categoryId ? `&limit=${limit}` : `?limit=${limit}`;
+    }
 
     // 🔥 forzar no-store para refrescar siempre
     const response = await fetch(url, { cache: 'no-store' });
@@ -101,7 +122,7 @@ export async function submitRating(itemId: string, rating: number): Promise<Item
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-device-id': deviceId, 
+      'x-device-id': deviceId,
     },
     body: JSON.stringify({ itemId, puntuacion: rating }),
   });

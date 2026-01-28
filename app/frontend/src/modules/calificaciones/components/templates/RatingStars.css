@@ -1,28 +1,56 @@
 .rating-stars {
   display: flex;
-  gap: 2px;
+  gap: 4px;
+  align-items: center;
 }
 
-.rating-stars button {
+.rating-stars button.star {
   background: none;
   border: none;
   cursor: pointer;
   padding: 0;
-  font-size: 1.5rem;
-  color: #4B5563; /* gray-600 */
-  transition: color 0.2s;
+  font-size: 24px;
+  color: rgba(255, 255, 255, 0.15);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: scale(1);
+  filter: drop-shadow(0 0 0px transparent);
 }
 
-.rating-stars button:hover,
-.rating-stars button.active {
-  color: #FBBF24; /* yellow-400 */
+@media (min-width: 768px) {
+  .rating-stars button.star {
+    font-size: 26px;
+  }
 }
 
-.rating-stars button:focus {
+.rating-stars button.star:hover {
+  transform: scale(1.25);
+  color: rgba(255, 215, 0, 0.8);
+}
+
+.rating-stars button.star.active {
+  color: #FFD700;
+  filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.7));
+  transform: scale(1.15);
+  animation: star-pulse 0.6s ease-in-out;
+}
+
+@keyframes star-pulse {
+
+  0%,
+  100% {
+    transform: scale(1.15);
+  }
+
+  50% {
+    transform: scale(1.35);
+  }
+}
+
+.rating-stars button.star:focus {
   outline: none;
 }
 
-.rating-stars button:disabled {
+.rating-stars button.star:disabled {
   cursor: not-allowed;
-  opacity: 0.7;
+  opacity: 0.5;
 }

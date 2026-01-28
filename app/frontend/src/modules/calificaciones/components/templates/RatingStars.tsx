@@ -26,13 +26,12 @@ export default function RatingStars({
     <div className="rating-stars">
       {[...Array(maxStars)].map((_, index) => {
         const starValue = index + 1;
+        const isActive = starValue <= (hover || rating);
         return (
           <button
             key={index}
-            className={`star ${starValue <= (hover || rating) ? 'active' : ''}`}
-            onClick={() => {
-              onRatingChange(starValue);
-            }}
+            className={`star ${isActive ? 'active' : ''}`}
+            onClick={() => onRatingChange(starValue)}
             onMouseEnter={() => setHover(starValue)}
             onMouseLeave={() => setHover(0)}
             aria-label={`Calificar con ${starValue} ${starValue === 1 ? 'estrella' : 'estrellas'}`}>

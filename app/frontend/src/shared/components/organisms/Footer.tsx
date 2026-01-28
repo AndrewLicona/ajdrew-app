@@ -6,39 +6,39 @@ import { FaXTwitter } from "react-icons/fa6"
 
 const Footer: React.FC = () => {
   const socialLinks = [
-    { 
-      href: "https://www.facebook.com", 
-      icon: FaFacebook, 
+    {
+      href: "https://www.facebook.com",
+      icon: FaFacebook,
       size: 24,
       label: "Facebook"
     },
-    { 
-      href: "https://x.com", 
-      icon: FaXTwitter, 
+    {
+      href: "https://x.com",
+      icon: FaXTwitter,
       size: 22,
       label: "X (Twitter)"
     },
-    { 
-      href: "https://www.instagram.com", 
-      icon: FaInstagram, 
+    {
+      href: "https://www.instagram.com",
+      icon: FaInstagram,
       size: 24,
       label: "Instagram"
     },
-    { 
-      href: "https://www.youtube.com/@canal1", 
-      icon: FaYoutube, 
+    {
+      href: "https://www.youtube.com/@canal1",
+      icon: FaYoutube,
       size: 24,
       label: "YouTube Principal"
     },
-    { 
-      href: "https://www.youtube.com/@canal2", 
-      icon: FaYoutube, 
+    {
+      href: "https://www.youtube.com/@canal2",
+      icon: FaYoutube,
       size: 24,
       label: "YouTube Secundario"
     },
-    { 
-      href: "https://www.tiktok.com", 
-      icon: SiTiktok, 
+    {
+      href: "https://www.tiktok.com",
+      icon: SiTiktok,
       size: 24,
       label: "TikTok"
     },
@@ -49,7 +49,7 @@ const Footer: React.FC = () => {
       <div className="w-full px-4 sm:px-6 lg:px-8">
         {/* Contenedor principal - Grid responsive */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-          
+
           {/* Copyright - Izquierda en desktop */}
           <div className="text-center md:text-left">
             <p className="text-sm text-[var(--color-text-secondary)]">
@@ -62,10 +62,10 @@ const Footer: React.FC = () => {
             {socialLinks.map((social, index) => {
               const Icon = social.icon
               return (
-                <a 
+                <a
                   key={index}
-                  href={social.href} 
-                  target="_blank" 
+                  href={social.href}
+                  target="_blank"
                   rel="noopener noreferrer"
                   aria-label={social.label}
                   className="text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] 
@@ -79,20 +79,28 @@ const Footer: React.FC = () => {
 
           {/* Enlaces legales - Derecha en desktop */}
           <div className="flex flex-col sm:flex-row items-center justify-center md:justify-end gap-3 sm:gap-4">
-            <a 
-              href="/privacy" 
+            <a
+              href="/privacy"
               className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] 
                 transition-colors duration-200"
             >
               Política de Privacidad
             </a>
             <span className="hidden sm:inline text-[var(--color-text-secondary)]">•</span>
-            <a 
-              href="/terms" 
+            <a
+              href="/terms"
               className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] 
                 transition-colors duration-200"
             >
               Términos de Servicio
+            </a>
+            <span className="hidden sm:inline text-[var(--color-text-secondary)]">•</span>
+            <a
+              href="/admin"
+              className="text-xs text-[var(--color-text-secondary)]/50 hover:text-[var(--color-primary)] 
+                transition-colors duration-200"
+            >
+              Admin
             </a>
           </div>
         </div>

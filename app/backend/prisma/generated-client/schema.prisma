@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Rol {
+  ADMIN
+  EDITOR
+}
+
+model Usuario {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  nombre    String
+  rol       Rol      @default(EDITOR)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Juego {
+  id          String            @id @default(cuid())
+  nombre      String
+  slug        String            @unique
+  descripcion String?
+  image       String?
+  activo      Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  categorias  Categoria[]
+  votaciones  VotacionBracket[]
+  sorteos     Sorteo[]
+}
+
+model Categoria {
+  id        String            @id @default(cuid())
+  nombre    String
+  activa    Boolean           @default(true)
+  tipo      String
+  juegoId   String?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  items     ItemCalificable[]
+  juego     Juego?            @relation(fields: [juegoId], references: [id])
+}
+
+model ItemCalificable {
+  id             String         @id @default(cuid())
+  nombre         String
+  categoriaId    String
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  image          String?
+  calificaciones Calificacion[]
+  categoria      Categoria      @relation(fields: [categoriaId], references: [id])
+  matchesSideA   BracketMatch[] @relation("MatchSideA")
+  matchesSideB   BracketMatch[] @relation("MatchSideB")
+  matchesWon     BracketMatch[] @relation("MatchWinner")
+}
+
+model Calificacion {
+  id         String          @id @default(cuid())
+  puntuacion Int
+  ip         String?
+  itemId     String
+  createdAt  DateTime        @default(now())
+  deviceId   String?
+  item       ItemCalificable @relation(fields: [itemId], references: [id], onDelete: Cascade)
+}
+
+model VotacionBracket {
+  id          String         @id @default(cuid())
+  tematica    String
+  slug        String         @unique
+  estado      String         @default("BORRADOR") // BORRADOR, ACTIVA, FINALIZADA
+  rondaActual Int            @default(1)
+  juegoId     String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  juego       Juego          @relation(fields: [juegoId], references: [id])
+  matches     BracketMatch[]
+}
+
+model BracketMatch {
+  id        String           @id @default(cuid())
+  bracketId String
+  ronda     Int
+  itemAId   String?
+  itemBId   String?
+  votosA    Int              @default(0)
+  votosB    Int              @default(0)
+  ganadorId String?
+  bracket   VotacionBracket  @relation(fields: [bracketId], references: [id], onDelete: Cascade)
+  itemA     ItemCalificable? @relation("MatchSideA", fields: [itemAId], references: [id])
+  itemB     ItemCalificable? @relation("MatchSideB", fields: [itemBId], references: [id])
+  ganador   ItemCalificable? @relation("MatchWinner", fields: [ganadorId], references: [id])
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+}
+
+model Sorteo {
+  id          String   @id @default(cuid())
+  titulo      String
+  descripcion String?
+  premio      String
+  fechaFin    DateTime
+  estado      String   @default("ACTIVO") // ACTIVO, CERRADO
+  juegoId     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  juego       Juego?   @relation(fields: [juegoId], references: [id])
+}

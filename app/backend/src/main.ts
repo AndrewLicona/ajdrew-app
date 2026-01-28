@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger } from '@nestjs/common';
@@ -12,6 +13,8 @@ async function bootstrap() {
       'https://ajdrew.andrewlamaquina.my',
       'http://localhost:3001',
       'http://localhost:3000',
+      'http://192.168.100.8:3001', // Access from mobile on local network
+      'http://192.168.100.8:3000',
       'http://frontend:3002',
       'http://frontend:3002',
       'http://frontend:3001',
@@ -29,13 +32,13 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   const port = process.env.PORT || 3000;
-  await app.listen(port);
-
-  
+  await app.listen(port, '0.0.0.0'); // Listen on all interfaces
 
 
-  Logger.log(`🚀 Servidor ejecutándose en http://localhost:${port}`, 'Bootstrap');
-  Logger.log(`📊 Ver estado de la base de datos: http://localhost:${port}/api/db-status`, 'Bootstrap');
+  Logger.log(`🚀 Servidor ejecutándose en:`, 'Bootstrap');
+  Logger.log(`   - Local:   http://localhost:${port}`, 'Bootstrap');
+  Logger.log(`   - Network: http://192.168.100.8:${port}`, 'Bootstrap');
+  Logger.log(`📊 Estado DB:  http://localhost:${port}/api/db-status`, 'Bootstrap');
 
 }
 

@@ -10,5 +10,6 @@ import { ItemsCalificablesModule } from '../items-calificables/items-calificable
   imports: [PrismaModule, ItemsCalificablesModule],
   controllers: [CalificacionesController],
   providers: [CalificacionesService, CalificacionRepository],
+  exports: [CalificacionesService, CalificacionRepository],
 })
-export class CalificacionesModule {}
+export class CalificacionesModule { }

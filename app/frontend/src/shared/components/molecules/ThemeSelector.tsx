@@ -13,9 +13,8 @@ export function ThemeSelector() {
     setMounted(true);
   }, []);
 
-  if (!mounted) {
-    return null;
-  }
+  // Deactivated: Theme selection is now integrated into the headers
+  return null;
 
   const toggleTheme = () => {
     setTheme(theme === 'plata' ? 'verde' : 'plata');
@@ -24,7 +23,7 @@ export function ThemeSelector() {
   return (
     <button
       onClick={toggleTheme}
-      className="fixed bottom-6 right-6 z-50 h-12 w-12 rounded-full flex items-center justify-center
+      className="fixed bottom-6 right-6 z-[1000] h-12 w-12 rounded-full flex items-center justify-center
         bg-[var(--color-card)] text-[var(--color-text)] shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105
         border border-[var(--color-card-border)] hover:border-[var(--color-primary)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]
         focus:ring-offset-2 focus:ring-offset-[var(--color-background)]"

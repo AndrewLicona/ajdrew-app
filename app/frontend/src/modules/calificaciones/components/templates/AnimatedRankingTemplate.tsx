@@ -1,6 +1,4 @@
-// src/components/AnimatedRankingTemplate.tsx
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface ItemWithId {
   id?: number | string;
@@ -12,8 +10,7 @@ interface AnimatedRankingTemplateProps<T extends ItemWithId> {
   ranking: T[];
   loading: boolean;
   error?: string;
-  highlightedItemId?: number | string | null;
-  renderItem: (item: T, index: number, highlighted: boolean) => React.ReactNode;
+  renderItem: (item: T, index: number) => React.ReactNode;
   title?: string;
 }
 
@@ -21,7 +18,6 @@ export function AnimatedRankingTemplate<T extends ItemWithId>({
   ranking,
   loading,
   error,
-  highlightedItemId,
   renderItem,
   title = 'Ranking',
 }: AnimatedRankingTemplateProps<T>) {
@@ -38,20 +34,11 @@ export function AnimatedRankingTemplate<T extends ItemWithId>({
         <p className="text-[var(--color-error)] text-center">{error}</p>
       ) : (
         <div className="space-y-2">
-          <AnimatePresence>
-            {ranking.map((item, index) => (
-              <motion.div
-                key={item.itemId}
-                layout
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
-              >
-                {renderItem(item, index, highlightedItemId === (item.id || item.itemId))}
-              </motion.div>
-            ))}
-          </AnimatePresence>
+          {ranking.map((item, index) => (
+            <div key={item.id || item.itemId}>
+              {renderItem(item, index)}
+            </div>
+          ))}
         </div>
       )}
     </div>

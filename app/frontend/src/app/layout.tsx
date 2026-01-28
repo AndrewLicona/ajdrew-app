@@ -6,11 +6,12 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Footer from "@/shared/components/organisms/Footer";
 import Header from "@/shared/components/organisms/Header";
+import { PublicLayoutWrapper } from "./PublicLayoutWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
-}); 
+});
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
     default: "AJDREW - Tu comunidad de juegos, rankings y más",
   },
   description: "Participa en rankings, califica juegos, compite en torneos y aprende con tutoriales en la comunidad de AJDREW.",
-  
+
 };
 
 export default function RootLayout({
@@ -43,16 +44,9 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange={false}
         >
-          <div className="flex flex-col min-h-screen">
-            <Header />
-            <main className="flex-grow">
-              <div className="max-w-[1920px] w-full mx-auto">
-                {children}
-              </div>
-            </main>
-            <Footer />
-            <ThemeSelector />
-          </div>
+          <PublicLayoutWrapper>
+            {children}
+          </PublicLayoutWrapper>
         </ThemeProvider>
       </body>
     </html>

@@ -6,14 +6,22 @@ import { ItemCalificableRepository } from '../infrastructure/persistence/item-ca
 
 @Injectable()
 export class ItemsCalificablesService {
-  constructor(private readonly itemCalificableRepository: ItemCalificableRepository) {}
+  constructor(private readonly itemCalificableRepository: ItemCalificableRepository) { }
 
   create(createItemCalificableDto: CreateItemCalificableDto) {
     return this.itemCalificableRepository.create(createItemCalificableDto);
   }
 
-  findAll(categoryId?: string, deviceId?: string) {
-    return this.itemCalificableRepository.findAll(categoryId, deviceId);
+  findAll(params: {
+    categoryId?: string;
+    search?: string;
+    sortBy?: string;
+    order?: 'asc' | 'desc';
+    page?: number;
+    limit?: number;
+    deviceId?: string;
+  }) {
+    return this.itemCalificableRepository.findAll(params);
   }
 
   findOne(id: string, deviceId?: string) {

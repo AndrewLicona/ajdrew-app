@@ -7,13 +7,40 @@ import { ItemsCalificablesModule } from './items-calificables/items-calificables
 import { CalificacionesModule } from './calificaciones/calificaciones.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { PrismaService } from './prisma/prisma.service';
+import { JuegosModule } from './juegos/juegos.module';
+import { UsuariosModule } from './usuarios/usuarios.module';
+import { AuthModule } from './auth/auth.module';
+import { SorteosModule } from './sorteos/sorteos.module';
+import { VotacionesModule } from './votaciones/votaciones.module';
+import { MediaModule } from './media/media.module';
+import { TutorialesModule } from './tutoriales/tutoriales.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { PublicacionesModule } from './publicaciones/publicaciones.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { SocialMediaModule } from './modules/social-media/social-media.module';
 
 @Module({
-  imports: [PrismaModule, CategoriasModule, ItemsCalificablesModule, CalificacionesModule],
+  imports: [
+    PrismaModule,
+    CategoriasModule,
+    ItemsCalificablesModule,
+    CalificacionesModule,
+    JuegosModule,
+    UsuariosModule,
+    AuthModule,
+    SorteosModule,
+    VotacionesModule,
+    MediaModule,
+    TutorialesModule,
+    DashboardModule,
+    PublicacionesModule,
+    EventEmitterModule.forRoot(),
+    SocialMediaModule
+  ],
   controllers: [AppController],
   providers: [
     AppService,
-    PrismaService   
+    PrismaService
   ],
 })
-export class AppModule {}
+export class AppModule { }

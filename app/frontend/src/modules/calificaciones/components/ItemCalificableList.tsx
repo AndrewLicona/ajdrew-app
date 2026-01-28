@@ -11,7 +11,7 @@ import { Alert } from '@/shared/components/Alert';
 interface ItemCalificableListProps {
   categoryId: string;
   initialItems: ItemCalificable[];
-  
+
 }
 
 export default function ItemCalificableList({ categoryId, initialItems }: ItemCalificableListProps) {
@@ -31,7 +31,7 @@ export default function ItemCalificableList({ categoryId, initialItems }: ItemCa
   }, [categoryId]);
 
   useEffect(() => {
-    
+
     fetchUserRatings();
   }, [fetchUserRatings]);
 
@@ -40,7 +40,7 @@ export default function ItemCalificableList({ categoryId, initialItems }: ItemCa
   const handleRatingChange = async (itemId: string, rating: number) => {
     try {
       const updatedItem = await submitRating(itemId, rating);
-      
+
       setItems(currentItems =>
         currentItems.map(item =>
           item.id === itemId ? updatedItem : item
@@ -63,9 +63,11 @@ export default function ItemCalificableList({ categoryId, initialItems }: ItemCa
   }
 
   return (
-    <div className="w-full max-w-[65vw] min-w-[35vw] xl:max-w-[65vw] 2xl:max-w-[65vw] mx-auto px-2">
-      <h2 className="text-2xl font-semibold mb-6 text-center text-[var(--color-text)]">Ítems Calificables</h2>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3 ">
+    <div className="w-full mx-auto px-0 sm:px-2">
+      <h2 className="text-xl md:text-3xl font-black mb-6 md:mb-10 text-center text-white uppercase italic tracking-tighter">
+        Zona de <span className="text-[var(--color-primary)]">Votación</span>
+      </h2>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-5">
         {items.length === 0 ? (
           <p className="text-center text-[var(--color-text-secondary)] col-span-full">No hay ítems calificables en esta categoría.</p>
         ) : (

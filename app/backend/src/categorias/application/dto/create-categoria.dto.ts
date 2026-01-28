@@ -1,5 +1,6 @@
 export class CreateCategoriaDto {
   nombre: string;
+  tipo: string;
   activa?: boolean;
-  tipo: 'calificacion';
+  juegoId?: string;
 }

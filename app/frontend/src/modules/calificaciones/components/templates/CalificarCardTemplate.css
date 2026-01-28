@@ -8,15 +8,19 @@
 }
 
 .calificar-card-min {
-  min-width: var(--calificar-card-min-width-mobile);
-  max-width: var(--calificar-card-max-width-mobile);
+  min-width: 0;
+  /* Allow shrinking */
+  width: 100%;
+  max-width: 100%;
 }
+
 @media (min-width: 640px) {
   .calificar-card-min {
     min-width: var(--calificar-card-min-width-tablet);
     max-width: var(--calificar-card-max-width-tablet);
   }
 }
+
 @media (min-width: 1024px) {
   .calificar-card-min {
     min-width: var(--calificar-card-min-width-desktop);

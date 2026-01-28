@@ -6,7 +6,7 @@ import { CreateCalificacionDto } from '../../application/dto/create-calificacion
 
 @Injectable()
 export class CalificacionRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async create(createCalificacionDto: CreateCalificacionDto, ip?: string, deviceId?: string) {
     const data = { ...createCalificacionDto, ip, deviceId };
@@ -70,7 +70,7 @@ export class CalificacionRepository {
     };
   }
 
-  async getRanking(categoryId?: string): Promise<Array<{ itemId: string; averageRating: number; ratingCount: number; itemName: string; itemImage?: string }>> {
+  async getRanking(categoryId?: string, limit?: number): Promise<Array<{ itemId: string; averageRating: number; ratingCount: number; itemName: string; itemImage?: string }>> {
     let itemIdsToFilter: string[] = [];
 
     if (categoryId) {
@@ -104,9 +104,17 @@ export class CalificacionRepository {
           puntuacion: 'desc',
         },
       },
+      take: limit, // Apply limit if provided
     });
 
     if (rankingData.length === 0) {
+      // If there are items but no votes, we might want to return unranked items?
+      // For now, consistent with previous behavior, return empty. 
+      // User complaint was about positions not updating, implying they have votes.
+      // If items have 0 votes they won't appear here.
+      // We should arguably return items with 0 votes too if we want "all items".
+      // But for "Ranking", items with no votes are effectively last or unranked.
+      // Let's stick to this for now.
       return [];
     }
 
@@ -127,7 +135,7 @@ export class CalificacionRepository {
 
     interface ItemMap {
       id: string;
-      nombre: string;
+      nombre: string; // Fix type definition
       image: string | null;
     }
 
@@ -135,16 +143,20 @@ export class CalificacionRepository {
       items.map(item => [item.id, item] as [string, ItemMap])
     );
 
-    const ranking = rankingData.map(r => {
-      const item = itemsMap.get(r.itemId);
-      return {
-        itemId: r.itemId,
-        averageRating: r._avg?.puntuacion || 0,
-        ratingCount: r._count?._all || 0,
-        itemName: item?.nombre || 'Unknown',
-        itemImage: item?.image || undefined,
-      };
-    });
+    // Filter out any items that might have been deleted but still have votes (integrity check)
+    // and map to result
+    const ranking = rankingData
+      .filter(r => itemsMap.has(r.itemId))
+      .map(r => {
+        const item = itemsMap.get(r.itemId);
+        return {
+          itemId: r.itemId,
+          averageRating: r._avg?.puntuacion || 0,
+          ratingCount: r._count?._all || 0,
+          itemName: item?.nombre || 'Unknown',
+          itemImage: item?.image || undefined,
+        };
+      });
 
     return ranking;
   }
