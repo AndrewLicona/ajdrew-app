@@ -31,7 +31,7 @@ services:
       timeout: 5s
       retries: 5
     ports:
-      # Puerto único para acceso externo si necesitas (opcional)
+      # Puerto único para acceso externo (Estandarizado)
       - "5433:5432"
     restart: unless-stopped
     networks:
@@ -59,8 +59,8 @@ services:
       test: [ "CMD", "wget", "--spider", "http://localhost:3000/api/health" ]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 30s
+      retries: 5
+      start_period: 60s
 
   # 🌐 Frontend Next.js
   frontend:
@@ -79,8 +79,8 @@ services:
       - HOSTNAME=0.0.0.0
       - PORT=3001
     ports:
-      # Puerto único para este proyecto
-      - "3002:3001"
+      # Puerto estandarizado para este proyecto
+      - "3300:3001"
     networks:
       - ajdrew-net
     depends_on:
@@ -91,7 +91,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 120s
   # 🧭 Prisma Studio (Opcional - Comentar si no se usa)
   # prisma-studio:
   #   build:
