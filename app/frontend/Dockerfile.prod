@@ -41,4 +41,4 @@ COPY --from=builder /app/app/frontend/public ./public
 EXPOSE 80
 
 # Comando para iniciar
-CMD ["node", "server.js"]
+CMD ["node", "app/frontend/server.js"]
