@@ -62,4 +62,35 @@ export class TutorialesController {
     remove(@Param('id') id: string) {
         return this.tutorialesService.remove(id);
     }
+
+    @Post('sugerir')
+    sugerir(@Body() body: any) {
+        // Simple slugify for suggestion
+        const slug = body.titulo
+            .toLowerCase()
+            .replace(/ /g, '-')
+            .replace(/[^\w-]+/g, '') + '-' + Date.now().toString().slice(-4);
+
+        const dto: CreateTutorialDto = {
+            titulo: body.titulo,
+            slug: slug,
+            videoUrl: body.videoUrl,
+            descripcion: body.descripcion || '',
+            juegoId: body.juegoId,
+            dificultad: 'MEDIO', // Default for suggestions
+            activo: false, // FORCE INACTIVE
+            destacado: false,
+            autor: body.autor || null,
+            autorUrl: body.autorUrl || null,
+            imageCover: body.imageCover || null,
+            pasos: body.pasos ? body.pasos.map((p: any, index: number) => ({
+                orden: index + 1,
+                titulo: p.titulo,
+                descripcion: p.descripcion,
+                image: p.image || null // Map step image
+            })) : []
+        } as any; // Cast to any to bypass optional check if strict
+
+        return this.tutorialesService.create(dto);
+    }
 }

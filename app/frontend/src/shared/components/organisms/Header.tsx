@@ -51,22 +51,22 @@ const Header: React.FC = () => {
 
   return (
     <>
-      <header className="fixed top-0 left-0 w-full z-[300] md:hidden bg-[var(--color-card)]/80 backdrop-blur-xl border-b border-white/5 h-10 flex items-center justify-between px-4 shadow-lg">
-        <Link href="/" className="flex items-center gap-2">
+      <header className="fixed top-0 left-0 w-full z-[300] md:hidden bg-[var(--color-card)]/90 backdrop-blur-xl border-b border-white/10 h-16 flex items-center justify-between px-5 shadow-lg">
+        <Link href="/" className="flex items-center gap-3">
           <Image
             src="/LOGO-AJDREW.png"
             alt="AJDREW"
-            width={32}
-            height={32}
-            className="rounded-lg shadow-lg shrink-0"
+            width={40}
+            height={40}
+            className="rounded-xl shadow-lg shrink-0"
           />
-          <span className="text-lg font-black text-white italic tracking-tighter uppercase">AJDREW</span>
+          <span className="text-xl font-black text-white italic tracking-tighter uppercase drop-shadow-md">AJDREW</span>
         </Link>
         <button
           onClick={toggleTheme}
-          className="p-2 rounded-xl bg-white/5 border border-white/5 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] active:scale-90 transition-all"
+          className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] active:scale-90 transition-all shadow-sm"
         >
-          {theme === 'plata' ? <Moon size={18} /> : <Sun size={18} />}
+          {theme === 'plata' ? <Moon size={20} /> : <Sun size={20} />}
         </button>
       </header>
 
@@ -121,32 +121,32 @@ const Header: React.FC = () => {
         <div className="relative w-full max-w-md pointer-events-auto">
           {/* Community Dropup Menu */}
           {isCommunityOpen && (
-            <div className="absolute bottom-full left-0 right-0 mb-4 bg-[var(--color-card)] border border-[var(--color-primary)]/20 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="absolute bottom-full left-0 right-0 mb-4 bg-[var(--color-card)] border border-[var(--color-primary)]/20 rounded-2xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
               <div className="p-2 grid grid-cols-2 gap-2">
                 <Link
                   href="/calificaciones"
                   onClick={() => setIsCommunityOpen(false)}
-                  className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${pathname === '/calificaciones' ? 'bg-[var(--color-primary)] text-white' : 'text-white/40 hover:bg-white/5'
+                  className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all ${pathname === '/calificaciones' ? 'bg-[var(--color-primary)] text-white' : 'text-white/60 hover:bg-white/5'
                     }`}
                 >
-                  <Trophy size={20} />
-                  <span className="text-[10px] font-black uppercase">Rankings</span>
+                  <Trophy size={22} />
+                  <span className="text-[11px] font-black uppercase">Rankings</span>
                 </Link>
                 <Link
                   href="/votaciones"
                   onClick={() => setIsCommunityOpen(false)}
-                  className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${pathname === '/votaciones' ? 'bg-[var(--color-primary)] text-white' : 'text-white/40 hover:bg-white/5'
+                  className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all ${pathname === '/votaciones' ? 'bg-[var(--color-primary)] text-white' : 'text-white/60 hover:bg-white/5'
                     }`}
                 >
-                  <Vote size={20} />
-                  <span className="text-[10px] font-black uppercase">Votaciones</span>
+                  <Vote size={22} />
+                  <span className="text-[11px] font-black uppercase">Votaciones</span>
                 </Link>
               </div>
             </div>
           )}
 
           {/* Bottom Island BAR */}
-          <nav className="bg-[var(--color-card)]/90 backdrop-blur-2xl border border-[var(--color-primary)]/30 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.8)] flex items-center p-1 justify-between">
+          <nav className="bg-[var(--color-card)]/95 backdrop-blur-2xl border-2 border-white/5 rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.9)] flex items-center p-2 justify-between">
             {mobileNavItems.slice(0, 2).map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href
@@ -155,11 +155,11 @@ const Header: React.FC = () => {
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsCommunityOpen(false)}
-                  className={`flex flex-col items-center justify-center gap-1 py-1.5 rounded-xl transition-all duration-300 flex-1 ${isActive ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-secondary)] opacity-60'
+                  className={`flex flex-col items-center justify-center gap-1.5 py-2 rounded-2xl transition-all duration-300 flex-1 ${isActive ? 'text-[var(--color-primary)] bg-[var(--color-primary)]/10 font-bold' : 'text-[var(--color-text-secondary)] opacity-50 hover:opacity-100'
                     }`}
                 >
-                  <Icon className="w-4.5 h-4.5" />
-                  <span className="text-[8.5px] font-bold uppercase tracking-tight">{item.name}</span>
+                  <Icon className="w-5 h-5" />
+                  <span className="text-[9px] font-black uppercase tracking-tight">{item.name}</span>
                 </Link>
               )
             })}
@@ -167,14 +167,14 @@ const Header: React.FC = () => {
             {/* Comunidad Toggle Button */}
             <button
               onClick={() => setIsCommunityOpen(!isCommunityOpen)}
-              className={`flex flex-col items-center justify-center gap-1 py-2 rounded-xl transition-all duration-300 flex-1 relative ${isCommunityOpen || pathname === '/calificaciones' || pathname === '/votaciones' ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-secondary)] opacity-60'
+              className={`flex flex-col items-center justify-center gap-1.5 py-2 mx-1 rounded-2xl transition-all duration-300 flex-1 relative ${isCommunityOpen || pathname === '/calificaciones' || pathname === '/votaciones' ? 'text-[var(--color-primary)] bg-[var(--color-primary)]/10 font-bold' : 'text-[var(--color-text-secondary)] opacity-50 hover:opacity-100'
                 }`}
             >
               <div className="relative">
-                <Trophy className="w-4.5 h-4.5" />
-                <ChevronUp className={`w-2.5 h-2.5 absolute -top-1 -right-2.5 transition-transform duration-300 ${isCommunityOpen ? 'rotate-180' : ''}`} />
+                <Trophy className="w-5 h-5" />
+                <ChevronUp className={`w-3 h-3 absolute -top-1.5 -right-3 transition-transform duration-300 ${isCommunityOpen ? 'rotate-180' : ''}`} />
               </div>
-              <span className="text-[8.5px] font-bold uppercase tracking-tight">Comunidad</span>
+              <span className="text-[9px] font-black uppercase tracking-tight">Comunidad</span>
             </button>
 
             {mobileNavItems.slice(2).map((item) => {
@@ -185,11 +185,11 @@ const Header: React.FC = () => {
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsCommunityOpen(false)}
-                  className={`flex flex-col items-center justify-center gap-1 py-1.5 rounded-xl transition-all duration-300 flex-1 ${isActive ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-secondary)] opacity-60'
+                  className={`flex flex-col items-center justify-center gap-1.5 py-2 rounded-2xl transition-all duration-300 flex-1 ${isActive ? 'text-[var(--color-primary)] bg-[var(--color-primary)]/10 font-bold' : 'text-[var(--color-text-secondary)] opacity-50 hover:opacity-100'
                     }`}
                 >
-                  <Icon className="w-4.5 h-4.5" />
-                  <span className="text-[8.5px] font-bold uppercase tracking-tight">{item.name}</span>
+                  <Icon className="w-5 h-5" />
+                  <span className="text-[9px] font-black uppercase tracking-tight">{item.name}</span>
                 </Link>
               )
             })}

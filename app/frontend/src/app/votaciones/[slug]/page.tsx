@@ -8,6 +8,7 @@ import Link from 'next/link';
 import Swal from 'sweetalert2';
 import { getOrCreateDeviceId } from '@/modules/calificaciones/services/calificacionesService';
 import { BracketTree } from '@/modules/votaciones/components/BracketTree';
+import { ShareButton } from '@/shared/components/molecules/ShareButton';
 
 interface Item {
     id: string;
@@ -153,6 +154,14 @@ export default function BracketViewPage() {
                     <p className="text-[10px] md:text-xs text-[var(--color-text)]/30 font-black uppercase tracking-[0.3em]">
                         {bracket.juego?.nombre || 'General'} • {bracket.estado}
                     </p>
+                    <div className="flex justify-center mt-4">
+                        <ShareButton
+                            title={`Participa en: ${bracket.tematica}`}
+                            text={`🏆 Estoy participando en el torneo "${bracket.tematica}" de ${bracket.juego?.nombre || 'Gaming'} en AJDREW. ¡Entra y vota!`}
+                            url={typeof window !== 'undefined' ? window.location.href : ''}
+                            variant="minimal"
+                        />
+                    </div>
                 </div>
 
                 {/* Segmented Navigation Phases & View Toggle */}

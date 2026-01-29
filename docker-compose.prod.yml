@@ -1,12 +1,11 @@
-
-
 services:
   # 🔄 Reverse proxy Nginx
   nginx:
     build: ./app/nginx
     container_name: ajdrew-nginx
     ports:
-      - "80:80"
+      # Puerto alternativo (8080 está ocupado por otro proyecto)
+      - "8081:80"
     depends_on:
       - backend
       - frontend
@@ -27,12 +26,13 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-user} -d ${DB_NAME:-ajdrew_db}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-user} -d ${DB_NAME:-ajdrew_db}" ]
       interval: 10s
       timeout: 5s
       retries: 5
     ports:
-      - "5432:5432"
+      # Puerto único para acceso externo si necesitas (opcional)
+      - "5433:5432"
     restart: unless-stopped
     networks:
       - ajdrew-net
@@ -41,21 +41,21 @@ services:
   backend:
     build:
       context: .
-      dockerfile: app/backend/Dockerfile
+      dockerfile: app/backend/Dockerfile.prod
     container_name: ajdrew-backend
     restart: unless-stopped
     env_file:
       - .env
     environment:
       - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
-      - FRONTEND_URL=http://frontend:3001
+      - FRONTEND_URL=https://ajdrew.andrewlamaquina.my
     depends_on:
       db:
         condition: service_healthy
     networks:
       - ajdrew-net
     healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:3000/health"]
+      test: [ "CMD", "wget", "--spider", "http://localhost:3000/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -64,15 +64,20 @@ services:
   frontend:
     build:
       context: .
-      dockerfile: app/frontend/Dockerfile
+      dockerfile: app/frontend/Dockerfile.prod
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
     container_name: ajdrew-frontend
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=/api
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
       - PORT=3001
     ports:
-      - "3001:3001"
+      # Puerto único para este proyecto
+      - "3002:3001"
     working_dir: /app/app/frontend
     networks:
       - ajdrew-net
@@ -80,32 +85,31 @@ services:
       backend:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:3001/api/health"]
+      test: [ "CMD", "wget", "--spider", "http://localhost:3001/api/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
+  # 🧭 Prisma Studio (Opcional - Comentar si no se usa)
+  # prisma-studio:
+  #   build:
+  #     context: .
+  #     dockerfile: app/backend/Dockerfile.prod
+  #   container_name: prisma-studio
+  #   command: >
+  #     sh -c "cd /app/app/backend && 
+  #            npx prisma studio --hostname 0.0.0.0 --port 5555"
+  #   ports:
+  #     - "5556:5555"
+  #   environment:
+  #     - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #   networks:
+  #     - ajdrew-net
 
-  # 🧭 Prisma Studio
-  prisma-studio:
-    build:
-      context: .
-      dockerfile: app/backend/Dockerfile
-    container_name: prisma-studio
-    command: >
-      sh -c "cd /app/app/backend && 
-             npx prisma studio --hostname 0.0.0.0 --port 5555"
-    ports:
-      - "5555:5555"
-    environment:
-      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - ajdrew-net
-
-# 🗂️ Volúmenes y redes
+  # 🗂️ Volúmenes y redes
 volumes:
   postgres_data:
     driver: local

@@ -35,6 +35,8 @@ interface Categoria {
     nombre: string;
 }
 
+import GuideSubmissionModal from '@/modules/tutoriales/components/GuideSubmissionModal';
+
 export default function TutorialesPage() {
     const [tutoriales, setTutoriales] = useState<Tutorial[]>([]);
     const [juegos, setJuegos] = useState<Juego[]>([]);
@@ -45,6 +47,7 @@ export default function TutorialesPage() {
     const [selectedDifficulty, setSelectedDifficulty] = useState<string>('TODOS');
     const [searchQuery, setSearchQuery] = useState('');
     const [isGameDropdownOpen, setIsGameDropdownOpen] = useState(false);
+    const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false);
 
     const fetchData = async () => {
         try {
@@ -328,11 +331,20 @@ export default function TutorialesPage() {
                     </div>
                     <h2 className="text-4xl md:text-6xl font-black text-white italic uppercase tracking-tighter mb-6 leading-none">¿TIENES UNA GUÍA <span className="text-[var(--color-primary)]">ELITE</span>?</h2>
                     <p className="text-sm md:text-xl text-white/40 font-black uppercase italic max-w-2xl mb-12 tracking-tight">Únete a nuestra comunidad de creadores y ayuda a otros jugadores a alcanzar el siguiente nivel.</p>
-                    <button className="bg-[var(--color-primary)] text-black px-12 py-5 rounded-full font-black uppercase tracking-[0.3em] text-[10px] md:text-xs hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(34,197,94,0.3)] hover:shadow-[0_0_50px_rgba(34,197,94,0.5)]">
+                    <button
+                        onClick={() => setIsSubmissionModalOpen(true)}
+                        className="bg-[var(--color-primary)] text-black px-12 py-5 rounded-full font-black uppercase tracking-[0.3em] text-[10px] md:text-xs hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(34,197,94,0.3)] hover:shadow-[0_0_50px_rgba(34,197,94,0.5)]"
+                    >
                         Enviar mi Guía
                     </button>
                 </div>
             </div>
+
+            <GuideSubmissionModal
+                isOpen={isSubmissionModalOpen}
+                onClose={() => setIsSubmissionModalOpen(false)}
+                juegos={juegos}
+            />
         </div>
     );
 }

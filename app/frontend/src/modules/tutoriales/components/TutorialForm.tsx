@@ -19,6 +19,9 @@ interface TutorialFormData {
     videoUrl: string;
     descripcion?: string;
     image?: string;
+    autor?: string;
+    autorUrl?: string;
+    imageCover?: string;
     dificultad: string;
     juegoId: string;
     categoriaId?: string;
@@ -54,6 +57,9 @@ export const TutorialForm: React.FC<TutorialFormProps> = ({
         videoUrl: '',
         descripcion: '',
         image: '',
+        autor: '',
+        autorUrl: '',
+        imageCover: '',
         dificultad: 'MEDIO',
         juegoId: '',
         categoriaId: '',
@@ -287,6 +293,43 @@ export const TutorialForm: React.FC<TutorialFormProps> = ({
                                     </button>
                                 </div>
                             )}
+                        </div>
+                    </div>
+
+                    {/* Meta Info Section */}
+                    <div className="space-y-4 pt-4 border-t border-white/5">
+                        <h3 className="text-xs font-black text-[var(--color-primary)] uppercase tracking-widest border-l-2 border-[var(--color-primary)] pl-3">Metadatos & Atribución</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="autor">Autor / Creador</Label>
+                                <Input
+                                    id="autor"
+                                    name="autor"
+                                    value={formData.autor || ''}
+                                    onChange={handleChange}
+                                    placeholder="Nombre del creador"
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="autorUrl">URL Autor (Canal)</Label>
+                                <Input
+                                    id="autorUrl"
+                                    name="autorUrl"
+                                    value={formData.autorUrl || ''}
+                                    onChange={handleChange}
+                                    placeholder="https://youtube.com/..."
+                                />
+                            </div>
+                            <div className="col-span-2">
+                                <Label htmlFor="imageCover">URL Portada Personalizada (Opcional)</Label>
+                                <Input
+                                    id="imageCover"
+                                    name="imageCover"
+                                    value={formData.imageCover || ''}
+                                    onChange={handleChange}
+                                    placeholder="https://... (Sobreescribe la miniatura de YouTube si se usa en el frontend)"
+                                />
+                            </div>
                         </div>
                     </div>
 

@@ -45,20 +45,20 @@ const Footer: React.FC = () => {
   ]
 
   return (
-    <footer className="bg-[var(--color-card)] border-t border-[var(--color-card-border)] py-6 w-full">
-      <div className="w-full px-4 sm:px-6 lg:px-8">
+    <footer className="bg-[var(--color-card)]/90 backdrop-blur-xl border-t-2 border-white/5 pt-10 pb-32 md:py-12 w-full mt-auto">
+      <div className="w-full px-6 sm:px-8 lg:px-10">
         {/* Contenedor principal - Grid responsive */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-6 items-center">
 
           {/* Copyright - Izquierda en desktop */}
-          <div className="text-center md:text-left">
-            <p className="text-sm text-[var(--color-text-secondary)]">
+          <div className="text-center md:text-left order-3 md:order-1">
+            <p className="text-xs md:text-sm text-[var(--color-text-secondary)] font-medium opacity-60">
               &copy; {new Date().getFullYear()} AJDREW. Todos los derechos reservados.
             </p>
           </div>
 
           {/* Redes sociales - Centro */}
-          <div className="flex justify-center items-center gap-4">
+          <div className="flex justify-center items-center gap-3 md:gap-4 order-1 md:order-2">
             {socialLinks.map((social, index) => {
               const Icon = social.icon
               return (
@@ -69,36 +69,36 @@ const Footer: React.FC = () => {
                   rel="noopener noreferrer"
                   aria-label={social.label}
                   className="text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] 
-                    transition-colors duration-200 hover:scale-110 transform"
+                    transition-all duration-300 hover:scale-110 transform p-2 bg-white/5 rounded-full border border-white/5 hover:border-[var(--color-primary)]/30 hover:bg-[var(--color-primary)]/10"
                 >
-                  <Icon size={social.size} />
+                  <Icon size={28} className="md:w-6 md:h-6" />
                 </a>
               )
             })}
           </div>
 
           {/* Enlaces legales - Derecha en desktop */}
-          <div className="flex flex-col sm:flex-row items-center justify-center md:justify-end gap-3 sm:gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center md:justify-end gap-4 sm:gap-6 order-2 md:order-3">
             <a
               href="/privacy"
-              className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] 
-                transition-colors duration-200"
+              className="text-xs md:text-sm font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] 
+                transition-colors duration-200 uppercase tracking-wide"
             >
               Política de Privacidad
             </a>
-            <span className="hidden sm:inline text-[var(--color-text-secondary)]">•</span>
+            <span className="hidden sm:inline text-[var(--color-text-secondary)] opacity-30">•</span>
             <a
               href="/terms"
-              className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] 
-                transition-colors duration-200"
+              className="text-xs md:text-sm font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] 
+                transition-colors duration-200 uppercase tracking-wide"
             >
-              Términos de Servicio
+              Términos de servicio
             </a>
-            <span className="hidden sm:inline text-[var(--color-text-secondary)]">•</span>
+            <span className="hidden sm:inline text-[var(--color-text-secondary)] opacity-30">•</span>
             <a
               href="/admin"
-              className="text-xs text-[var(--color-text-secondary)]/50 hover:text-[var(--color-primary)] 
-                transition-colors duration-200"
+              className="text-[10px] md:text-xs font-black text-[var(--color-text-secondary)]/30 hover:text-[var(--color-primary)] 
+                transition-colors duration-200 uppercase tracking-widest"
             >
               Admin
             </a>

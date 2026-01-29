@@ -60,6 +60,7 @@ export default function TutorialesAdminPage() {
     const [editingTutorial, setEditingTutorial] = useState<Tutorial | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedJuego, setSelectedJuego] = useState<string>('all');
+    const [activeTab, setActiveTab] = useState<'published' | 'pending'>('published');
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -86,6 +87,8 @@ export default function TutorialesAdminPage() {
     useEffect(() => {
         fetchData();
     }, [fetchData]);
+
+    // ... (Handlers same as before) 
 
     const handleSave = async (data: any) => {
         try {
@@ -169,13 +172,17 @@ export default function TutorialesAdminPage() {
     const filteredTutorials = tutoriales.filter(t => {
         const matchesSearch = t.titulo.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesJuego = selectedJuego === 'all' || t.juegoId === selectedJuego;
-        return matchesSearch && matchesJuego;
+        const matchesTab = activeTab === 'published' ? t.activo : !t.activo; // Active vs Pending
+        return matchesSearch && matchesJuego && matchesTab;
     });
 
     const getYoutubeThumb = (url: string) => {
+        if (!url) return '';
         const id = url.split('v=')[1]?.split('&')[0] || url.split('/').pop();
         return `https://img.youtube.com/vi/${id}/mqdefault.jpg`;
     };
+
+    const pendingCount = tutoriales.filter(t => !t.activo).length;
 
     return (
         <div className="space-y-8 pb-32">
@@ -187,9 +194,11 @@ export default function TutorialesAdminPage() {
                         <div className="flex items-center gap-2 px-3 py-1 bg-[var(--color-primary)]/10 rounded-full border border-[var(--color-primary)]/20">
                             <span className="text-[var(--color-primary)] text-[10px] font-black uppercase tracking-tighter">Total: {tutoriales.length}</span>
                         </div>
-                        <div className="flex items-center gap-2 px-3 py-1 bg-blue-500/10 rounded-full border border-blue-500/20">
-                            <span className="text-blue-500 text-[10px] font-black uppercase tracking-tighter">Destacados: {tutoriales.filter(t => t.destacado).length}</span>
-                        </div>
+                        {pendingCount > 0 && (
+                            <div className="flex items-center gap-2 px-3 py-1 bg-yellow-500/10 rounded-full border border-yellow-500/20 animate-pulse">
+                                <span className="text-yellow-500 text-[10px] font-black uppercase tracking-tighter">Pendientes: {pendingCount}</span>
+                            </div>
+                        )}
                     </div>
                 </div>
                 <Bt
@@ -202,30 +211,59 @@ export default function TutorialesAdminPage() {
             </div>
 
             {/* Global Controls */}
-            <div className="bg-[var(--color-card)] p-4 md:p-6 rounded-[2rem] border border-white/5 space-y-4">
-                <div className="flex flex-col lg:flex-row gap-4 items-center">
-                    <div className="relative flex-1 w-full">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
-                        <Input
-                            placeholder="Buscar tutorial por título..."
-                            className="pl-12 h-14 bg-black/20 border-white/5 rounded-2xl focus:ring-[var(--color-primary)]/20 text-center md:text-left"
-                            value={searchTerm}
-                            onChange={(e: any) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-                    <div className="relative w-full lg:w-72">
-                        <Gamepad2 className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={16} />
-                        <select
-                            value={selectedJuego}
-                            onChange={(e) => setSelectedJuego(e.target.value)}
-                            className="w-full h-14 bg-black/40 border border-white/10 rounded-2xl pl-12 pr-10 text-[10px] font-black uppercase tracking-widest text-[var(--color-primary)] appearance-none focus:ring-2 focus:ring-[var(--color-primary)]/20 cursor-pointer outline-none shadow-inner"
-                        >
-                            <option value="all" className="bg-[#111] text-white">Todos los Juegos</option>
-                            {juegos.map(j => (
-                                <option key={j.id} value={j.id} className="bg-[#111] text-white">{j.nombre}</option>
-                            ))}
-                        </select>
-                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 pointer-events-none" size={16} />
+            <div className="space-y-6">
+                {/* Tabs */}
+                <div className="flex p-1 bg-black/20 rounded-2xl border border-white/5 w-full md:w-fit mx-auto md:mx-0">
+                    <button
+                        onClick={() => setActiveTab('published')}
+                        className={`flex-1 md:flex-none px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'published'
+                                ? 'bg-[var(--color-primary)] text-black shadow-lg shadow-[var(--color-primary)]/20'
+                                : 'text-white/40 hover:text-white hover:bg-white/5'
+                            }`}
+                    >
+                        Publicados
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('pending')}
+                        className={`flex-1 md:flex-none px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all relative ${activeTab === 'pending'
+                                ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20'
+                                : 'text-white/40 hover:text-white hover:bg-white/5'
+                            }`}
+                    >
+                        Pendientes de Revisión
+                        {pendingCount > 0 && (
+                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] flex items-center justify-center rounded-full border border-black shadow">
+                                {pendingCount}
+                            </span>
+                        )}
+                    </button>
+                </div>
+
+                <div className="bg-[var(--color-card)] p-4 md:p-6 rounded-[2rem] border border-white/5 space-y-4">
+                    <div className="flex flex-col lg:flex-row gap-4 items-center">
+                        <div className="relative flex-1 w-full">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
+                            <Input
+                                placeholder="Buscar tutorial por título..."
+                                className="pl-12 h-14 bg-black/20 border-white/5 rounded-2xl focus:ring-[var(--color-primary)]/20 text-center md:text-left"
+                                value={searchTerm}
+                                onChange={(e: any) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                        <div className="relative w-full lg:w-72">
+                            <Gamepad2 className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={16} />
+                            <select
+                                value={selectedJuego}
+                                onChange={(e) => setSelectedJuego(e.target.value)}
+                                className="w-full h-14 bg-black/40 border border-white/10 rounded-2xl pl-12 pr-10 text-[10px] font-black uppercase tracking-widest text-[var(--color-primary)] appearance-none focus:ring-2 focus:ring-[var(--color-primary)]/20 cursor-pointer outline-none shadow-inner"
+                            >
+                                <option value="all" className="bg-[#111] text-white">Todos los Juegos</option>
+                                {juegos.map(j => (
+                                    <option key={j.id} value={j.id} className="bg-[#111] text-white">{j.nombre}</option>
+                                ))}
+                            </select>
+                            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 pointer-events-none" size={16} />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -235,7 +273,7 @@ export default function TutorialesAdminPage() {
                 {loading ? (
                     [1, 2, 3, 4].map(i => <div key={i} className="h-28 bg-white/5 rounded-3xl animate-pulse" />)
                 ) : filteredTutorials.length === 0 ? (
-                    <div className="col-span-full py-20 text-center opacity-20 italic">No se encontraron tutoriales.</div>
+                    <div className="col-span-full py-20 text-center opacity-20 italic">No se encontraron tutoriales {activeTab === 'pending' ? 'pendientes' : 'publicados'}.</div>
                 ) : (
                     <AnimatePresence mode="popLayout">
                         {filteredTutorials.map((tutorial) => (

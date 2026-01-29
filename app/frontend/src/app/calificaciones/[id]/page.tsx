@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Trophy, ArrowLeft, Gamepad2, Layers, Sparkles, Target } from 'lucide-react';
+import { ShareButton } from '@/shared/components/molecules/ShareButton';
 import ItemCalificableList from '@/modules/calificaciones/components/ItemCalificableList';
 import RankingDisplay from '@/modules/calificaciones/components/RankingDisplay';
 import { fetchCategories, fetchJuegos } from '@/modules/calificaciones/services/calificacionesService';
@@ -168,13 +169,25 @@ export default function RankingDetailPage() {
                             </div>
                         </div>
 
-                        {/* Support Link */}
-                        <button
-                            onClick={() => router.push('/calificaciones')}
-                            className="w-full py-3 md:py-4 bg-white/5 border border-white/10 rounded-xl md:rounded-2xl flex items-center justify-center gap-2 group/btn hover:bg-white/10 transition-all text-[9px] md:text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white"
-                        >
-                            <ArrowLeft size={12} className="md:size-[14px]" /> Volver a Rankings
-                        </button>
+                        {/* Share & Support */}
+                        <div className="space-y-3">
+                            {category && (
+                                <ShareButton
+                                    title={`Ranking: ${category.nombre}`}
+                                    text={`🏆 Mira el Ranking Oficial de ${category.nombre} en AJDREW!`}
+                                    url={typeof window !== 'undefined' ? window.location.href : ''}
+                                    variant="full"
+                                    className="w-full"
+                                />
+                            )}
+
+                            <button
+                                onClick={() => router.push('/calificaciones')}
+                                className="w-full py-3 md:py-4 bg-white/5 border border-white/10 rounded-xl md:rounded-2xl flex items-center justify-center gap-2 group/btn hover:bg-white/10 transition-all text-[9px] md:text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white"
+                            >
+                                <ArrowLeft size={12} className="md:size-[14px]" /> Volver a Rankings
+                            </button>
+                        </div>
                     </aside>
                 </div>
             </div>

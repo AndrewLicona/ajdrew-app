@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { PlayCircle, Youtube, ArrowLeft, Trophy, Clock, Star, Zap, Share2, ThumbsUp, LayoutGrid } from 'lucide-react';
+import { ShareButton } from '@/shared/components/molecules/ShareButton';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -215,12 +216,18 @@ export default function TutorialDetailPage() {
                                                         </div>
 
                                                         {step.image && (
-                                                            <div className="relative max-w-3xl rounded-[2rem] md:rounded-[2.5rem] overflow-hidden border border-white/10 shadow-4xl group/image bg-black/40 aspect-[16/9] md:aspect-auto">
-                                                                <div className="absolute inset-0 bg-[var(--color-primary)]/10 opacity-0 group-hover/image:opacity-100 transition-opacity duration-700"></div>
+                                                            <div className="relative w-full max-w-4xl aspect-video md:aspect-[21/9] rounded-[2rem] md:rounded-[2.5rem] overflow-hidden border border-white/10 shadow-4xl group/image bg-black">
+                                                                {/* BLUR FILL EFFECT */}
+                                                                <div
+                                                                    className="absolute inset-0 bg-cover bg-center blur-2xl opacity-40 scale-110 transition-transform duration-1000 group-hover/image:scale-125"
+                                                                    style={{ backgroundImage: `url(${step.image})` }}
+                                                                />
+                                                                <div className="absolute inset-0 bg-black/20" /> {/* Dimmer */}
+
                                                                 <img
                                                                     src={step.image}
                                                                     alt={step.titulo}
-                                                                    className="w-full h-full object-cover md:object-contain group-hover:scale-[1.03] transition-transform duration-1000"
+                                                                    className="absolute inset-0 w-full h-full object-contain z-10 transition-transform duration-700 group-hover/image:scale-[1.02]"
                                                                 />
                                                             </div>
                                                         )}
@@ -239,6 +246,19 @@ export default function TutorialDetailPage() {
                                 <h3 className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em] mb-10 border-b border-white/5 pb-4">Info Estratégica</h3>
 
                                 <div className="space-y-8">
+                                    {/* Author Attribution */}
+                                    {(tutorial as any).autor && (
+                                        <div className="flex items-center gap-5 group cursor-pointer" onClick={() => (tutorial as any).autorUrl ? window.open((tutorial as any).autorUrl, '_blank') : null}>
+                                            <div className="w-14 h-14 bg-purple-500/10 rounded-2xl flex items-center justify-center border border-purple-500/20 group-hover:bg-purple-500 transition-all duration-500">
+                                                <Star className="text-purple-400 group-hover:text-black" size={28} />
+                                            </div>
+                                            <div>
+                                                <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-1">Creado por</p>
+                                                <p className="text-lg text-white font-black uppercase italic tracking-tighter group-hover:text-purple-400 transition-colors">{(tutorial as any).autor}</p>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <div className="flex items-center gap-5 group cursor-pointer" onClick={() => router.push(`/juegos/${tutorial.juego?.slug}`)}>
                                         <div className="w-14 h-14 bg-[var(--color-primary)]/10 rounded-2xl flex items-center justify-center border border-[var(--color-primary)]/20 group-hover:bg-[var(--color-primary)] transition-all duration-500">
                                             <Gamepad2 className="text-[var(--color-primary)] group-hover:text-black" size={28} />
@@ -308,57 +328,14 @@ export default function TutorialDetailPage() {
                                     >
                                         <ThumbsUp size={16} /> {utilidadClicked ? '¡Marcado!' : '¡Me ha servido!'}
                                     </button>
-                                    <button
-                                        onClick={async () => {
-                                            if (compartirClicked) return;
-                                            setCompartirClicked(true);
-                                            try {
-                                                await fetch(`${process.env.NEXT_PUBLIC_API_URL}/tutoriales/${tutorial.id}/compartir`, {
-                                                    method: 'POST',
-                                                });
 
-                                                if (navigator.share) {
-                                                    try {
-                                                        await navigator.share({
-                                                            title: tutorial.titulo,
-                                                            text: `Mira este tutorial de ${tutorial.juego?.nombre || 'General'} en AJDREW!`,
-                                                            url: window.location.href,
-                                                        });
-                                                    } catch (shareError) {
-                                                        console.log('Share cancelled or failed', shareError);
-                                                    }
-                                                } else if (navigator.clipboard && navigator.clipboard.writeText) {
-                                                    try {
-                                                        await navigator.clipboard.writeText(window.location.href);
-                                                        import('sweetalert2').then((Swal) => {
-                                                            Swal.default.fire({
-                                                                title: '¡Copiado!',
-                                                                text: 'El enlace se ha copiado al portapapeles.',
-                                                                icon: 'info',
-                                                                toast: true,
-                                                                position: 'top-end',
-                                                                showConfirmButton: false,
-                                                                timer: 3000
-                                                            });
-                                                        });
-                                                    } catch (clipError) {
-                                                        console.error('Clipboard error:', clipError);
-                                                    }
-                                                }
-                                                setTimeout(() => setCompartirClicked(false), 2000);
-                                            } catch (error) {
-                                                console.error('Error al registrar compartir:', error);
-                                                setCompartirClicked(false);
-                                            }
-                                        }}
-                                        disabled={compartirClicked}
-                                        className={`w-full flex items-center justify-center gap-3 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all border ${compartirClicked
-                                            ? 'bg-green-500/20 border-green-500/40 cursor-not-allowed'
-                                            : 'bg-white/5 border-white/5 hover:bg-white/10'
-                                            }`}
-                                    >
-                                        <Share2 size={16} /> {compartirClicked ? '¡Compartido!' : 'Compartir Guía'}
-                                    </button>
+                                    <ShareButton
+                                        title={shareTitle}
+                                        text={`🎮 Mira este tutorial de ${tutorial.juego?.nombre || 'Gaming'} en AJDREW!`}
+                                        url={shareUrl}
+                                        variant="full"
+                                        className="w-full"
+                                    />
                                 </div>
 
                                 {/* Tip Box (Inside sticky) */}
