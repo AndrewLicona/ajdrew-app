@@ -56,10 +56,10 @@ services:
     networks:
       - ajdrew-net
     healthcheck:
-      test: [ "CMD", "wget", "--spider", "http://localhost:3000/api/health" ]
+      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1" ]
       interval: 30s
       timeout: 10s
-      retries: 5
+      retries: 10
       start_period: 60s
 
   # 🌐 Frontend Next.js
@@ -77,15 +77,14 @@ services:
       - NODE_ENV=production
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
       - HOSTNAME=0.0.0.0
-      - PORT=3001
+      - PORT=80
     ports:
       # Puerto estandarizado para este proyecto
       - "3300:80"
     networks:
       - ajdrew-net
     depends_on:
-      backend:
-        condition: service_healthy
+      - backend
     # ✅ Healthcheck removido para primer deploy por petición del usuario
     # healthcheck:
     #   test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1" ]
