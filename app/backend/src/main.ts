@@ -11,17 +11,13 @@ async function bootstrap() {
     origin: [
       'https://andrewlamaquina.my',
       'https://ajdrew.andrewlamaquina.my',
-      'http://localhost:3001',
+      'http://localhost:3300',
+      'http://localhost:8081',
       'http://localhost:3000',
-      'http://192.168.100.8:3001', // Access from mobile on local network
-      'http://192.168.100.8:3000',
-      'http://frontend:3002',
-      'http://frontend:3002',
-      'http://frontend:3001',
+      /^http:\/\/192\.168\.\d+\.\d+(:\d+)?$/, // Permitir cualquier IP local con cualquier puerto
+      'http://frontend:3300',
+      'http://frontend:80',
       'http://frontend',
-      'http://backend:3000',
-      'http://localhost:3000/api/db-status',
-      'http://localhost:3000/api/health',
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
