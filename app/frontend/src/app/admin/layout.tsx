@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Gamepad2, Layers, Package, Gift, LogOut, Menu, X, Vote, Sun, Moon, Twitter, MessageSquare, Facebook, Instagram, Youtube, Share2 } from 'lucide-react';
+import { LayoutDashboard, Gamepad2, Layers, Package, Gift, LogOut, Menu, X, Vote, Sun, Moon, Twitter, MessageSquare, Facebook, Instagram, Youtube, Share2, Users } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -63,6 +63,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: 'Votaciones', href: '/admin/votaciones', icon: Vote },
         { name: 'Tutoriales', href: '/admin/tutoriales', icon: Package },
         { name: 'Sorteos', href: '/admin/sorteos', icon: Gift },
+        { name: 'Usuarios', href: '/admin/usuarios', icon: Users },
         { name: 'Integraciones', href: '/admin/integraciones', icon: Share2 },
     ];
 

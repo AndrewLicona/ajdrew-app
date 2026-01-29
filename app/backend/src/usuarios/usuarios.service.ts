@@ -21,4 +21,8 @@ export class UsuariosService {
             password: hashedPassword,
         });
     }
+
+    async findAll() {
+        return this.usuarioRepository.findAll();
+    }
 }
