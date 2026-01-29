@@ -11,6 +11,9 @@ COPY package.json ./
 COPY app/backend/package.json ./app/backend/
 COPY packages/shared/package.json ./packages/shared/
 
+# IMPORTANTE: Copiar schema de Prisma ANTES del install
+COPY app/backend/prisma ./app/backend/prisma
+
 # Instalar dependencias
 RUN pnpm install --frozen-lockfile
 
