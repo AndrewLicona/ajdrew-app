@@ -80,38 +80,39 @@ services:
       - PORT=3001
     ports:
       # Puerto estandarizado para este proyecto
-      - "3300:3001"
+      - "3300:80"
     networks:
       - ajdrew-net
     depends_on:
       backend:
         condition: service_healthy
-    healthcheck:
-      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3001/ || exit 1" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 120s
-  # 🧭 Prisma Studio (Opcional - Comentar si no se usa)
-  # prisma-studio:
-  #   build:
-  #     context: .
-  #     dockerfile: app/backend/Dockerfile.prod
-  #   container_name: prisma-studio
-  #   command: >
-  #     sh -c "cd /app/app/backend && 
-  #            npx prisma studio --hostname 0.0.0.0 --port 5555"
-  #   ports:
-  #     - "5556:5555"
-  #   environment:
-  #     - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
-  #   networks:
-  #     - ajdrew-net
+    # ✅ Healthcheck removido para primer deploy por petición del usuario
+    # healthcheck:
+    #   test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1" ]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 5
+    #   start_period: 120s
+    # 🧭 Prisma Studio (Opcional - Comentar si no se usa)
+    # prisma-studio:
+    #   build:
+    #     context: .
+    #     dockerfile: app/backend/Dockerfile.prod
+    #   container_name: prisma-studio
+    #   command: >
+    #     sh -c "cd /app/app/backend && 
+    #            npx prisma studio --hostname 0.0.0.0 --port 5555"
+    #   ports:
+    #     - "5556:5555"
+    #   environment:
+    #     - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+    #   depends_on:
+    #     db:
+    #       condition: service_healthy
+    #   networks:
+    #     - ajdrew-net
 
-  # 🗂️ Volúmenes y redes
+    # 🗂️ Volúmenes y redes
 volumes:
   postgres_data:
     driver: local

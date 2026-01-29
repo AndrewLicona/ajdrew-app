@@ -30,7 +30,7 @@ WORKDIR /app
 
 # Variables de entorno
 ENV NODE_ENV=production
-ENV PORT=3001
+ENV PORT=80
 
 # Copiar solo lo necesario
 COPY --from=builder /app/app/frontend/.next/standalone ./
@@ -38,7 +38,7 @@ COPY --from=builder /app/app/frontend/.next/static ./.next/static
 COPY --from=builder /app/app/frontend/public ./public
 
 # Puerto expuesto
-EXPOSE 3001
+EXPOSE 80
 
 # Comando para iniciar
 CMD ["node", "server.js"]
