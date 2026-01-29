@@ -133,7 +133,7 @@ async function main() {
                         )
                     );
 
-                    const matches = [];
+                    const matches: any[] = [];
                     for (let i = 0; i < tourneyItems.length; i += 2) {
                         matches.push({
                             bracketId: bracket.id,
