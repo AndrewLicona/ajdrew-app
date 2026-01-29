@@ -48,7 +48,7 @@ services:
     env_file:
       - .env
     environment:
-      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-ajdrew}?schema=public
+      - DATABASE_URL=${DATABASE_URL}
       - FRONTEND_URL=https://ajdrew.andrewlamaquina.my
     depends_on:
       db:
@@ -76,6 +76,7 @@ services:
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - HOSTNAME=0.0.0.0
       - PORT=3001
     ports:
       # Puerto único para este proyecto
