@@ -22,12 +22,10 @@
     "concurrently": "^9.1.2"
   },
   "dependencies": {
-    "@prisma/client": "^6.17.1",
-    "bcrypt": "^6.0.0"
+    "@prisma/client": "^6.17.1"
   },
   "pnpm": {
     "allowedBuildScripts": [
-      "bcrypt",
       "ffmpeg-static"
     ]
   }
