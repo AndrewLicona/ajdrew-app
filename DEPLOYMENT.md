@@ -42,9 +42,9 @@ JWT_EXPIRATION=7d
 # =====================================
 # ☁️ CLOUDINARY
 # =====================================
-CLOUDINARY_CLOUD_NAME=djujhuorh
-CLOUDINARY_API_KEY=367512512763321
-CLOUDINARY_API_SECRET=o01QpVhXBk0G_Bdu8oJ8mcLxO3s
+CLOUDINARY_CLOUD_NAME=tu_cloud_name
+CLOUDINARY_API_KEY=tu_api_key
+CLOUDINARY_API_SECRET=tu_api_secret
 
 # =====================================
 # 🌐 URLS (CRÍTICO - Reemplaza con tu dominio)
