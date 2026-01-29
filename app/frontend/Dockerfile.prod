@@ -35,6 +35,7 @@ ENV PORT=80
 # Copiar solo lo necesario
 COPY --from=builder /app/app/frontend/.next/standalone ./
 COPY --from=builder /app/app/frontend/.next/static ./app/frontend/.next/static
+COPY --from=builder /app/app/frontend/.next/static ./.next/static
 COPY --from=builder /app/app/frontend/public ./app/frontend/public
 
 # Puerto expuesto
