@@ -31,7 +31,7 @@ async function bootstrap() {
   // Configuración de prefijo global
   app.setGlobalPrefix('api');
 
-  const port = process.env.PORT || 3000;
+  const port = 3000;
   await app.listen(port, '0.0.0.0'); // Listen on all interfaces
 
 
