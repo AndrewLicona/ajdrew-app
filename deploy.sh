@@ -13,8 +13,10 @@ echo "🛑 Deteniendo contenedores actuales..."
 docker compose -f docker-compose.prod.yml down
 
 # 3. Reconstruir y reiniciar los contenedores en segundo plano
-echo "🐳 Reconstruyendo contenedores..."
-docker compose -f docker-compose.prod.yml up -d --build
+# --no-cache asegura que los cambios en el código se compilen de nuevo y no use imágenes viejas
+echo "🐳 Reconstruyendo contenedores (modo limpio)..."
+docker compose -f docker-compose.prod.yml build --no-cache
+docker compose -f docker-compose.prod.yml up -d
 
 # 4. Limpiar solo imágenes huérfanas (dangling) para no borrar backups o imágenes base necesarias
 echo "🧹 Limpiando imágenes temporales huérfanas..."
