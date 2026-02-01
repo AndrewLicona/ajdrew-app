@@ -137,7 +137,7 @@ export default function AdminDashboard() {
                     <p className="text-[var(--color-text-secondary)] text-sm font-medium">Información real del rendimiento de la plataforma.</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Link href="/admin/juegos" className="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white text-xs font-black uppercase rounded-xl hover:shadow-lg hover:shadow-[var(--color-primary)]/20 transition-all active:scale-95">
+                    <Link href="/admin/juegos" data-testid="dashboard-new-content-btn" className="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white text-xs font-black uppercase rounded-xl hover:shadow-lg hover:shadow-[var(--color-primary)]/20 transition-all active:scale-95">
                         <Plus size={16} /> Nuevo Contenido
                     </Link>
                     <Link href="/" target="_blank" className="p-2 bg-white/5 text-white/40 hover:text-white rounded-xl transition-colors border border-white/5">

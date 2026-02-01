@@ -94,6 +94,7 @@ export default function UsuariosPage() {
                 </div>
                 <button
                     onClick={() => setIsModalOpen(true)}
+                    data-testid="create-user-button"
                     className="flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-primary)] text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:scale-105 active:scale-95 transition-all shadow-lg shadow-[var(--color-primary)]/20"
                 >
                     <UserPlus size={18} />
@@ -144,12 +145,13 @@ export default function UsuariosPage() {
                                 <X size={20} className="text-[var(--color-text-secondary)]" />
                             </button>
                         </div>
-                        <form onSubmit={handleCreate} className="p-6 space-y-4">
+                        <form onSubmit={handleCreate} className="p-6 space-y-4" data-testid="create-user-form">
                             <div className="space-y-1.5">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-secondary)] ml-1">Nombre Completo</label>
                                 <input
                                     required
                                     type="text"
+                                    data-testid="user-name-input"
                                     value={formData.nombre}
                                     onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-[var(--color-primary)] outline-none transition-all font-medium"
@@ -161,6 +163,7 @@ export default function UsuariosPage() {
                                 <input
                                     required
                                     type="email"
+                                    data-testid="user-email-input"
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-[var(--color-primary)] outline-none transition-all font-medium"
@@ -172,6 +175,7 @@ export default function UsuariosPage() {
                                 <input
                                     required
                                     type="password"
+                                    data-testid="user-password-input"
                                     value={formData.password}
                                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-[var(--color-primary)] outline-none transition-all font-medium"
@@ -182,6 +186,7 @@ export default function UsuariosPage() {
                                 <label className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-secondary)] ml-1">Rol de Acceso</label>
                                 <select
                                     value={formData.rol}
+                                    data-testid="user-role-select"
                                     onChange={(e) => setFormData({ ...formData, rol: e.target.value })}
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-[var(--color-primary)] outline-none transition-all font-bold"
                                 >
@@ -192,6 +197,7 @@ export default function UsuariosPage() {
                             <button
                                 disabled={isSaving}
                                 type="submit"
+                                data-testid="user-submit-button"
                                 className="w-full mt-4 py-4 bg-[var(--color-primary)] text-white rounded-2xl font-black uppercase tracking-widest text-sm hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 group disabled:opacity-50"
                             >
                                 {isSaving ? <Loader2 className="animate-spin w-5 h-5" /> : 'Crear Usuario'}

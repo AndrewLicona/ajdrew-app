@@ -54,12 +54,14 @@ export default function LoginPage() {
             <div className="w-full max-w-md p-8 bg-[var(--color-card)] rounded-xl border border-[var(--color-primary)]/30 shadow-2xl">
                 <h1 className="text-3xl font-bold text-center mb-8 text-[var(--color-text)]">Admin Login</h1>
 
-                <form onSubmit={handleLogin} className="space-y-6">
+                <form onSubmit={handleLogin} className="space-y-6" data-testid="login-form">
                     <div>
                         <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Email</label>
                         <input
                             type="email"
                             required
+                            data-testid="email-input"
+                            aria-label="Correo Electrónico"
                             className="w-full p-3 rounded-lg bg-[var(--color-bg)] border border-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-colors"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -71,6 +73,8 @@ export default function LoginPage() {
                         <input
                             type="password"
                             required
+                            data-testid="password-input"
+                            aria-label="Contraseña"
                             className="w-full p-3 rounded-lg bg-[var(--color-bg)] border border-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-colors"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
@@ -80,6 +84,7 @@ export default function LoginPage() {
                     <button
                         type="submit"
                         disabled={loading}
+                        data-testid="login-submit-button"
                         className="w-full py-3 bg-[var(--color-primary)] text-white font-bold rounded-lg hover:bg-[var(--color-primary-dark)] transition-colors disabled:opacity-50"
                     >
                         {loading ? 'Iniciando...' : 'Entrar'}

@@ -187,6 +187,7 @@ export default function VotacionesAdminPage() {
                 <Bt
                     onClick={() => { setEditingBracket(null); setShowForm(true); }}
                     icon={<Plus size={18} />}
+                    data-testid="new-tournament-button"
                     className="shadow-xl shadow-[var(--color-primary)]/20 px-8 py-3 rounded-2xl mx-auto md:mx-0"
                 >
                     NUEVO TORNEO
@@ -200,6 +201,7 @@ export default function VotacionesAdminPage() {
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
                         <Input
                             placeholder="Buscar torneo..."
+                            data-testid="search-tournament-input"
                             className="pl-12 h-14 bg-black/20 border-white/5 rounded-2xl focus:ring-[var(--color-primary)]/20 text-center md:text-left"
                             value={searchTerm}
                             onChange={(e: any) => setSearchTerm(e.target.value)}
@@ -240,6 +242,7 @@ export default function VotacionesAdminPage() {
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.95 }}
                                     className="bg-[var(--color-card)] rounded-2xl border border-white/5 hover:border-[var(--color-primary)]/30 transition-all p-3 flex items-center gap-4 group shadow-lg"
+                                    data-testid={`bracket-card-${bracket.slug}`}
                                 >
                                     {/* Info Section - Expanded since Trophy is gone */}
 
