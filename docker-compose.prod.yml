@@ -43,7 +43,7 @@ services:
       context: .
       dockerfile: app/backend/Dockerfile.prod
     container_name: ajdrew-backend
-    command: sh -c "npx prisma migrate deploy && npx prisma db seed && node dist/main.js"
+    command: sh -c "npx prisma migrate deploy && node dist/main.js"
     restart: unless-stopped
     env_file:
       - .env
