@@ -131,6 +131,7 @@ export default function TutorialesPage() {
                 <div className="relative group">
                     <button
                         onClick={() => setIsGameDropdownOpen(!isGameDropdownOpen)}
+                        data-testid="game-filter-btn"
                         className={`flex items-center gap-3 px-8 py-4 bg-[#0a0a0a]/60 backdrop-blur-3xl border rounded-2xl md:rounded-3xl text-[10px] md:text-xs font-black uppercase tracking-[0.2em] transition-all duration-500 shadow-2xl ${selectedJuegoId ? 'border-[var(--color-primary)]/50 text-white shadow-[0_0_30px_rgba(34,197,94,0.15)]' : 'border-white/10 text-white/40'
                             } hover:border-[var(--color-primary)]/40 hover:scale-105 active:scale-95`}
                     >
@@ -150,6 +151,7 @@ export default function TutorialesPage() {
                                 <div className="max-h-[400px] overflow-y-auto no-scrollbar py-2">
                                     <button
                                         onClick={() => { setSelectedJuegoId(''); setSelectedCategoryId(''); setIsGameDropdownOpen(false); }}
+                                        data-testid="game-filter-option-all"
                                         className="w-full px-6 py-4 text-left text-[9px] font-black uppercase tracking-[0.2em] hover:bg-white/5 transition-colors border-b border-white/5 text-white/40 mb-2"
                                     >
                                         Todos los Juegos
@@ -161,6 +163,7 @@ export default function TutorialesPage() {
                                                 <button
                                                     key={j.id}
                                                     onClick={() => { setSelectedJuegoId(j.id); setSelectedCategoryId(''); setIsGameDropdownOpen(false); }}
+                                                    data-testid={`game-filter-option-${j.slug}`}
                                                     className={`w-full px-6 py-4 rounded-xl text-left text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-between group/opt ${selectedJuegoId === j.id ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]' : 'text-white/60 hover:bg-white/5 hover:text-white'
                                                         }`}
                                                 >
@@ -186,6 +189,7 @@ export default function TutorialesPage() {
                             <button
                                 key={diff}
                                 onClick={() => setSelectedDifficulty(diff)}
+                                data-testid={`difficulty-filter-${diff}`}
                                 className={`px-5 py-1.5 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${selectedDifficulty === diff
                                     ? 'bg-[var(--color-primary)] text-black shadow-[0_0_20px_rgba(34,197,94,0.2)]'
                                     : 'text-white/30 hover:text-white/60'
@@ -203,6 +207,7 @@ export default function TutorialesPage() {
                             <select
                                 value={selectedCategoryId}
                                 onChange={(e) => setSelectedCategoryId(e.target.value)}
+                                data-testid="category-filter-select"
                                 className="w-full appearance-none bg-white/5 border border-white/10 rounded-full px-5 py-2.5 pr-10 text-[var(--color-text)] text-[10px] font-black uppercase tracking-wider cursor-pointer hover:bg-white/10 hover:border-[var(--color-primary)]/30 transition-all focus:outline-none"
                             >
                                 <option value="" className="bg-[#0d0d0d] text-white">Categoría</option>
@@ -230,6 +235,7 @@ export default function TutorialesPage() {
                                 placeholder="Buscar guía..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
+                                data-testid="search-tutorial-input"
                                 className="w-full bg-transparent border-none py-2.5 pl-12 pr-6 text-white text-[10px] md:text-xs font-black uppercase tracking-widest outline-none placeholder:text-white/10"
                             />
                         </div>
@@ -333,6 +339,7 @@ export default function TutorialesPage() {
                     <p className="text-sm md:text-xl text-white/40 font-black uppercase italic max-w-2xl mb-12 tracking-tight">Únete a nuestra comunidad de creadores y ayuda a otros jugadores a alcanzar el siguiente nivel.</p>
                     <button
                         onClick={() => setIsSubmissionModalOpen(true)}
+                        data-testid="submit-guide-btn"
                         className="bg-[var(--color-primary)] text-black px-12 py-5 rounded-full font-black uppercase tracking-[0.3em] text-[10px] md:text-xs hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(34,197,94,0.3)] hover:shadow-[0_0_50px_rgba(34,197,94,0.5)]"
                     >
                         Enviar mi Guía
