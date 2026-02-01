@@ -95,6 +95,7 @@ const Header: React.FC = () => {
                     <Link
                       key={item.href}
                       href={item.href}
+                      data-testid={`nav-link-${item.href.replace('/', '') || 'inicio'}`}
                       className={`flex items-center gap-2 px-4 py-2 text-[11px] font-bold uppercase tracking-widest transition-all duration-300 rounded-lg hover:bg-[var(--color-primary)]/5 ${isActive ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-secondary)] hover:text-white'
                         }`}
                     >
@@ -135,6 +136,7 @@ const Header: React.FC = () => {
                 <Link
                   href="/votaciones"
                   onClick={() => setIsCommunityOpen(false)}
+                  data-testid="nav-link-mobile-votaciones"
                   className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all ${pathname === '/votaciones' ? 'bg-[var(--color-primary)] text-white' : 'text-white/60 hover:bg-white/5'
                     }`}
                 >

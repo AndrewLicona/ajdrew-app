@@ -89,6 +89,7 @@ export default function VotacionesPage() {
                         <select
                             value={selectedJuegoId}
                             onChange={(e) => setSelectedJuegoId(e.target.value)}
+                            data-testid="game-filter-select"
                             className="w-full appearance-none bg-white/5 border border-white/10 rounded-[1.8rem] px-5 py-3 pr-10 text-[var(--color-text)] text-[10px] md:text-xs font-black uppercase tracking-wider cursor-pointer hover:bg-white/10 hover:border-[var(--color-primary)]/30 transition-all focus:outline-none"
                         >
                             <option value="" className="bg-[#0a0a0a] text-white">

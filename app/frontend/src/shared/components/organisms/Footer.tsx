@@ -97,6 +97,7 @@ const Footer: React.FC = () => {
             <span className="hidden sm:inline text-[var(--color-text-secondary)] opacity-30">•</span>
             <a
               href="/admin"
+              data-testid="admin-footer-link"
               className="text-[10px] md:text-xs font-black text-[var(--color-text-secondary)]/30 hover:text-[var(--color-primary)] 
                 transition-colors duration-200 uppercase tracking-widest"
             >

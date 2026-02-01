@@ -82,6 +82,7 @@ export default function SorteosPublicPage() {
                                 <select
                                     value={selectedJuegoId}
                                     onChange={(e) => setSelectedJuegoId(e.target.value)}
+                                    data-testid="game-filter-select"
                                     className="w-full appearance-none bg-white/5 border border-white/10 rounded-[1.8rem] px-5 py-3 pr-10 text-white text-[10px] md:text-xs font-black uppercase tracking-wider cursor-pointer hover:bg-white/10 hover:border-yellow-400/30 transition-all focus:outline-none"
                                 >
                                     <option value="" className="bg-[#0a0a0a] text-white">
@@ -107,6 +108,7 @@ export default function SorteosPublicPage() {
                             <div className="flex gap-2 bg-white/5 p-1.5 rounded-[1.5rem] w-full md:w-auto">
                                 <button
                                     onClick={() => setActiveTab('ACTIVO')}
+                                    data-testid="status-tab-activo"
                                     className={`flex items-center justify-center gap-1.5 px-4 py-2 rounded-[1.2rem] text-[9px] md:text-[10px] font-black uppercase tracking-wider transition-all flex-1 md:flex-none ${activeTab === 'ACTIVO'
                                         ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20'
                                         : 'text-white/50 hover:text-white/70'
@@ -117,6 +119,7 @@ export default function SorteosPublicPage() {
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('CERRADO')}
+                                    data-testid="status-tab-cerrado"
                                     className={`flex items-center justify-center gap-1.5 px-4 py-2 rounded-[1.2rem] text-[9px] md:text-[10px] font-black uppercase tracking-wider transition-all flex-1 md:flex-none ${activeTab === 'CERRADO'
                                         ? 'bg-gray-600 text-white shadow-lg'
                                         : 'text-white/50 hover:text-white/70'

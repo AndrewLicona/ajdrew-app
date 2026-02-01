@@ -172,6 +172,7 @@ export const HomePageContent = () => {
 
                     <Link
                         href="/juegos"
+                        data-testid="hero-explore-btn"
                         className="group relative bg-white text-black px-10 md:px-12 py-4 md:py-5 rounded-xl font-black uppercase tracking-[0.2em] text-[10px] transition-all hover:scale-105 hover:bg-[var(--color-primary)] hover:text-white shadow-3xl shadow-white/5"
                     >
                         Explorar Juegos
@@ -181,7 +182,7 @@ export const HomePageContent = () => {
                 {/* --- MAIN FEATURES GRID --- */}
                 <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mt-10 md:mt-16 animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-300">
                     {/* Juegos Card */}
-                    <Link href="/juegos" className="group relative bg-[var(--color-card)]/40 p-5 md:p-8 rounded-[24px] md:rounded-[32px] border border-white/5 hover:border-[var(--color-primary)]/30 backdrop-blur-xl transition-all duration-500 overflow-hidden shadow-2xl">
+                    <Link href="/juegos" data-testid="feature-card-juegos" className="group relative bg-[var(--color-card)]/40 p-5 md:p-8 rounded-[24px] md:rounded-[32px] border border-white/5 hover:border-[var(--color-primary)]/30 backdrop-blur-xl transition-all duration-500 overflow-hidden shadow-2xl">
                         <div className="absolute top-0 right-0 p-6 md:p-8 text-white/5 group-hover:text-[var(--color-primary)]/20 transition-colors hidden md:block">
                             <Gamepad2 className="w-16 h-16 md:w-20 md:h-20" strokeWidth={1} />
                         </div>
@@ -197,7 +198,7 @@ export const HomePageContent = () => {
                     </Link>
 
                     {/* Rankings Card */}
-                    <Link href="/calificaciones" className="group relative bg-[var(--color-card)]/40 p-5 md:p-8 rounded-[24px] md:rounded-[32px] border border-white/5 hover:border-yellow-500/30 backdrop-blur-xl transition-all duration-500 overflow-hidden shadow-2xl">
+                    <Link href="/calificaciones" data-testid="feature-card-rankings" className="group relative bg-[var(--color-card)]/40 p-5 md:p-8 rounded-[24px] md:rounded-[32px] border border-white/5 hover:border-yellow-500/30 backdrop-blur-xl transition-all duration-500 overflow-hidden shadow-2xl">
                         <div className="absolute top-0 right-0 p-6 md:p-8 text-white/5 group-hover:text-yellow-500/20 transition-colors hidden md:block">
                             <Star className="w-16 h-16 md:w-20 md:h-20" strokeWidth={1} />
                         </div>
@@ -213,7 +214,7 @@ export const HomePageContent = () => {
                     </Link>
 
                     {/* Sorteos Card */}
-                    <Link href="/sorteos" className="group relative bg-[var(--color-card)]/40 p-5 md:p-8 rounded-[24px] md:rounded-[32px] border border-white/5 hover:border-emerald-500/30 backdrop-blur-xl transition-all duration-500 overflow-hidden shadow-2xl">
+                    <Link href="/sorteos" data-testid="feature-card-sorteos" className="group relative bg-[var(--color-card)]/40 p-5 md:p-8 rounded-[24px] md:rounded-[32px] border border-white/5 hover:border-emerald-500/30 backdrop-blur-xl transition-all duration-500 overflow-hidden shadow-2xl">
                         <div className="absolute top-0 right-0 p-6 md:p-8 text-white/5 group-hover:text-emerald-500/20 transition-colors hidden md:block">
                             <Gift className="w-16 h-16 md:w-20 md:h-20" strokeWidth={1} />
                         </div>
@@ -229,7 +230,7 @@ export const HomePageContent = () => {
                     </Link>
 
                     {/* Tutoriales Card */}
-                    <Link href="/tutoriales" className="group relative bg-[var(--color-card)]/40 p-5 md:p-8 rounded-[24px] md:rounded-[32px] border border-white/5 hover:border-red-500/30 backdrop-blur-xl transition-all duration-500 overflow-hidden shadow-2xl">
+                    <Link href="/tutoriales" data-testid="feature-card-tutoriales" className="group relative bg-[var(--color-card)]/40 p-5 md:p-8 rounded-[24px] md:rounded-[32px] border border-white/5 hover:border-red-500/30 backdrop-blur-xl transition-all duration-500 overflow-hidden shadow-2xl">
                         <div className="absolute top-0 right-0 p-6 md:p-8 text-white/5 group-hover:text-red-500/20 transition-colors hidden md:block">
                             <Youtube className="w-16 h-16 md:w-20 md:h-20" strokeWidth={1} />
                         </div>
