@@ -213,6 +213,7 @@ export default function SorteosAdminPage() {
                 <Bt
                     onClick={() => { setEditingSorteo(null); setShowForm(true); }}
                     icon={<Plus size={18} />}
+                    data-testid="new-sorteo-button"
                     className="shadow-xl shadow-[var(--color-primary)]/20 px-8 py-3 rounded-2xl mx-auto md:mx-0"
                 >
                     NUEVO SORTEO
@@ -226,6 +227,7 @@ export default function SorteosAdminPage() {
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
                         <Input
                             placeholder="Buscar sorteo o premio..."
+                            data-testid="search-sorteo-input"
                             className="pl-12 h-14 bg-black/20 border-white/5 rounded-2xl focus:ring-[var(--color-primary)]/20 text-center md:text-left"
                             value={searchTerm}
                             onChange={(e: any) => setSearchTerm(e.target.value)}
@@ -282,6 +284,7 @@ export default function SorteosAdminPage() {
                                 exit={{ opacity: 0, scale: 0.95 }}
                                 transition={{ layout: { type: "spring", stiffness: 300, damping: 30 } }}
                                 className="bg-[var(--color-card)] rounded-3xl border border-white/5 hover:border-[var(--color-primary)]/30 transition-all p-3 flex flex-col gap-4 group relative overflow-hidden shadow-lg"
+                                data-testid={`sorteo-card-${sorteo.id}`}
                             >
                                 <div className="flex items-center gap-4">
                                     <div className={`w-20 h-20 shrink-0 relative flex items-center justify-center rounded-2xl border border-white/5 shadow-inner transition-all group-hover:scale-105 duration-500 ${sorteo.estado === 'ACTIVO' ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]' : 'bg-red-500/5 text-red-500/20'}`}>
@@ -372,6 +375,7 @@ export default function SorteosAdminPage() {
                                             onClick={() => handleFinalize(sorteo.id, sorteo.titulo)}
                                             disabled={!sorteo._count?.participantes}
                                             className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[var(--color-primary)] text-black rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-30 shadow-lg shadow-[var(--color-primary)]/10"
+                                            data-testid="finalize-web-btn"
                                         >
                                             <Trophy size={14} />
                                             <span className="text-[9px] font-black uppercase tracking-widest">SORTEO WEB</span>
@@ -383,6 +387,7 @@ export default function SorteosAdminPage() {
                                                 setShowManualModal(true);
                                             }}
                                             className="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-white/40 hover:text-white rounded-xl border border-white/5 transition-all text-[9px] font-black uppercase tracking-widest"
+                                            data-testid="finalize-manual-btn"
                                         >
                                             MANUAL / YT
                                         </button>

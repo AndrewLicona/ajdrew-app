@@ -204,6 +204,7 @@ export default function TutorialesAdminPage() {
                 <Bt
                     onClick={() => { setEditingTutorial(null); setShowForm(true); }}
                     icon={<Plus size={18} />}
+                    data-testid="new-tutorial-button"
                     className="shadow-xl shadow-[var(--color-primary)]/20 px-8 py-3 rounded-2xl mx-auto md:mx-0"
                 >
                     NUEVO TUTORIAL
@@ -216,18 +217,20 @@ export default function TutorialesAdminPage() {
                 <div className="flex p-1 bg-black/20 rounded-2xl border border-white/5 w-full md:w-fit mx-auto md:mx-0">
                     <button
                         onClick={() => setActiveTab('published')}
+                        data-testid="tab-published"
                         className={`flex-1 md:flex-none px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'published'
-                                ? 'bg-[var(--color-primary)] text-black shadow-lg shadow-[var(--color-primary)]/20'
-                                : 'text-white/40 hover:text-white hover:bg-white/5'
+                            ? 'bg-[var(--color-primary)] text-black shadow-lg shadow-[var(--color-primary)]/20'
+                            : 'text-white/40 hover:text-white hover:bg-white/5'
                             }`}
                     >
                         Publicados
                     </button>
                     <button
                         onClick={() => setActiveTab('pending')}
+                        data-testid="tab-pending"
                         className={`flex-1 md:flex-none px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all relative ${activeTab === 'pending'
-                                ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20'
-                                : 'text-white/40 hover:text-white hover:bg-white/5'
+                            ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20'
+                            : 'text-white/40 hover:text-white hover:bg-white/5'
                             }`}
                     >
                         Pendientes de Revisión
@@ -245,6 +248,7 @@ export default function TutorialesAdminPage() {
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
                             <Input
                                 placeholder="Buscar tutorial por título..."
+                                data-testid="search-tutorial-input"
                                 className="pl-12 h-14 bg-black/20 border-white/5 rounded-2xl focus:ring-[var(--color-primary)]/20 text-center md:text-left"
                                 value={searchTerm}
                                 onChange={(e: any) => setSearchTerm(e.target.value)}
@@ -285,6 +289,7 @@ export default function TutorialesAdminPage() {
                                 exit={{ opacity: 0, scale: 0.95 }}
                                 transition={{ layout: { type: "spring", stiffness: 300, damping: 30 } }}
                                 className="bg-[var(--color-card)] rounded-3xl border border-white/5 hover:border-[var(--color-primary)]/30 transition-all p-3 flex items-center gap-4 group relative overflow-hidden"
+                                data-testid={`tutorial-card-${tutorial.id}`}
                             >
                                 {/* Thumbnail */}
                                 <div className="relative w-28 sm:w-32 h-20 shrink-0 rounded-2xl overflow-hidden bg-black/40 border border-white/5 group/thumb">

@@ -16,9 +16,9 @@ docker compose -f docker-compose.prod.yml down
 echo "🐳 Reconstruyendo contenedores..."
 docker compose -f docker-compose.prod.yml up -d --build
 
-# 4. Limpiar imágenes antiguas para ahorrar espacio
-echo "🧹 Limpiando imágenes antiguas..."
-docker image prune -f
+# 4. Limpiar solo imágenes huérfanas (dangling) para no borrar backups o imágenes base necesarias
+echo "🧹 Limpiando imágenes temporales huérfanas..."
+docker image prune -f --filter "label=stage!=build"
 
 echo "✅ ¡Despliegue completado con éxito!"
 echo "🌐 Frontend activo en el puerto 3300"

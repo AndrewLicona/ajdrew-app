@@ -176,6 +176,7 @@ export default function CategoriasAdminPage() {
                         setShowForm(true);
                     }}
                     icon={<Plus size={18} />}
+                    data-testid="new-categoria-button"
                     className="shadow-xl shadow-[var(--color-primary)]/20 px-8 py-3 rounded-2xl mx-auto md:mx-0"
                 >
                     NUEVA CATEGORÍA
@@ -188,6 +189,7 @@ export default function CategoriasAdminPage() {
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={16} />
                     <Input
                         placeholder="Buscar categoría..."
+                        data-testid="search-categoria-input"
                         className="pl-12 h-12 bg-[var(--color-card)] border-white/5 rounded-2xl focus:ring-[var(--color-primary)]/30 text-center"
                         value={searchTerm}
                         onChange={(e: any) => setSearchTerm(e.target.value)}
@@ -239,6 +241,7 @@ export default function CategoriasAdminPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         className="bg-[var(--color-card)] rounded-2xl border border-white/5 hover:border-[var(--color-primary)]/30 transition-all p-4 flex items-center gap-4 group shadow-lg"
+                        data-testid={`categoria-card-${cat.id}`}
                     >
                         {/* Info Section */}
                         <div className="flex-1 min-w-0">

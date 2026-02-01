@@ -169,6 +169,7 @@ export default function JuegosAdminPage() {
                         setShowForm(true);
                     }}
                     icon={<Plus size={18} />}
+                    data-testid="new-juego-button"
                     className="shadow-xl shadow-[var(--color-primary)]/20 px-8 py-3 rounded-2xl mx-auto md:mx-0"
                 >
                     AÑADIR JUEGO
@@ -181,6 +182,7 @@ export default function JuegosAdminPage() {
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={16} />
                     <Input
                         placeholder="Buscar por nombre..."
+                        data-testid="search-juego-input"
                         className="pl-12 h-12 bg-[var(--color-card)] border-white/5 rounded-2xl focus:ring-[var(--color-primary)]/30 text-center"
                         value={searchTerm}
                         onChange={(e: any) => setSearchTerm(e.target.value)}
@@ -221,6 +223,7 @@ export default function JuegosAdminPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         className="bg-[var(--color-card)] rounded-xl border border-white/5 hover:border-[var(--color-primary)]/30 transition-all p-3 flex items-center gap-4 group shadow-lg"
+                        data-testid={`juego-card-${juego.slug}`}
                     >
                         {/* Thumbnail - Slightly larger for clarity */}
                         <div className="w-16 h-16 shrink-0 relative bg-black/40 rounded-xl overflow-hidden border border-white/5 shadow-inner">
@@ -240,6 +243,7 @@ export default function JuegosAdminPage() {
                                 </h3>
                                 <button
                                     onClick={() => toggleStatus(juego.id, juego.activo)}
+                                    data-testid="toggle-active-juego-btn"
                                     className={`shrink-0 text-[7px] font-black px-2 py-1 rounded-md border transition-all tracking-widest ${juego.activo
                                         ? 'bg-green-500/10 text-green-500 border-green-500/20'
                                         : 'bg-red-500/10 text-red-500 border-red-500/20'
