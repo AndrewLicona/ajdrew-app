@@ -35,9 +35,10 @@ export const JuegoTabs: React.FC<JuegoTabsProps> = ({ activeTab, setActiveTab })
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
+                                data-testid={`hub-tab-${tab.id}`}
                                 className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 py-2.5 sm:py-3 px-1 sm:px-6 rounded-2xl sm:rounded-full transition-all duration-300 ${isActive
-                                        ? 'bg-[var(--color-primary)] text-black shadow-lg shadow-[var(--color-primary)]/20 scale-[1.02]'
-                                        : 'text-white/30 hover:text-white hover:bg-white/5'
+                                    ? 'bg-[var(--color-primary)] text-black shadow-lg shadow-[var(--color-primary)]/20 scale-[1.02]'
+                                    : 'text-white/30 hover:text-white hover:bg-white/5'
                                     }`}
                             >
                                 <Icon size={16} strokeWidth={isActive ? 3 : 2} className="sm:w-4 sm:h-4" />

@@ -66,6 +66,7 @@ export default function JuegosPage() {
                         <Link
                             key={juego.id}
                             href={`/juegos/${juego.slug}`}
+                            data-testid={`game-card-${juego.slug}`}
                             className="group relative flex flex-col w-full aspect-square rounded-[2rem] overflow-hidden transition-all duration-500 hover:-translate-y-2 border border-white/5 hover:border-[var(--color-primary)]/40"
                         >
                             {/* Card Background & Overlay */}

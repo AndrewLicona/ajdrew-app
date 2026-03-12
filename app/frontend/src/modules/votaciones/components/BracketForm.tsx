@@ -386,6 +386,7 @@ export const BracketForm: React.FC<BracketFormProps> = ({
                         <Input
                             id="tematica"
                             name="tematica"
+                            data-testid="bracket-tematica-input"
                             value={formData.tematica}
                             onChange={handleChange}
                             placeholder="Ej: Mejor Delantero 2024"
@@ -397,6 +398,7 @@ export const BracketForm: React.FC<BracketFormProps> = ({
                         <Input
                             id="slug"
                             name="slug"
+                            data-testid="bracket-slug-input"
                             value={formData.slug}
                             onChange={handleChange}
                             placeholder="ej: mejor-delantero-2024"
@@ -411,6 +413,7 @@ export const BracketForm: React.FC<BracketFormProps> = ({
                         <select
                             id="juegoId"
                             name="juegoId"
+                            data-testid="bracket-juego-select"
                             value={formData.juegoId}
                             onChange={handleChange}
                             className="w-full h-11 bg-black/20 border border-white/10 rounded-xl px-4 text-white focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] outline-none transition-all placeholder:text-white/20"
@@ -429,6 +432,7 @@ export const BracketForm: React.FC<BracketFormProps> = ({
                         <select
                             id="categoriaId"
                             name="categoriaId"
+                            data-testid="bracket-categoria-select"
                             value={formData.categoriaId}
                             onChange={handleChange}
                             disabled={!formData.juegoId}

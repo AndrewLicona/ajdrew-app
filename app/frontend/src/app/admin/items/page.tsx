@@ -234,6 +234,7 @@ export default function ItemsAdminPage() {
                     <Bt
                         onClick={() => { setEditingItem(null); setShowForm(true); }}
                         icon={<Plus size={18} />}
+                        data-testid="new-item-button"
                         className="shadow-xl shadow-[var(--color-primary)]/20 px-8 py-3 rounded-2xl"
                     >
                         AÑADIR ÍTEM

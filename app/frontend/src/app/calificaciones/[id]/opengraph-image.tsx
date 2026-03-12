@@ -4,31 +4,41 @@ export const runtime = 'edge';
 
 export const alt = 'Ranking AJDREW';
 export const size = {
-    width: 1200,
+    width: 630, // Using a portrait/square-ish ratio if we want to match exactly, but let's stick to standard landscape 1200x630 or 800x800. Let's use 840x1000 to match the vertical list shape, Twitter will display it if valid or crop it. Actually, standard is 1200x630.
     height: 630,
 };
 
 export const contentType = 'image/png';
 
 export default async function Image({ params }: { params: { id: string } }) {
-    let categoryName = 'Ranking General';
-    let juegoNombre = 'Gaming Elite';
+    let categoryName = 'RANKING GENERAL';
+    let rankingItems: any[] = [];
 
     try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/calificaciones/public`);
-        if (res.ok) {
-            const data = await res.json();
-            const category = data.find((c: any) => c.id === params.id);
+        // Fetch Category Info
+        const resCat = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/calificaciones/public`);
+        if (resCat.ok) {
+            const dataCat = await resCat.json();
+            const category = dataCat.find((c: any) => c.id === params.id);
             if (category) {
                 categoryName = category.nombre;
-                // Since the public endpoint usually returns minimal data, we might not get the full juego object
-                // unless the endpoint structure supports it. Assuming basic data available.
-                // If not efficient, we fallback to generic text.
-                // Ideally we would have a specific endpoint for detail, but reusing existing.
             }
+        }
+
+        // Fetch Top 5 Ranking
+        const resRanking = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/calificaciones/ranking-list?categoryId=${params.id}&limit=5`);
+        if (resRanking.ok) {
+            rankingItems = await resRanking.json();
         }
     } catch (e) {
         console.error('Failed to fetch ranking for OG', e);
+    }
+
+    // Ensure we have at least some layout if empty
+    if (rankingItems.length === 0) {
+        rankingItems = [
+            { itemName: 'Esperando votos...', averageRating: 0, ratingCount: 0 }
+        ];
     }
 
     return new ImageResponse(
@@ -41,112 +51,95 @@ export default async function Image({ params }: { params: { id: string } }) {
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    background: 'linear-gradient(to bottom right, #050505, #1a1a1a)',
-                    position: 'relative',
+                    background: '#0a0d0a', // very dark green/black
                     fontFamily: 'sans-serif',
                 }}
             >
-                {/* Decorative Elements */}
-                <div style={{
-                    position: 'absolute',
-                    top: -100,
-                    right: -100,
-                    width: 600,
-                    height: 600,
-                    background: '#22c55e',
-                    filter: 'blur(200px)',
-                    opacity: 0.1,
-                }} />
-
-                <div style={{
-                    position: 'absolute',
-                    bottom: -100,
-                    left: -100,
-                    width: 500,
-                    height: 500,
-                    background: '#8b5cf6', // Violet accent
-                    filter: 'blur(180px)',
-                    opacity: 0.1,
-                }} />
-
+                {/* Main Card */}
                 <div style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 10,
-                    padding: '60px',
-                    textAlign: 'center',
-                    border: '1px solid rgba(255,255,255,0.1)',
+                    width: '900px', // constrain width within 1200
+                    height: '580px', // constrain height within 630
+                    background: '#111811', // dark card background
                     borderRadius: '40px',
-                    backgroundColor: 'rgba(0,0,0,0.4)',
-                    boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+                    border: '1px solid #1f291f',
+                    padding: '30px 50px',
                 }}>
-                    <div style={{
-                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                        color: '#22c55e',
-                        border: '1px solid rgba(34, 197, 94, 0.3)',
-                        padding: '10px 30px',
-                        borderRadius: '50px',
-                        fontSize: 24,
-                        fontWeight: 900,
-                        textTransform: 'uppercase',
-                        marginBottom: '30px',
-                        letterSpacing: '0.1em',
-                    }}>
-                        Ranking Oficial
+                    
+                    {/* Header */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <div style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            width: '40px', height: '40px', borderRadius: '50%', border: '2px solid #22c55e', color: '#22c55e', fontSize: 20
+                        }}>
+                            🏆
+                        </div>
+                        <h1 style={{ color: '#ffffff', fontSize: 36, fontWeight: 900, fontStyle: 'italic', margin: 0, textTransform: 'uppercase', letterSpacing: '-1px' }}>
+                            RANKING <span style={{ color: '#22c55e' }}>OFICIAL</span>
+                        </h1>
                     </div>
 
-                    <div style={{
-                        fontSize: 70,
-                        fontWeight: 900,
-                        color: 'white',
-                        lineHeight: 1,
-                        textTransform: 'uppercase',
-                        marginBottom: '20px',
-                        textShadow: '0 5px 20px rgba(0,0,0,0.8)',
-                        maxWidth: '900px',
-                    }}>
-                        {categoryName}
-                    </div>
+                    <h2 style={{ color: '#ffffff', fontSize: 32, fontWeight: 900, marginTop: '20px', marginBottom: '20px' }}>
+                        Top 5: {categoryName.toUpperCase()}
+                    </h2>
 
-                    <div style={{
-                        fontSize: 30,
-                        color: 'rgba(255,255,255,0.5)',
-                        fontWeight: 500,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                    }}>
-                        Descubre quiénes dominan el Top 10
-                    </div>
-                </div>
+                    {/* List */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+                        {rankingItems.slice(0, 5).map((item, index) => {
+                            const pct = Math.min((item.averageRating / 5) * 100, 100);
+                            let rankColor = '#666';
+                            let icon = `#${index + 1}`;
+                            if (index === 0) { rankColor = '#eab308'; icon = '🏆'; }
+                            if (index === 1) { rankColor = '#cbd5e1'; icon = '🥈'; }
+                            if (index === 2) { rankColor = '#b45309'; icon = '🥉'; }
 
-                <div style={{
-                    position: 'absolute',
-                    bottom: 40,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '15px',
-                    opacity: 0.8,
-                }}>
-                    <div style={{
-                        width: '12px',
-                        height: '12px',
-                        borderRadius: '50%',
-                        backgroundColor: '#22c55e',
-                    }} />
-                    <div style={{
-                        color: 'white',
-                        fontSize: 24,
-                        fontWeight: 700,
-                        letterSpacing: '0.2em',
-                    }}>AJDREW.COM</div>
+                            return (
+                                <div key={index} style={{
+                                    display: 'flex', alignItems: 'center', background: '#0d120d', borderRadius: '20px', padding: '10px 20px', border: '1px solid #1a221a'
+                                }}>
+                                    {/* Rank */}
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '50px', fontSize: index < 3 ? '24px' : '20px', color: rankColor, fontWeight: 900, marginRight: '15px' }}>
+                                        {icon}
+                                    </div>
+                                    
+                                    {/* Image */}
+                                    {item.itemImage ? (
+                                        <img src={item.itemImage} style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', border: '1px solid #333' }} />
+                                    ) : (
+                                        <div style={{ width: '60px', height: '60px', borderRadius: '12px', background: '#222', border: '1px solid #333' }} />
+                                    )}
+
+                                    {/* Details */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '20px', flex: 1 }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '8px' }}>
+                                            <span style={{ color: '#ffffff', fontSize: 24, fontWeight: 900, fontStyle: 'italic', textTransform: 'uppercase' }}>
+                                                {item.itemName}
+                                            </span>
+                                            <span style={{ color: '#22c55e', fontSize: 20, fontWeight: 900 }}>
+                                                {item.averageRating.toFixed(1)}
+                                            </span>
+                                        </div>
+                                        
+                                        {/* Progress Bar Container */}
+                                        <div style={{ display: 'flex', width: '100%', height: '8px', background: '#1c281c', borderRadius: '4px', overflow: 'hidden' }}>
+                                            <div style={{ display: 'flex', width: `${pct}%`, height: '100%', background: '#06b6d4' }} />
+                                        </div>
+                                        
+                                        <span style={{ color: '#6b7280', fontSize: 14, fontWeight: 700, marginTop: '8px', textTransform: 'uppercase' }}>
+                                            {item.ratingCount} VOTOS
+                                        </span>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
         ),
         {
-            ...size,
+            width: 1200,
+            height: 630,
         }
     );
 }

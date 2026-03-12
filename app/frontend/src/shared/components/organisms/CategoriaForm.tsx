@@ -96,6 +96,7 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
                     <Input
                         id="nombre"
                         name="nombre"
+                        data-testid="categoria-nombre-input"
                         value={formData.nombre}
                         onChange={handleChange}
                         placeholder="Ej: Personajes, Tutoriales, etc."
@@ -108,6 +109,7 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
                     <select
                         id="tipo"
                         name="tipo"
+                        data-testid="categoria-tipo-select"
                         value={formData.tipo}
                         onChange={handleChange}
                         className="w-full h-11 bg-black/20 border border-white/10 rounded-xl px-4 text-white focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] outline-none transition-all"
@@ -124,6 +126,7 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
                     <select
                         id="juegoId"
                         name="juegoId"
+                        data-testid="categoria-juego-select"
                         value={formData.juegoId || ''}
                         onChange={handleChange}
                         className="w-full h-11 bg-black/20 border border-white/10 rounded-xl px-4 text-white focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] outline-none transition-all"

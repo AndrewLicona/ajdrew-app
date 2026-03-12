@@ -110,6 +110,7 @@ export const SorteoForm: React.FC<SorteoFormProps> = ({
                     <Input
                         id="titulo"
                         name="titulo"
+                        data-testid="sorteo-titulo-input"
                         value={formData.titulo}
                         onChange={handleChange}
                         placeholder="Ej: Sorteo de Navidad"
@@ -122,6 +123,7 @@ export const SorteoForm: React.FC<SorteoFormProps> = ({
                     <Input
                         id="premio"
                         name="premio"
+                        data-testid="sorteo-premio-input"
                         value={formData.premio}
                         onChange={handleChange}
                         placeholder="Ej: 50 USD Gift Card"
@@ -134,6 +136,7 @@ export const SorteoForm: React.FC<SorteoFormProps> = ({
                     <Input
                         id="fechaFin"
                         name="fechaFin"
+                        data-testid="sorteo-fechafin-input"
                         type="datetime-local"
                         value={formData.fechaFin}
                         onChange={handleChange}
@@ -146,6 +149,7 @@ export const SorteoForm: React.FC<SorteoFormProps> = ({
                     <select
                         id="juegoId"
                         name="juegoId"
+                        data-testid="sorteo-juego-select"
                         value={formData.juegoId}
                         onChange={handleChange}
                         className="w-full h-11 bg-black/20 border border-white/10 rounded-xl px-4 text-white focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] outline-none transition-all placeholder:text-white/20"
@@ -164,6 +168,7 @@ export const SorteoForm: React.FC<SorteoFormProps> = ({
                     <Input
                         id="externalUrl"
                         name="externalUrl"
+                        data-testid="sorteo-url-input"
                         value={formData.externalUrl}
                         onChange={handleChange}
                         placeholder="https://youtube.com/live/..."
@@ -175,6 +180,7 @@ export const SorteoForm: React.FC<SorteoFormProps> = ({
                     <Input
                         id="numGanadores"
                         name="numGanadores"
+                        data-testid="sorteo-ganadores-input"
                         type="number"
                         min="1"
                         value={formData.numGanadores}

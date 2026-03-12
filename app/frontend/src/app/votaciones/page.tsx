@@ -123,6 +123,7 @@ export default function VotacionesPage() {
                             <Link
                                 key={bracket.id}
                                 href={`/votaciones/${bracket.slug || bracket.id}`}
+                                data-testid={`bracket-card-${bracket.slug}`}
                                 className="group relative aspect-square rounded-2xl md:rounded-[2.5rem] overflow-hidden bg-[#0d0d0d] border border-white/5 hover:border-[var(--color-primary)]/40 transition-all duration-700 hover:-translate-y-1 shadow-2xl animate-in fade-in slide-in-from-bottom-10"
                                 style={{ animationDelay: `${idx * 100}ms` }}
                             >

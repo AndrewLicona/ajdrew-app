@@ -204,6 +204,7 @@ export const TutorialForm: React.FC<TutorialFormProps> = ({
                             <Input
                                 id="titulo"
                                 name="titulo"
+                                data-testid="tutorial-titulo-input"
                                 value={formData.titulo}
                                 onChange={handleChange}
                                 placeholder="Ej: Guía Suprema de Messi"
@@ -215,6 +216,7 @@ export const TutorialForm: React.FC<TutorialFormProps> = ({
                             <Input
                                 id="slug"
                                 name="slug"
+                                data-testid="tutorial-slug-input"
                                 value={formData.slug}
                                 onChange={handleChange}
                                 placeholder="ej: guia-suprema-messi"
@@ -229,6 +231,7 @@ export const TutorialForm: React.FC<TutorialFormProps> = ({
                             <Input
                                 id="videoUrl"
                                 name="videoUrl"
+                                data-testid="tutorial-video-input"
                                 value={formData.videoUrl}
                                 onChange={handleChange}
                                 placeholder="https://www.youtube.com/watch?v=..."
@@ -269,6 +272,7 @@ export const TutorialForm: React.FC<TutorialFormProps> = ({
                                 <Bt
                                     variant="secondary"
                                     type="button"
+                                    data-testid="tutorial-image-btn"
                                     className="h-10 text-[10px] px-4 bg-white/5 border-white/10"
                                     onClick={() => document.getElementById('cover-upload')?.click()}
                                 >
@@ -305,6 +309,7 @@ export const TutorialForm: React.FC<TutorialFormProps> = ({
                                 <Input
                                     id="autor"
                                     name="autor"
+                                    data-testid="tutorial-autor-input"
                                     value={formData.autor || ''}
                                     onChange={handleChange}
                                     placeholder="Nombre del creador"
@@ -315,6 +320,7 @@ export const TutorialForm: React.FC<TutorialFormProps> = ({
                                 <Input
                                     id="autorUrl"
                                     name="autorUrl"
+                                    data-testid="tutorial-autor-url-input"
                                     value={formData.autorUrl || ''}
                                     onChange={handleChange}
                                     placeholder="https://youtube.com/..."
@@ -325,6 +331,7 @@ export const TutorialForm: React.FC<TutorialFormProps> = ({
                                 <Input
                                     id="imageCover"
                                     name="imageCover"
+                                    data-testid="tutorial-cover-url-input"
                                     value={formData.imageCover || ''}
                                     onChange={handleChange}
                                     placeholder="https://... (Sobreescribe la miniatura de YouTube si se usa en el frontend)"
@@ -338,6 +345,7 @@ export const TutorialForm: React.FC<TutorialFormProps> = ({
                         <textarea
                             id="descripcion"
                             name="descripcion"
+                            data-testid="tutorial-descripcion-input"
                             value={formData.descripcion}
                             onChange={handleChange}
                             rows={3}
@@ -352,6 +360,7 @@ export const TutorialForm: React.FC<TutorialFormProps> = ({
                             <select
                                 id="juegoId"
                                 name="juegoId"
+                                data-testid="tutorial-juego-select"
                                 value={formData.juegoId}
                                 onChange={handleChange}
                                 className="w-full h-11 bg-black/20 border border-white/10 rounded-xl px-4 text-white focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] outline-none transition-all"
@@ -370,6 +379,7 @@ export const TutorialForm: React.FC<TutorialFormProps> = ({
                             <select
                                 id="categoriaId"
                                 name="categoriaId"
+                                data-testid="tutorial-categoria-select"
                                 value={formData.categoriaId || ''}
                                 onChange={handleChange}
                                 className="w-full h-11 bg-black/20 border border-white/10 rounded-xl px-4 text-white focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] outline-none transition-all"
@@ -392,6 +402,7 @@ export const TutorialForm: React.FC<TutorialFormProps> = ({
                             <select
                                 id="dificultad"
                                 name="dificultad"
+                                data-testid="tutorial-dificultad-select"
                                 value={formData.dificultad}
                                 onChange={handleChange}
                                 className="w-full h-11 bg-black/20 border border-white/10 rounded-xl px-4 text-white focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] outline-none transition-all"
@@ -408,6 +419,7 @@ export const TutorialForm: React.FC<TutorialFormProps> = ({
                                     type="checkbox"
                                     id="destacado"
                                     name="destacado"
+                                    data-testid="tutorial-destacado-checkbox"
                                     checked={formData.destacado}
                                     onChange={handleChange}
                                     className="w-4 h-4 rounded border-white/10 bg-black/40 text-[var(--color-primary)] focus:ring-[var(--color-primary)] transition-all"

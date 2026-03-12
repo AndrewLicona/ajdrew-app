@@ -60,10 +60,10 @@ export const BracketTree: React.FC<BracketTreeProps> = ({ matches, currentRound,
         else if (finalMatch.votosA >= finalMatch.votosB) finalWinner = finalMatch.itemA;
     }
 
-    const MATCH_HEIGHT = 160;
-    const GUTTER_WIDTH = 60;
+    const MATCH_HEIGHT = 100;
+    const GUTTER_WIDTH = 40;
     const HEADER_HEIGHT = 60;
-    const FINAL_EXTRA_GAP = 120;
+    const FINAL_EXTRA_GAP = 80;
 
     const renderMatchCard = (match: Match | null, isPlaceholder: boolean) => {
         const winnerA = match ? (match.votosA > match.votosB || (match.votosA === match.votosB && match.votosA > 0)) : false;
@@ -72,9 +72,9 @@ export const BracketTree: React.FC<BracketTreeProps> = ({ matches, currentRound,
 
         return (
             <div className={`
-                flex flex-col gap-1 w-44 md:w-48 transition-all duration-700 relative group
+                flex flex-col gap-1 w-40 md:w-44 transition-all duration-700 relative group
                 ${isPlaceholder ? 'opacity-30' : 'opacity-100'}
-                [--card-half-width:88px] md:[--card-half-width:96px]
+                [--card-half-width:80px] md:[--card-half-width:88px]
             `}>
                 {isLive && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-red-500 text-white text-[7px] font-black uppercase tracking-widest rounded-full animate-pulse z-10 shadow-[0_0_10px_rgba(239,68,68,0.5)]">
@@ -164,7 +164,7 @@ export const BracketTree: React.FC<BracketTreeProps> = ({ matches, currentRound,
                         )}
                     </div>
                 </div>
-                <div className="flex flex-col justify-center" style={{ height: (roundsData[0].length / 2) * MATCH_HEIGHT }}>
+                <div className="flex flex-col justify-center" style={{ height: roundsData[0].length * (MATCH_HEIGHT / 2) }}>
                     {sideMatches.map((m, mIdx) => {
                         const isLastRoundOfWing = roundIdx === totalRounds - 2;
                         const connectorWidth = isLastRoundOfWing ? FINAL_EXTRA_GAP : GUTTER_WIDTH;

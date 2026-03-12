@@ -105,6 +105,7 @@ export const JuegoForm: React.FC<JuegoFormProps> = ({
                     <Input
                         id="nombre"
                         name="nombre"
+                        data-testid="juego-nombre-input"
                         value={formData.nombre}
                         onChange={handleChange}
                         placeholder="Ej: EAFC 25"
@@ -117,6 +118,7 @@ export const JuegoForm: React.FC<JuegoFormProps> = ({
                     <Input
                         id="slug"
                         name="slug"
+                        data-testid="juego-slug-input"
                         value={formData.slug}
                         onChange={handleChange}
                         placeholder="ej: eafc-25"
@@ -130,6 +132,7 @@ export const JuegoForm: React.FC<JuegoFormProps> = ({
                     <Input
                         id="descripcion"
                         name="descripcion"
+                        data-testid="juego-descripcion-input"
                         value={formData.descripcion}
                         onChange={handleChange}
                         placeholder="Corta descripción del juego..."

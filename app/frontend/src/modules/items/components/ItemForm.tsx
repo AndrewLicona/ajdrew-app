@@ -104,6 +104,7 @@ export const ItemForm: React.FC<ItemFormProps> = ({
                     <Input
                         id="nombre"
                         name="nombre"
+                        data-testid="item-nombre-input"
                         value={formData.nombre}
                         onChange={handleChange}
                         placeholder="Ej: Messi, Real Madrid, etc."
@@ -116,6 +117,7 @@ export const ItemForm: React.FC<ItemFormProps> = ({
                     <select
                         id="categoriaId"
                         name="categoriaId"
+                        data-testid="item-categoria-select"
                         value={formData.categoriaId}
                         onChange={handleChange}
                         className="w-full h-11 bg-black/20 border border-white/10 rounded-xl px-4 text-white focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] outline-none transition-all placeholder:text-white/20"
