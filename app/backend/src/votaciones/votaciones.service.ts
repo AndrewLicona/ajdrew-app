@@ -3,6 +3,8 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { VotacionRepository } from './infrastructure/persistence/votacion.repository';
 import { CreateBracketDto, VoteBracketDto } from './application/dto/create-bracket.dto';
 import { PublicacionesService } from '../publicaciones/publicaciones.service';
+import { BracketMatchAbiertoEvent, BracketMatchCerradoEvent } from '../modules/social-media/services/bracket-media.service';
+import { RondaNombre } from '../modules/social-media/generators/bracket-image.generator';
 
 @Injectable()
 export class VotacionesService {
@@ -125,30 +127,50 @@ export class VotacionesService {
         if (bracket.estado !== 'ACTIVA') throw new BadRequestException('Solo se pueden avanzar torneos activos');
 
         const currentRound = bracket.rondaActual;
-        const matches = await this.repository.findMatchesByRound(id, currentRound);
+        const roundNames: Record<number, RondaNombre> = {
+            1: 'Octavos',
+            2: 'Cuartos',
+            3: 'Semifinal',
+            4: 'Final'
+        };
 
-        // Determine winners of current round
+        const matches = await this.repository.findMatchesByRoundWithItems(id, currentRound);
+
+        // Determine winners and emit CLOSED events
         const winnersIds: string[] = [];
         for (const match of matches) {
-            // Very simple winner logic: more votes wins. 
-            // If tied, first one (A) wins for now.
+            let ganadorId: string | null = null;
             if (match.votosA >= match.votosB && match.itemAId) {
-                winnersIds.push(match.itemAId);
+                ganadorId = match.itemAId;
             } else if (match.itemBId) {
-                winnersIds.push(match.itemBId);
+                ganadorId = match.itemBId;
             } else if (match.itemAId) {
-                // Handle case where B is null
-                winnersIds.push(match.itemAId);
+                ganadorId = match.itemAId;
             }
+            if (ganadorId) winnersIds.push(ganadorId);
+
+            // Emit cerrado event
+            const totalVotos = match.votosA + match.votosB;
+            this.eventEmitter.emit('bracket.match.cerrado', new BracketMatchCerradoEvent(
+                match.id,
+                bracket.tematica,
+                roundNames[currentRound] || 'Octavos',
+                bracket.juego.nombre,
+                match.itemAId!,
+                match.itemA?.nombre || '?',
+                (match.itemA as any)?.imagenUrl || (match.itemA as any)?.image || '',
+                match.votosA,
+                totalVotos > 0 ? Math.round((match.votosA / totalVotos) * 100) : 50,
+                match.itemBId!,
+                match.itemB?.nombre || '?',
+                (match.itemB as any)?.imagenUrl || (match.itemB as any)?.image || '',
+                match.votosB,
+                totalVotos > 0 ? Math.round((match.votosB / totalVotos) * 100) : 50,
+                ganadorId!
+            ));
         }
 
         if (winnersIds.length <= 1) {
-            // Final winner reached or no winners
-            await this.publicacionesService.createAutomated(
-                `🏆 ¡Tenemos un ganador!`,
-                `El torneo "${bracket.tematica}" ha finalizado. ¡Mira quién se llevó la corona!`,
-                `/votaciones/${bracket.slug}`
-            );
             return this.repository.update(id, { estado: 'FINALIZADA', proximoCierreAt: null });
         }
 
@@ -167,22 +189,37 @@ export class VotacionesService {
         await this.repository.createMatches(nextMatches);
 
         // Calculate next deadline if automated
-        const nextDeadline = bracket.rondaDuracion > 0
-            ? this.repository.calculateNextDeadline(bracket.rondaDuracion)
+        const nextDeadline = (bracket as any).rondaDuracion > 0
+            ? this.repository.calculateNextDeadline((bracket as any).rondaDuracion)
             : null;
 
         await this.publicacionesService.createAutomated(
-            `🔥 ¡Siguiente Ronda en ${(bracket as any).tematica}!`,
+            `🔥 ¡Siguiente Ronda en ${bracket.tematica}!`,
             `La Ronda ${nextRound} ya está activa. ¡Entra y vota por tus favoritos antes de que termine el tiempo!`,
-            `/votaciones/${(bracket as any).slug}`
+            `/votaciones/${bracket.slug}`
         );
 
-        // Emit event for Social Media automation (Discord)
-        this.eventEmitter.emit('bracket.phase.started', {
-            bracketId: id,
-            round: nextRound,
-            tematica: bracket.tematica
-        });
+        const nextRondaName = roundNames[nextRound] || 'Octavos';
+
+        // Apertura de NUEVOS matches
+        for (const m of nextMatches) {
+            const itemA = await (this.repository as any).findOneItem(m.itemAId);
+            const itemB = m.itemBId ? await (this.repository as any).findOneItem(m.itemBId) : null;
+
+            this.eventEmitter.emit('bracket.match.abierto', new BracketMatchAbiertoEvent(
+                `new-${m.itemAId}-${m.itemBId}-${Date.now()}`,
+                bracket.tematica,
+                nextRondaName,
+                bracket.juego.nombre,
+                itemA?.id || '',
+                itemA?.nombre || '?',
+                itemA?.imagenUrl || itemA?.image || '',
+                itemB?.id || 'null',
+                itemB?.nombre || 'BYE',
+                itemB?.imagenUrl || itemB?.image || '',
+                (bracket as any).rondaDuracion || 24
+            ));
+        }
 
         return this.repository.update(id, {
             rondaActual: nextRound,

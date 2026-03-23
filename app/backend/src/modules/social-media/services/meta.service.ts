@@ -66,10 +66,10 @@ export class MetaService {
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
 
         return `${gameEmoji} ¡NUEVA RONDA! ${bracket.tematica}\n\n` +
-            `🔥 La Ronda ${round} ha comenzado en Elite Rankings.\n\n` +
+            `🔥 La Ronda ${round} ha comenzado en AJDREW.\n\n` +
             `🗳️ ¡Entra y vota por tus favoritos ahora!\n` +
-            `${frontendUrl}/votaciones/${bracket.slug}\n\n` +
-            `#EliteRankings #${bracket.juego?.nombre?.replace(/\s+/g, '') || 'Gaming'}`;
+            `${frontendUrl}/votaciones/${bracket.slug}?utm_source=x&utm_medium=social&utm_campaign=bracket_round\n\n` +
+            `@AJDREWGameplays #AJDREW #EliteRankings #${bracket.juego?.nombre?.replace(/\s+/g, '') || 'Gaming'}`;
     }
 
     private async postToFacebook(account: any, text: string, imageUrl: string, bracketId: string | null, round: number) {
@@ -177,6 +177,43 @@ export class MetaService {
                 });
             }
             throw new Error(`Error de Meta API: ${errorMsg}`);
+        }
+    }
+
+    async publishMatchResult(
+        bracketId: string,
+        round: number,
+        imageUrl: string,
+        winnerName: string
+    ) {
+        try {
+            const bracket = await this.prisma.votacionBracket.findUnique({
+                where: { id: bracketId },
+                include: { juego: true }
+            });
+
+            if (!bracket) return;
+
+            const text = `🏆 ¡RESULTADO FINAL! ${bracket.tematica}\n\n` +
+                `✨ ${winnerName} ha ganado su combate en la Ronda ${round}.\n\n` +
+                `🗳️ Sigue el torneo en:\n` +
+                `${process.env.FRONTEND_URL || 'https://ajdrew.site'}/votaciones/${bracket.slug}?utm_source=x&utm_medium=social&utm_campaign=bracket_result\n\n` +
+                `@AJDREWGameplays #AJDREW #EliteRankings #${bracket.juego?.nombre?.replace(/\s+/g, '') || 'Gaming'}`;
+
+            // 1. Post to Facebook Pages
+            const fbAccounts = await this.prisma.facebookAccount.findMany({ where: { isActive: true } });
+            for (const account of fbAccounts) {
+                await this.postToFacebook(account, text, imageUrl, bracketId, round);
+            }
+
+            // 2. Post to Instagram Accounts
+            const igAccounts = await this.prisma.instagramAccount.findMany({ where: { isActive: true } });
+            for (const account of igAccounts) {
+                await this.postToInstagram(account, text, imageUrl, bracketId, round);
+            }
+
+        } catch (error) {
+            this.logger.error('Error in Meta publication process (Result)', error);
         }
     }
 }

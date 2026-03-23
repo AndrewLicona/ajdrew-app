@@ -2,7 +2,7 @@
 
 ## Tu Setup
 
-- **Dominio**: `ajdrew.andrewlamaquina.my`
+- **Dominio**: `ajdrew.site`
 - **Servidor**: Casero con múltiples proyectos
 - **Túnel**: Cloudflare Tunnel (cloudflared)
 - **Puertos configurados**:
@@ -44,7 +44,7 @@ ingress:
   # Otros proyectos que ya tengas...
   
   # AJDREW - Nuevo
-  - hostname: ajdrew.andrewlamaquina.my
+  - hostname: ajdrew.site
     service: http://localhost:8081
     originRequest:
       noTLSVerify: true
@@ -104,9 +104,9 @@ JWT_SECRET=<SECRET_GENERADO>
 JWT_EXPIRATION=7d
 
 # URLs ya están pre-configuradas
-NEXT_PUBLIC_API_URL=https://ajdrew.andrewlamaquina.my/api
-FRONTEND_URL=https://ajdrew.andrewlamaquina.my
-ALLOWED_ORIGINS=https://ajdrew.andrewlamaquina.my
+NEXT_PUBLIC_API_URL=https://ajdrew.site/api
+FRONTEND_URL=https://ajdrew.site
+ALLOWED_ORIGINS=https://ajdrew.site
 ```
 
 ### Paso 2: Verificar Puertos Libres
@@ -163,7 +163,7 @@ curl http://localhost:8081/api/health
 # Debe responder: {"status":"ok"}
 
 # Test desde el dominio (esperar 1-2 mins para DNS)
-curl https://ajdrew.andrewlamaquina.my/api/health
+curl https://ajdrew.site/api/health
 ```
 
 ---
@@ -291,7 +291,7 @@ sudo journalctl -u cloudflared -f
 # Verificar variable de entorno
 docker exec ajdrew-frontend env | grep NEXT_PUBLIC_API_URL
 
-# Debe mostrar: NEXT_PUBLIC_API_URL=https://ajdrew.andrewlamaquina.my/api
+# Debe mostrar: NEXT_PUBLIC_API_URL=https://ajdrew.site/api
 
 # Si no, rebuild sin cache:
 docker-compose -f docker-compose.prod.yml build --no-cache frontend
@@ -305,7 +305,7 @@ docker-compose -f docker-compose.prod.yml up -d
 - [ ] `.env` creado con valores de producción
 - [ ] Passwords generados (DB_PASSWORD, JWT_SECRET)
 - [ ] Puertos verificados (8081, 3002, 5433 libres)
-- [ ] Cloudflare Tunnel configurado para `ajdrew.andrewlamaquina.my`
+- [ ] Cloudflare Tunnel configurado para `ajdrew.site`
 - [ ] DNS apuntando correctamente
 - [ ] Espacio en disco suficiente (mín 10GB)
 
@@ -315,7 +315,7 @@ docker-compose -f docker-compose.prod.yml up -d
 
 - [ ] Contenedores corriendo (`docker ps`)
 - [ ] Backend health OK (`curl http://localhost:8080/api/health`)
-- [ ] Sitio accesible en `https://ajdrew.andrewlamaquina.my`
+- [ ] Sitio accesible en `https://ajdrew.site`
 - [ ] ShareButtons funcionan y usan dominio correcto
 - [ ] OG Images se generan correctamente
 - [ ] Migraciones ejecutadas

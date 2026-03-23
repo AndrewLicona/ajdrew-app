@@ -14,10 +14,12 @@ async function bootstrap() {
       'http://localhost:3300',
       'http://localhost:8081',
       'http://localhost:3000',
-      /^http:\/\/192\.168\.\d+\.\d+(:\d+)?$/, // Permitir cualquier IP local con cualquier puerto
+      /^http:\/\/192\.168\.\d+\.\d+(:\d+)?$/, 
       'http://frontend:3300',
       'http://frontend:80',
       'http://frontend',
+      'https://ajdrew.site',
+      'http://ajdrew.site',
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,

@@ -74,12 +74,22 @@ export class VotacionRepository {
         });
     }
 
-    async findMatchesByRound(bracketId: string, ronda: number) {
+    async findMatchesByRoundWithItems(bracketId: string, ronda: number) {
         return this.prisma.bracketMatch.findMany({
             where: {
                 bracketId,
                 ronda,
             },
+            include: {
+                itemA: true,
+                itemB: true,
+            }
+        });
+    }
+
+    async findOneItem(id: string) {
+        return (this.prisma as any).itemCalificable.findUnique({
+            where: { id }
         });
     }
 

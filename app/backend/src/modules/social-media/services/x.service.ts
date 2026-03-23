@@ -133,6 +133,42 @@ export class XService {
         }
     }
 
+    async publishMatchResult(
+        bracketId: string,
+        round: number,
+        imageBuffer: Buffer,
+        winnerName: string
+    ) {
+        try {
+            const bracket = await this.prisma.votacionBracket.findUnique({
+                where: { id: bracketId },
+                include: { juego: true }
+            });
+
+            if (!bracket) return;
+
+            // 1. Get accounts
+            const dbAccounts = await this.prisma.xAccount.findMany({ where: { isActive: true } });
+            const envAccount = this.getEnvAccount();
+            const allAccounts = [...dbAccounts];
+            if (envAccount) allAccounts.push(envAccount);
+
+            if (allAccounts.length === 0) return;
+
+            const text = `🏆 ¡RESULTADO FINAL! ${bracket.tematica}\n\n` +
+                `✨ ${winnerName} ha ganado su combate en la Ronda ${round}.\n\n` +
+                `🗳️ Sigue el torneo en:\n` +
+                `${process.env.FRONTEND_URL || 'https://ajdrew.site'}/votaciones/${bracket.slug}\n\n` +
+                `@AJDREWGameplays #EliteRankings #${bracket.juego?.nombre?.replace(/\s+/g, '') || 'Gaming'}`;
+
+            for (const account of allAccounts) {
+                await this.sendTweet(account, text, imageBuffer, bracketId, round);
+            }
+        } catch (error) {
+            this.logger.error('Error in X publication process (Result)', error);
+        }
+    }
+
     // For manual testing/admin
     async testTweet(accountId: string) {
         const account = await this.prisma.xAccount.findUnique({ where: { id: accountId } });

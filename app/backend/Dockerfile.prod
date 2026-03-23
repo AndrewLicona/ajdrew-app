@@ -26,7 +26,7 @@ RUN pnpm --filter backend build
 
 # Etapa de producción
 FROM node:20-alpine
-RUN apk add --no-cache wget
+RUN apk add --no-cache wget libc6-compat
 WORKDIR /app
 
 # Variables de entorno
