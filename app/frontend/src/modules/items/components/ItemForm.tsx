@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { FormTemplate } from '@/shared/components/templates/FormTemplate';
 import { Input } from '@/shared/components/atoms/Input';
 import { Label } from '@/shared/components/atoms/Label';
 import { Bt } from '@/shared/components/atoms/Button';
 import { CloudinaryUpload } from '@/shared/components/molecules/CloudinaryUpload';
 
-interface Category {
+interface Game {
     id: string;
     nombre: string;
 }
@@ -15,12 +15,12 @@ interface Category {
 interface ItemFormData {
     nombre: string;
     image: string;
-    categoriaId: string;
+    juegoId?: string;
 }
 
 interface ItemFormProps {
     initialData?: ItemFormData;
-    categories: Category[];
+    games: Game[];
     onSubmit: (data: ItemFormData) => Promise<void>;
     onCancel: () => void;
     title: string;
@@ -28,7 +28,7 @@ interface ItemFormProps {
 
 export const ItemForm: React.FC<ItemFormProps> = ({
     initialData,
-    categories,
+    games,
     onSubmit,
     onCancel,
     title
@@ -36,27 +36,16 @@ export const ItemForm: React.FC<ItemFormProps> = ({
     const [formData, setFormData] = useState<ItemFormData>(initialData || {
         nombre: '',
         image: '',
-        categoriaId: categories.length > 0 ? categories[0].id : '',
+        juegoId: '',
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
-    // Initialize category if not set and categories available
-    useEffect(() => {
-        if (!formData.categoriaId && categories.length > 0) {
-            setFormData(prev => ({ ...prev, categoriaId: categories[0].id }));
-        }
-    }, [categories]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!formData.nombre.trim()) {
             setError('El nombre es obligatorio.');
-            return;
-        }
-        if (!formData.categoriaId) {
-            setError('Debes seleccionar una categoría.');
             return;
         }
         if (!formData.image) {
@@ -92,7 +81,7 @@ export const ItemForm: React.FC<ItemFormProps> = ({
                     <Bt variant="secondary" onClick={onCancel} disabled={loading} type="button">
                         Cancelar
                     </Bt>
-                    <Bt type="submit" loading={loading} disabled={!formData.nombre || !formData.image || !formData.categoriaId}>
+                    <Bt type="submit" loading={loading} disabled={!formData.nombre || !formData.image}>
                         Guardar Ítem
                     </Bt>
                 </>
@@ -113,20 +102,19 @@ export const ItemForm: React.FC<ItemFormProps> = ({
                 </div>
 
                 <div>
-                    <Label htmlFor="categoriaId">Categoría *</Label>
+                    <Label htmlFor="juegoId">Juego (Opcional)</Label>
                     <select
-                        id="categoriaId"
-                        name="categoriaId"
-                        data-testid="item-categoria-select"
-                        value={formData.categoriaId}
+                        id="juegoId"
+                        name="juegoId"
+                        data-testid="item-juego-select"
+                        value={formData.juegoId || ''}
                         onChange={handleChange}
                         className="w-full h-11 bg-black/20 border border-white/10 rounded-xl px-4 text-white focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] outline-none transition-all placeholder:text-white/20"
-                        required
                     >
-                        <option value="" disabled>Seleccionar Categoría</option>
-                        {categories.map(cat => (
-                            <option key={cat.id} value={cat.id} className="bg-gray-900">
-                                {cat.nombre}
+                        <option value="">Ningún Juego...</option>
+                        {games.map(game => (
+                            <option key={game.id} value={game.id} className="bg-gray-900">
+                                {game.nombre}
                             </option>
                         ))}
                     </select>

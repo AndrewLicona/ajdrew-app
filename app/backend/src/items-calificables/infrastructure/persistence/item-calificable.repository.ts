@@ -19,11 +19,28 @@ export class ItemCalificableRepository {
   constructor(private readonly prisma: PrismaService) { }
 
   async create(createItemCalificableDto: CreateItemCalificableDto) {
-    return this.prisma.itemCalificable.create({ data: createItemCalificableDto });
+    return this.prisma.itemCalificable.create({ 
+      data: {
+        nombre: createItemCalificableDto.nombre,
+        image: createItemCalificableDto.image,
+        juegoId: createItemCalificableDto.juegoId,
+      }
+    });
+  }
+
+  async createMany(items: CreateItemCalificableDto[]) {
+    return this.prisma.itemCalificable.createMany({
+      data: items.map(item => ({
+        nombre: item.nombre,
+        image: item.image,
+        juegoId: item.juegoId,
+      }))
+    });
   }
 
   async findAll(params: {
     categoryId?: string;
+    tablaId?: string;
     search?: string;
     sortBy?: string;
     order?: 'asc' | 'desc';
@@ -31,10 +48,18 @@ export class ItemCalificableRepository {
     limit?: number;
     deviceId?: string;
   }) {
-    const { categoryId, search, sortBy, order, page, limit, deviceId } = params;
-
+    const { search, sortBy, order, page, limit, deviceId } = params;
+    const juegoId = (params as any).juegoId;
+    const tablaId = params.tablaId;
     const where: any = {};
-    if (categoryId) where.categoriaId = categoryId;
+
+    if (tablaId) {
+      // Filter items that belong to this specific tabla
+      where.tablas = { some: { tablaId } };
+    } else if (juegoId) {
+      where.juegoId = juegoId;
+    }
+
     if (search) {
       where.nombre = { contains: search, mode: 'insensitive' };
     }
@@ -46,7 +71,7 @@ export class ItemCalificableRepository {
 
     const items = await this.prisma.itemCalificable.findMany({
       where,
-      include: { categoria: { select: { id: true, nombre: true } } },
+      include: { juego: { select: { id: true, nombre: true } } },
       skip,
       take,
       orderBy: (sortBy && sortBy !== 'averageRating') ? { [sortBy]: order || 'desc' } : undefined
@@ -58,17 +83,20 @@ export class ItemCalificableRepository {
 
     const itemIds = items.map(item => item.id);
 
-    // Get average ratings and counts for ONLY the current page items
+    // Get average ratings and counts scoped to this tabla (if tablaId is set)
+    const calificacionWhere: any = { itemId: { in: itemIds } };
+    if (tablaId) calificacionWhere.tablaId = tablaId;
+
     const aggregateData = await this.prisma.calificacion.groupBy({
       by: ['itemId'],
-      where: { itemId: { in: itemIds } },
+      where: calificacionWhere,
       _avg: { puntuacion: true },
       _count: { puntuacion: true },
     });
 
     const userRatings = deviceId ? await this.prisma.calificacion.findMany({
       where: {
-        itemId: { in: itemIds },
+        ...calificacionWhere,
         deviceId: deviceId,
       },
     }) : [];

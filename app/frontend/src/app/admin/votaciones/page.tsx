@@ -17,7 +17,9 @@ import {
     Users,
     ChevronDown,
     X,
-    Filter
+    Filter,
+    Clock,
+    CalendarClock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BracketForm } from '@/modules/votaciones/components/BracketForm';
@@ -118,6 +120,61 @@ export default function VotacionesAdminPage() {
             });
             fetchData();
         } catch (e) { console.error('Error changing status'); }
+    };
+
+    const handleScheduleRound = async (id: string, currentSchedule?: string) => {
+        const defaultDt = currentSchedule
+            ? new Date(currentSchedule)
+            : new Date(Date.now() + 60 * 60 * 1000);
+        const pad = (n: number) => String(n).padStart(2, '0');
+        const defaultValue = `${defaultDt.getFullYear()}-${pad(defaultDt.getMonth() + 1)}-${pad(defaultDt.getDate())}T${pad(defaultDt.getHours())}:${pad(defaultDt.getMinutes())}`;
+
+        const { value: datetime, isConfirmed, isDenied } = await Swal.fire({
+            title: '⏰ Programar Avance de Ronda',
+            html: `
+                <p style="color:rgba(255,255,255,0.4);font-size:11px;margin-bottom:16px;">
+                  El sistema revisará cada minuto y avanzará la ronda automáticamente cuando llegue esta hora.
+                </p>
+                <input id="swal-dt" type="datetime-local" value="${defaultValue}"
+                  style="width:100%;padding:12px 16px;background:#111;border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:#fff;font-size:14px;font-weight:bold;outline:none;" />
+            `,
+            showCancelButton: true,
+            showDenyButton: !!currentSchedule,
+            confirmButtonText: '✅ Programar',
+            denyButtonText: '🗑 Quitar programación',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: 'var(--color-primary)',
+            denyButtonColor: '#dc2626',
+            background: '#0a0f0a',
+            color: '#fff',
+            preConfirm: () => (document.getElementById('swal-dt') as HTMLInputElement)?.value,
+        });
+
+        if (isDenied) {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/votaciones/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                body: JSON.stringify({ proximoCierreAt: null }),
+            });
+            Swal.fire({ title: 'Programación eliminada', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 2500, background: '#0a0f0a', color: '#fff' });
+            fetchData();
+            return;
+        }
+
+        if (!isConfirmed || !datetime) return;
+
+        const scheduledAt = new Date(datetime).toISOString();
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/votaciones/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+            body: JSON.stringify({ proximoCierreAt: scheduledAt }),
+        });
+        Swal.fire({
+            title: '⏰ Ronda programada',
+            html: `<span style="color:rgba(255,255,255,0.5);font-size:12px;">Se avanzará el <b style="color:#fff">${new Date(scheduledAt).toLocaleString()}</b></span>`,
+            icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, background: '#0a0f0a', color: '#fff',
+        });
+        fetchData();
     };
 
     const handleToggleActive = async (id: string, currentStatus: boolean) => {
@@ -282,27 +339,41 @@ export default function VotacionesAdminPage() {
                                             <div className="flex items-center gap-2">
                                                 <span className="text-[8px] font-black text-[var(--color-primary)]/60">RONDA {bracket.rondaActual} / {totalRounds}</span>
                                                 {bracket.estado === 'ACTIVA' && (
-                                                    <button
-                                                        onClick={async (e) => {
-                                                            e.stopPropagation();
-                                                            const res = await Swal.fire({
-                                                                title: '¿Avanzar de Ronda?',
-                                                                text: 'Se cerrarán los votos actuales y se generarán los nuevos enfrentamientos.',
-                                                                icon: 'question',
-                                                                showCancelButton: true,
-                                                                confirmButtonText: 'Sí, avanzar',
-                                                                confirmButtonColor: 'var(--color-primary)',
-                                                                background: '#0a0f0a',
-                                                                color: '#fff'
-                                                            });
-                                                            if (res.isConfirmed) {
-                                                                try { await fetch(`${process.env.NEXT_PUBLIC_API_URL}/votaciones/${bracket.id}/advance-round`, { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }); fetchData(); } catch (e) { }
-                                                            }
-                                                        }}
-                                                        className="px-2 py-0.5 bg-[var(--color-primary)]/10 text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white text-[7px] font-black uppercase rounded border border-[var(--color-primary)]/20 transition-all flex items-center gap-1"
-                                                    >
-                                                        + ROUND
-                                                    </button>
+                                                    <div className="flex items-center gap-1">
+                                                        <button
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                const res = await Swal.fire({
+                                                                    title: '¿Avanzar de Ronda?',
+                                                                    text: 'Se cerrarán los votos actuales y se generarán los nuevos enfrentamientos.',
+                                                                    icon: 'question',
+                                                                    showCancelButton: true,
+                                                                    confirmButtonText: 'Sí, avanzar',
+                                                                    confirmButtonColor: 'var(--color-primary)',
+                                                                    background: '#0a0f0a',
+                                                                    color: '#fff'
+                                                                });
+                                                                if (res.isConfirmed) {
+                                                                    try { await fetch(`${process.env.NEXT_PUBLIC_API_URL}/votaciones/${bracket.id}/advance-round`, { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }); fetchData(); } catch (e) { }
+                                                                }
+                                                            }}
+                                                            className="px-2 py-0.5 bg-[var(--color-primary)]/10 text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white text-[7px] font-black uppercase rounded border border-[var(--color-primary)]/20 transition-all flex items-center gap-1"
+                                                        >
+                                                            + ROUND
+                                                        </button>
+                                                        {/* Schedule button */}
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleScheduleRound(bracket.id, bracket.proximoCierreAt); }}
+                                                            title={bracket.proximoCierreAt ? `Programado: ${new Date(bracket.proximoCierreAt).toLocaleString()}` : 'Programar avance automático'}
+                                                            className={`p-0.5 rounded border text-[7px] font-black transition-all flex items-center gap-0.5 ${
+                                                                bracket.proximoCierreAt
+                                                                    ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/40 hover:bg-yellow-500/30'
+                                                                    : 'bg-white/5 text-white/30 border-white/10 hover:bg-white/10 hover:text-white'
+                                                            }`}
+                                                        >
+                                                            <CalendarClock size={11} />
+                                                        </button>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>

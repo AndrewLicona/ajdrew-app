@@ -37,7 +37,7 @@ export class CalificacionesService {
     return this.calificacionRepository.findByDeviceIdAndItemId(deviceId, itemId);
   }
 
-  async getRanking(categoryId?: string) {
-    return this.calificacionRepository.getRanking(categoryId);
+  async getRanking(tablaId?: string, juegoId?: string) {
+    return this.calificacionRepository.getRanking(tablaId, undefined, juegoId);
   }
 }

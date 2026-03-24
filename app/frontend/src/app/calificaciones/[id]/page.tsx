@@ -22,16 +22,19 @@ export default function RankingDetailPage() {
             if (!id) return;
             setLoading(true);
             try {
-                const [categoriesData, juegosData] = await Promise.all([
-                    fetchCategories(),
-                    fetchJuegos()
+                const [tablasDataRes, juegosDataRes] = await Promise.all([
+                    fetch(`${process.env.NEXT_PUBLIC_API_URL}/tablas-calificacion`),
+                    fetch(`${process.env.NEXT_PUBLIC_API_URL}/juegos`)
                 ]);
 
-                const catData = categoriesData.find(c => c.id === id);
-                if (catData) {
-                    const juego = juegosData.find(j => j.id === (catData as any).juegoId);
+                const tablasData = await tablasDataRes.json();
+                const juegosData = await juegosDataRes.json();
+
+                const tablaData = tablasData.find((t: any) => t.slug === id || t.id === id);
+                if (tablaData) {
+                    const juego = juegosData.find((j: any) => j.id === tablaData.juegoId);
                     setCategory({
-                        ...catData,
+                        ...tablaData,
                         items: [], // ItemCalificableList will fetch these
                         juegoNombre: (juego?.nombre || 'General') as string,
                         juegoId: (juego?.id || undefined) as string | undefined
@@ -124,7 +127,7 @@ export default function RankingDetailPage() {
                                 </div>
 
                                 <RankingDisplay
-                                    categoryId={category.id}
+                                    tablaId={category.id}
                                     categoryName={category.nombre}
                                     limit={5}
                                 />
@@ -141,7 +144,7 @@ export default function RankingDetailPage() {
 
                             <div className="relative z-10 w-full">
                                 <ItemCalificableList
-                                    categoryId={category.id}
+                                    tablaId={category.id}
                                     initialItems={[]}
                                 />
                             </div>

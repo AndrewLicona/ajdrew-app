@@ -7,7 +7,7 @@
 - **Túnel**: Cloudflare Tunnel (cloudflared)
 - **Puertos configurados**:
   - Nginx: `8081` (host) → `80` (container)
-  - Frontend: `3002` (host) → `3001` (container)
+  - Frontend: `3300` (host) → `80` (container)
   - PostgreSQL: `5433` (host) → `5432` (container) *(opcional para acceso externo)*
 
 ---

@@ -32,6 +32,8 @@ model Juego {
   sorteos     Sorteo[]
   tutoriales  Tutorial[]
   votaciones  VotacionBracket[]
+  items       ItemCalificable[] // NEW
+  tablas      TablaCalificacion[]
 }
 
 model Tutorial {
@@ -78,16 +80,17 @@ model Categoria {
   createdAt  DateTime          @default(now())
   updatedAt  DateTime          @updatedAt
   juegoId    String?
+  imageUrl   String?           
   juego      Juego?            @relation(fields: [juegoId], references: [id])
-  items      ItemCalificable[]
   tutoriales Tutorial[]
   votaciones VotacionBracket[]
+  tablas     TablaCalificacion[]
 }
 
 model ItemCalificable {
   id             String         @id @default(cuid())
   nombre         String
-  categoriaId    String
+  juegoId        String?        
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
   image          String?
@@ -95,17 +98,52 @@ model ItemCalificable {
   matchesSideA   BracketMatch[] @relation("MatchSideA")
   matchesSideB   BracketMatch[] @relation("MatchSideB")
   calificaciones Calificacion[]
-  categoria      Categoria      @relation(fields: [categoriaId], references: [id])
+  juego          Juego?         @relation(fields: [juegoId], references: [id])
+  
+  tablas         TablaItem[]
+}
+
+model TablaCalificacion {
+  id          String   @id @default(uuid())
+  nombre      String
+  slug        String   @unique
+  descripcion String?
+  image       String?
+  estado      String   @default("ACTIVO")
+  
+  juegoId     String
+  juego       Juego    @relation(fields: [juegoId], references: [id], onDelete: Cascade)
+  
+  categoriaId String?
+  categoria   Categoria? @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
+
+  items       TablaItem[]
+  calificaciones Calificacion[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model TablaItem {
+  id         String @id @default(uuid())
+  tablaId    String
+  tabla      TablaCalificacion @relation(fields: [tablaId], references: [id], onDelete: Cascade)
+  itemId     String
+  item       ItemCalificable @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([tablaId, itemId])
 }
 
 model Calificacion {
-  id         String          @id @default(cuid())
+  id         String             @id @default(cuid())
   puntuacion Int
   ip         String?
   itemId     String
-  createdAt  DateTime        @default(now())
+  tablaId    String?
+  createdAt  DateTime           @default(now())
   deviceId   String?
-  item       ItemCalificable @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  item       ItemCalificable    @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  tabla      TablaCalificacion? @relation(fields: [tablaId], references: [id], onDelete: SetNull)
 }
 
 model VotacionBracket {
@@ -121,6 +159,7 @@ model VotacionBracket {
   activa          Boolean        @default(true)
   proximoCierreAt DateTime?
   rondaDuracion   Int            @default(0)
+  imageUrl        String?        // NEW: Current share image
   matches         BracketMatch[]
   categoria       Categoria?     @relation(fields: [categoriaId], references: [id])
   juego           Juego          @relation(fields: [juegoId], references: [id])
@@ -391,4 +430,34 @@ model YoutubePublication {
 
   account YoutubeAccount  @relation(fields: [accountId], references: [id], onDelete: Cascade)
   bracket VotacionBracket @relation(fields: [bracketId], references: [id], onDelete: Cascade)
+}
+
+// Configuración de redes sociales por juego
+model JuegoSocialConfig {
+  id        String   @id @default(uuid())
+  juegoId   String   @unique
+  juego     Juego    @relation(fields: [juegoId], references: [id], onDelete: Cascade)
+
+  // Discord
+  discordEnabled   Boolean   @default(true)
+  discordWebhookIds String[]
+
+  // X/Twitter
+  xEnabled     Boolean @default(true)
+  xAccountIds  String[]
+
+  // Facebook
+  facebookEnabled    Boolean @default(true)
+  facebookAccountIds String[]
+
+  // Instagram
+  instagramEnabled    Boolean @default(true)
+  instagramAccountIds String[]
+
+  // YouTube
+  youtubeEnabled   Boolean @default(true)
+  youtubeAccountIds String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

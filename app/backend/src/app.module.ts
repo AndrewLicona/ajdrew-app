@@ -1,4 +1,3 @@
-
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -18,6 +17,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { PublicacionesModule } from './publicaciones/publicaciones.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { SocialMediaModule } from './modules/social-media/social-media.module';
+import { TablasCalificacionModule } from './tablas-calificacion/tablas-calificacion.module';
 
 @Module({
   imports: [
@@ -35,7 +35,8 @@ import { SocialMediaModule } from './modules/social-media/social-media.module';
     DashboardModule,
     PublicacionesModule,
     EventEmitterModule.forRoot(),
-    SocialMediaModule
+    SocialMediaModule,
+    TablasCalificacionModule,
   ],
   controllers: [AppController],
   providers: [

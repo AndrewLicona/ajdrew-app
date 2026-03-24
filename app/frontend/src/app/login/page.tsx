@@ -89,7 +89,7 @@ export default function LoginPage() {
                                     required
                                     data-testid="email-input"
                                     aria-label="Correo Electrónico"
-                                    placeholder="admin@ajdrew.com"
+                                    placeholder="tu@email.com"
                                     className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/5 border border-white/5 focus:border-[var(--color-primary)]/30 text-white text-sm outline-none transition-all placeholder:text-white/10"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}

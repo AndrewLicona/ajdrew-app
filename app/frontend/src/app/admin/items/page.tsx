@@ -10,9 +10,7 @@ import {
     Search,
     Star,
     Users,
-    Tag,
     ChevronDown,
-    Filter,
     ArrowUpDown,
     CheckSquare,
     Square,
@@ -23,6 +21,7 @@ import {
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ItemForm } from '@/modules/items/components/ItemForm';
+import { BulkItemForm } from '@/modules/items/components/BulkItemForm';
 import { Bt } from '@/shared/components/atoms/Button';
 import { Input } from '@/shared/components/atoms/Input';
 
@@ -30,13 +29,12 @@ interface Item {
     id: string;
     nombre: string;
     image: string;
-    categoriaId: string;
-    categoria?: { id: string, nombre: string };
+    juegoId?: string;
     averageRating: number;
     ratingCount: number;
 }
 
-interface Categoria {
+interface Juego {
     id: string;
     nombre: string;
 }
@@ -44,19 +42,19 @@ interface Categoria {
 export default function ItemsAdminPage() {
     // Data State
     const [items, setItems] = useState<Item[]>([]);
-    const [categorias, setCategorias] = useState<Categoria[]>([]);
+    const [juegos, setJuegos] = useState<Juego[]>([]);
     const [totalItems, setTotalItems] = useState(0);
 
     // UI State
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
+    const [showBulkForm, setShowBulkForm] = useState(false);
     const [editingItem, setEditingItem] = useState<Item | null>(null);
     const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
     // Filter & Pagination State
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [sortBy, setSortBy] = useState<string>('createdAt');
     const [order, setOrder] = useState<'asc' | 'desc'>('desc');
     const [page, setPage] = useState(1);
@@ -68,10 +66,10 @@ export default function ItemsAdminPage() {
         return () => clearTimeout(timer);
     }, [searchTerm]);
 
-    const fetchCategories = async () => {
+    const fetchGames = async () => {
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categorias`);
-            setCategorias(await res.json());
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/juegos`);
+            setJuegos(await res.json());
         } catch (e) { console.error(e); }
     };
 
@@ -83,7 +81,6 @@ export default function ItemsAdminPage() {
                 limit: limit.toString(),
                 sortBy,
                 order,
-                ...(selectedCategory !== 'all' && { categoryId: selectedCategory }),
                 ...(debouncedSearch && { search: debouncedSearch })
             });
 
@@ -106,22 +103,25 @@ export default function ItemsAdminPage() {
         } finally {
             setLoading(false);
         }
-    }, [page, limit, sortBy, order, selectedCategory, debouncedSearch]);
+    }, [page, limit, sortBy, order, debouncedSearch]);
 
     useEffect(() => {
-        fetchCategories();
+        fetchGames();
     }, []);
 
     useEffect(() => {
         setPage(1); // Reset to first page on filter change
-    }, [selectedCategory, debouncedSearch, sortBy, order]);
+    }, [debouncedSearch, sortBy, order]);
 
     useEffect(() => {
         fetchItems(page > 1);
-    }, [page, sortBy, order, selectedCategory, debouncedSearch, fetchItems]);
+    }, [page, sortBy, order, debouncedSearch, fetchItems]);
 
     const handleSave = async (data: any) => {
         try {
+            const payload = { ...data };
+            if (!payload.juegoId) delete payload.juegoId;
+
             const url = editingItem
                 ? `${process.env.NEXT_PUBLIC_API_URL}/items-calificables/${editingItem.id}`
                 : `${process.env.NEXT_PUBLIC_API_URL}/items-calificables`;
@@ -134,7 +134,7 @@ export default function ItemsAdminPage() {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
-                body: JSON.stringify(data),
+                body: JSON.stringify(payload),
             });
 
             if (response.ok) {
@@ -146,6 +146,36 @@ export default function ItemsAdminPage() {
             }
         } catch (error) {
             Swal.fire('Error', 'No se pudo guardar.', 'error');
+        }
+    };
+
+    const handleBulkSave = async (data: any[]) => {
+        try {
+            const payload = data.map(item => {
+                const cleaned = { ...item };
+                if (!cleaned.juegoId) delete cleaned.juegoId;
+                return cleaned;
+            });
+
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items-calificables/bulk`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (response.ok) {
+                Swal.fire({ title: '¡Lote Guardado!', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+                setShowBulkForm(false);
+                setPage(1);
+                fetchItems();
+            } else {
+                Swal.fire('Error', 'No se pudo guardar el lote. Verifica que el backend esté actualizado.', 'error');
+            }
+        } catch (error) {
+            Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
         }
     };
 
@@ -188,8 +218,6 @@ export default function ItemsAdminPage() {
 
         if (result.isConfirmed) {
             try {
-                // In a production environment, you'd have a bulk delete endpoint.
-                // For now, we simulate with individual calls to stay compatible with current backend logic.
                 await Promise.all(selectedItems.map(id =>
                     fetch(`${process.env.NEXT_PUBLIC_API_URL}/items-calificables/${id}`, {
                         method: 'DELETE',
@@ -220,17 +248,25 @@ export default function ItemsAdminPage() {
             {/* 1. Premium Header with global stats */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 text-center md:text-left">
                 <div className="flex flex-col items-center md:items-start">
-                    <h1 className="text-3xl font-black text-white italic tracking-tighter uppercase leading-none">Ítems de Categoría</h1>
+                    <h1 className="text-3xl font-black text-white italic tracking-tighter uppercase leading-none">Banco de Ítems</h1>
                     <div className="flex justify-center md:justify-start gap-4 mt-3">
                         <div className="flex items-center gap-2 px-3 py-1 bg-[var(--color-primary)]/10 rounded-full border border-[var(--color-primary)]/20">
                             <span className="text-[var(--color-primary)] text-[10px] font-black uppercase tracking-tighter">Total items: {totalItems}</span>
                         </div>
                         <div className="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/10">
-                            <span className="text-white/40 text-[10px] font-black uppercase tracking-tighter">Página: {page} de {Math.ceil(totalItems / limit)}</span>
+                            <span className="text-white/40 text-[10px] font-black uppercase tracking-tighter">Página: {page} de {Math.max(1, Math.ceil(totalItems / limit))}</span>
                         </div>
                     </div>
                 </div>
-                <div className="flex gap-2 mx-auto md:mx-0">
+                <div className="flex flex-col sm:flex-row gap-2 mx-auto md:mx-0">
+                    <Bt
+                        variant="secondary"
+                        onClick={() => setShowBulkForm(true)}
+                        icon={<Package size={18} />}
+                        className="px-6 py-3 rounded-2xl border border-[var(--color-primary)]/30 text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10"
+                    >
+                        SUBIDA MASIVA
+                    </Bt>
                     <Bt
                         onClick={() => { setEditingItem(null); setShowForm(true); }}
                         icon={<Plus size={18} />}
@@ -254,27 +290,11 @@ export default function ItemsAdminPage() {
                             </button>
                         )}
                         <Input
-                            placeholder="Buscar por nombre o categoría..."
+                            placeholder="Buscar por nombre..."
                             className="pl-12 h-14 bg-black/20 border-white/5 rounded-2xl focus:ring-[var(--color-primary)]/20 text-center md:text-left"
                             value={searchTerm}
                             onChange={(e: any) => setSearchTerm(e.target.value)}
                         />
-                    </div>
-
-                    {/* Category Selector (Searchable style) */}
-                    <div className="relative w-full lg:w-72">
-                        <Tag className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={16} />
-                        <select
-                            value={selectedCategory}
-                            onChange={(e) => setSelectedCategory(e.target.value)}
-                            className="w-full h-14 bg-black/40 border border-white/10 rounded-2xl pl-12 pr-10 text-[10px] font-black uppercase tracking-widest text-[var(--color-primary)] appearance-none focus:ring-2 focus:ring-[var(--color-primary)]/20 cursor-pointer outline-none shadow-inner"
-                        >
-                            <option value="all" className="bg-[#111] text-white">Todas las Categorías</option>
-                            {categorias.map(cat => (
-                                <option key={cat.id} value={cat.id} className="bg-[#111] text-white">{cat.nombre}</option>
-                            ))}
-                        </select>
-                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 pointer-events-none" size={16} />
                     </div>
 
                     {/* Sorting */}
@@ -291,7 +311,6 @@ export default function ItemsAdminPage() {
                         >
                             <option value="createdAt-desc" className="bg-[#111] text-white">Recientes</option>
                             <option value="nombre-asc" className="bg-[#111] text-white">Nombre A-Z</option>
-                            <option value="averageRating-desc" className="bg-[#111] text-white">Mejor Valorados</option>
                         </select>
                         <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 pointer-events-none" size={16} />
                     </div>
@@ -394,22 +413,6 @@ export default function ItemsAdminPage() {
                                 <h3 className="text-xs font-black text-white uppercase italic tracking-tighter truncate mb-1">
                                     {item.nombre}
                                 </h3>
-                                <div className="flex items-center gap-1.5 mb-2">
-                                    <Tag size={10} className="text-[var(--color-primary)] opacity-40" />
-                                    <span className="text-[8px] font-black text-white/30 uppercase tracking-[2px] truncate">
-                                        {item.categoria?.nombre || 'General'}
-                                    </span>
-                                </div>
-                                <div className="flex gap-4">
-                                    <div className="flex items-center gap-1.5">
-                                        <Star size={12} className="text-yellow-500/80" />
-                                        <span className="text-[10px] font-black text-white/50">{item.averageRating.toFixed(1)}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5">
-                                        <Users size={12} className="text-blue-400 opacity-60" />
-                                        <span className="text-[10px] font-black text-white/50">{item.ratingCount}</span>
-                                    </div>
-                                </div>
                             </div>
 
                             {/* Actions */}
@@ -469,11 +472,38 @@ export default function ItemsAdminPage() {
                                 initialData={editingItem ? {
                                     nombre: editingItem.nombre,
                                     image: editingItem.image,
-                                    categoriaId: editingItem.categoriaId
+                                    juegoId: editingItem.juegoId
                                 } : undefined}
-                                categories={categorias}
+                                games={juegos}
                                 onSubmit={handleSave}
                                 onCancel={() => { setShowForm(false); setEditingItem(null); }}
+                            />
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Bulk Form Modal */}
+            <AnimatePresence>
+                {showBulkForm && (
+                    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowBulkForm(false)}
+                            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="relative w-full max-w-4xl"
+                        >
+                            <BulkItemForm
+                                games={juegos}
+                                onSubmit={handleBulkSave}
+                                onCancel={() => setShowBulkForm(false)}
                             />
                         </motion.div>
                     </div>

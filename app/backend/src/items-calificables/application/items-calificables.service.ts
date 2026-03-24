@@ -12,8 +12,14 @@ export class ItemsCalificablesService {
     return this.itemCalificableRepository.create(createItemCalificableDto);
   }
 
+  createMany(items: CreateItemCalificableDto[]) {
+    return this.itemCalificableRepository.createMany(items);
+  }
+
+
   findAll(params: {
     categoryId?: string;
+    tablaId?: string;
     search?: string;
     sortBy?: string;
     order?: 'asc' | 'desc';

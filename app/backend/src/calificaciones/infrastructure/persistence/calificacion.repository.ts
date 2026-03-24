@@ -15,6 +15,8 @@ export class CalificacionRepository {
         where: {
           itemId: createCalificacionDto.itemId,
           deviceId: deviceId,
+          // Scope to the same tabla so same item can be rated independently per tabla
+          tablaId: createCalificacionDto.tablaId ?? null,
         },
       });
 
@@ -70,29 +72,41 @@ export class CalificacionRepository {
     };
   }
 
-  async getRanking(categoryId?: string, limit?: number): Promise<Array<{ itemId: string; averageRating: number; ratingCount: number; itemName: string; itemImage?: string }>> {
+  async getRanking(tablaId?: string, limit?: number, juegoId?: string): Promise<Array<{ itemId: string; averageRating: number; ratingCount: number; itemName: string; itemImage?: string }>> {
     let itemIdsToFilter: string[] = [];
 
-    if (categoryId) {
-      const itemsInCategory = await this.prisma.itemCalificable.findMany({
+    if (tablaId) {
+      const itemsInTabla = await this.prisma.tablaItem.findMany({
         where: {
-          categoriaId: categoryId,
+          tablaId: tablaId,
         },
         select: {
-          id: true,
+          itemId: true,
         },
       });
-      itemIdsToFilter = itemsInCategory.map(item => item.id);
+      itemIdsToFilter = itemsInTabla.map(item => item.itemId);
 
-      // If no items found in category, return empty ranking
+      // If no items found in tabla, return empty ranking
       if (itemIdsToFilter.length === 0) {
         return [];
       }
+    } else if (juegoId) {
+      const itemsInGame = await this.prisma.itemCalificable.findMany({
+        where: { juegoId },
+        select: { id: true },
+      });
+      itemIdsToFilter = itemsInGame.map(item => item.id);
+      if (itemIdsToFilter.length === 0) return [];
     }
+
+
+    const whereFilter: any = itemIdsToFilter.length > 0 ? { itemId: { in: itemIdsToFilter } } : {};
+    // Always scope ranking to a specific tabla when provided
+    if (tablaId) whereFilter.tablaId = tablaId;
 
     const rankingData = await this.prisma.calificacion.groupBy({
       by: ['itemId'],
-      where: itemIdsToFilter.length > 0 ? { itemId: { in: itemIdsToFilter } } : {},
+      where: whereFilter,
       _avg: {
         puntuacion: true,
       },

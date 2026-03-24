@@ -10,6 +10,7 @@ import {
 
 import { MetaService } from './meta.service';
 import { XService } from './x.service';
+import { PrismaService } from '../../../prisma/prisma.service';
 
 // ─── Eventos del dominio ──────────────────────────────────────────────────────
 
@@ -66,6 +67,7 @@ export class BracketMediaService {
     private readonly cloudinary: CloudinaryProvider,
     private readonly meta: MetaService,
     private readonly x: XService,
+    private readonly prisma: PrismaService,
   ) {}
 
   @OnEvent('bracket.match.abierto')
@@ -113,6 +115,15 @@ export class BracketMediaService {
           1,
           result.buffer
         );
+
+        // Update bracket imageUrl
+        const match = await this.prisma.bracketMatch.findUnique({ where: { id: event.matchId }, select: { bracketId: true } });
+        if (match) {
+            await this.prisma.votacionBracket.update({
+                where: { id: match.bracketId },
+                data: { imageUrl: result.cloudinaryUrl }
+            });
+        }
       }
     } catch (err) {
       this.logger.error(`Error generando imagen apertura: ${err.message}`, err.stack);
@@ -168,6 +179,15 @@ export class BracketMediaService {
           result.buffer,
           winnerName
         );
+
+        // Update bracket imageUrl
+        const match = await this.prisma.bracketMatch.findUnique({ where: { id: event.matchId }, select: { bracketId: true } });
+        if (match) {
+            await this.prisma.votacionBracket.update({
+                where: { id: match.bracketId },
+                data: { imageUrl: result.cloudinaryUrl }
+            });
+        }
       }
     } catch (err) {
       this.logger.error(`Error generando imagen resultado: ${err.message}`, err.stack);

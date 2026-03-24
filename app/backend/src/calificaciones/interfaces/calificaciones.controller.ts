@@ -2,11 +2,12 @@
 import { Controller, Get, Post, Body, Param, Req, Query, HttpCode, Header, Headers } from '@nestjs/common';
 import { CalificacionesService } from '../application/calificaciones.service';
 import { CreateCalificacionDto } from '../application/dto/create-calificacion.dto';
+import { RankingMediaService } from '../application/ranking-media.service';
 import type { Request } from 'express';
 
 @Controller('calificaciones')
 export class CalificacionesController {
-  constructor(private readonly calificacionesService: CalificacionesService) {}
+  constructor(private readonly calificacionesService: CalificacionesService, private readonly rankingMediaService: RankingMediaService) {}
 
   @Post()
   create(@Body() createCalificacionDto: CreateCalificacionDto, @Req() request: Request, @Headers('x-device-id') deviceId?: string) {
@@ -39,8 +40,8 @@ export class CalificacionesController {
   @Get('ranking-list')
   @HttpCode(200)
   @Header('Content-Type', 'application/json')
-  async getRanking(@Query('categoryId') categoryId?: string) {
-    return this.calificacionesService.getRanking(categoryId);
+  async getRanking(@Query('tablaId') tablaId?: string, @Query('juegoId') juegoId?: string) {
+    return this.calificacionesService.getRanking(tablaId, juegoId);
   }
 
   @Get(':id')

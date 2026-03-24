@@ -1,12 +1,13 @@
 import { Metadata } from 'next';
 
 type Props = {
-    params: { slug: string }
+    params: Promise<{ slug: string }>
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/votaciones/${params.slug}`);
+        const { slug } = await params;
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/votaciones/${slug}`);
         if (res.ok) {
             const data = await res.json();
             return {
@@ -16,6 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
                     title: `${data.tematica} - Torneo Oficial`,
                     description: `Entra y vota en este torneo activo de AJDREW.`,
                     type: 'website',
+                    images: data.imageUrl ? [data.imageUrl] : [],
                 }
             };
         }

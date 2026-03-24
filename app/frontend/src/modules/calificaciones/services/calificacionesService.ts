@@ -58,13 +58,14 @@ export async function fetchCategories(): Promise<Categoria[]> {
   }
 }
 
-// ✅ Obtener ítems de una categoría
-export async function fetchItemsForCategory(categoryId: string, deviceId?: string): Promise<ItemCalificable[]> {
-  if (!categoryId) return [];
+// ✅ Obtener ítems de una tabla de calificación (por tablaId) o categoría genérica
+export async function fetchItemsForCategory(tablaId: string, deviceId?: string): Promise<ItemCalificable[]> {
+  if (!tablaId) return [];
 
   try {
     const baseUrl = `${getApiUrl()}/items-calificables`;
-    const url = `${baseUrl}?categoryId=${categoryId}`;
+    // Use tablaId instead of categoryId so we only get items assigned to this tabla
+    const url = `${baseUrl}?tablaId=${tablaId}`;
 
     const options: RequestInit = deviceId ? { ...noCacheOptions } : { ...fetchOptions };
 
@@ -81,24 +82,23 @@ export async function fetchItemsForCategory(categoryId: string, deviceId?: strin
     }
 
     const data = await response.json();
-    // El backend devuelve { items: [], total: 0 }, extraemos solo los items
     return Array.isArray(data) ? data : (data.items || []);
   } catch (error) {
-    console.error(`Error fetching items for category ${categoryId}:`, error);
+    console.error(`Error fetching items for tabla ${tablaId}:`, error);
     return [];
   }
 }
 
 // ✅ Obtener ranking (SIN caché para ver cambios al instante)
-export async function fetchRanking(categoryId?: string, limit?: number): Promise<RankingItem[]> {
+export async function fetchRanking(tablaId?: string, limit?: number): Promise<RankingItem[]> {
   try {
-    let url = categoryId
-      ? `${getApiUrl()}/calificaciones/ranking-list?categoryId=${categoryId}`
+    let url = tablaId
+      ? `${getApiUrl()}/calificaciones/ranking-list?tablaId=${tablaId}`
       : `${getApiUrl()}/calificaciones/ranking-list`;
 
     // Agregar parámetro limit si existe
     if (limit) {
-      url += categoryId ? `&limit=${limit}` : `?limit=${limit}`;
+      url += tablaId ? `&limit=${limit}` : `?limit=${limit}`;
     }
 
     // 🔥 forzar no-store para refrescar siempre
@@ -115,7 +115,7 @@ export async function fetchRanking(categoryId?: string, limit?: number): Promise
 }
 
 // ✅ Enviar calificación de un ítem
-export async function submitRating(itemId: string, rating: number): Promise<ItemCalificable> {
+export async function submitRating(itemId: string, rating: number, tablaId?: string): Promise<ItemCalificable> {
   const deviceId = getOrCreateDeviceId();
 
   const response = await fetch(`${getApiUrl()}/calificaciones`, {
@@ -124,7 +124,7 @@ export async function submitRating(itemId: string, rating: number): Promise<Item
       'Content-Type': 'application/json',
       'x-device-id': deviceId,
     },
-    body: JSON.stringify({ itemId, puntuacion: rating }),
+    body: JSON.stringify({ itemId, puntuacion: rating, tablaId }),
   });
 
   if (!response.ok) {

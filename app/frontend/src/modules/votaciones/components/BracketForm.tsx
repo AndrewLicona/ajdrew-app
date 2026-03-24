@@ -155,16 +155,14 @@ export const BracketForm: React.FC<BracketFormProps> = ({
                 body: JSON.stringify({
                     nombre: newItemName,
                     image: newItemImage,
-                    categoriaId: formData.categoriaId
+                    juegoId: formData.juegoId
                 })
             });
 
             if (response.ok) {
                 const newItem = await response.json();
-                const cat = categories.find(c => c.id === formData.categoriaId);
-                const enrichedItem = { ...newItem, categoria: cat };
 
-                setAvailableItems(prev => [enrichedItem, ...prev]);
+                setAvailableItems(prev => [newItem, ...prev]);
                 setFormData(prev => ({
                     ...prev,
                     itemsIds: [...prev.itemsIds, newItem.id]
@@ -240,15 +238,14 @@ export const BracketForm: React.FC<BracketFormProps> = ({
                     body: JSON.stringify({
                         nombre: item.nombre,
                         image: item.image,
-                        categoriaId: formData.categoriaId
+                        juegoId: formData.juegoId
                     })
                 });
 
                 if (response.ok) {
                     const newItem = await response.json();
                     createdIds.push(newItem.id);
-                    const cat = categories.find(c => c.id === formData.categoriaId);
-                    newAvailableItems.push({ ...newItem, categoria: cat });
+                    newAvailableItems.push(newItem);
                 }
             }
 
@@ -350,9 +347,7 @@ export const BracketForm: React.FC<BracketFormProps> = ({
         item.nombre.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    let filteredItems = formData.categoriaId
-        ? filteredBySearch.filter(item => (item as any).categoriaId === formData.categoriaId || (item as any).categoria?.id === formData.categoriaId)
-        : filteredBySearch;
+    let filteredItems = filteredBySearch;
 
     if (showSelectedOnly) {
         filteredItems = filteredItems.filter(item => formData.itemsIds.includes(item.id));
@@ -707,9 +702,7 @@ export const BracketForm: React.FC<BracketFormProps> = ({
                                 );
                             })}
                             {filteredItems.length === 0 && (
-                                <div className="col-span-full py-12 text-center">
-                                    <p className="text-xs text-white/30 italic">No hay ítems en esta categoría. {formData.categoriaId && "¡Agrega el primero!"}</p>
-                                </div>
+                                    <p className="text-xs text-white/30 italic">No hay ítems registrados bajo este juego. ¡Agrega el primero!</p>
                             )}
                         </div>
                     )}

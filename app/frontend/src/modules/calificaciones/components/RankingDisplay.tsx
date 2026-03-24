@@ -10,12 +10,12 @@ import Image from 'next/image';
 import { Trophy, Medal, Star } from 'lucide-react';
 
 interface RankingDisplayProps {
-  categoryId?: string;
+  tablaId?: string;
   categoryName?: string;
   limit?: number;
 }
 
-export default function RankingDisplay({ categoryId, categoryName, limit = 5 }: RankingDisplayProps) {
+export default function RankingDisplay({ tablaId, categoryName, limit = 5 }: RankingDisplayProps) {
   const [ranking, setRanking] = useState<RankingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +24,7 @@ export default function RankingDisplay({ categoryId, categoryName, limit = 5 }: 
     const getRanking = async (showLoading = true) => {
       if (showLoading) setLoading(true);
       try {
-        const data = await fetchRanking(categoryId, limit);
+        const data = await fetchRanking(tablaId, limit);
         // Aplicar límite en frontend también como seguridad
         setRanking(data.slice(0, limit));
         setError(null);
@@ -40,7 +40,7 @@ export default function RankingDisplay({ categoryId, categoryName, limit = 5 }: 
     const interval = setInterval(() => getRanking(false), 5000);
 
     return () => clearInterval(interval);
-  }, [categoryId, limit]);
+  }, [tablaId, limit]);
 
   const renderItem = (item: RankingItem, index: number) => {
     const ratingPercentage = (item.averageRating / 5) * 100;
@@ -101,9 +101,9 @@ export default function RankingDisplay({ categoryId, categoryName, limit = 5 }: 
       </div>
     );
 
-    if (categoryId) {
+    if (tablaId) {
       return (
-        <Link key={item.itemId || index} href={`/calificaciones/${categoryId}`}>
+        <Link key={item.itemId || index} href={`/calificaciones/${tablaId}`}>
           {content}
         </Link>
       );

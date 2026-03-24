@@ -18,6 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
                         title: `Ranking Oficial - ${category.nombre}`,
                         description: `Mira la lista completa y los puntajes más altos en este ranking.`,
                         type: 'website',
+                        images: category.imageUrl ? [category.imageUrl] : [],
                     }
                 };
             }

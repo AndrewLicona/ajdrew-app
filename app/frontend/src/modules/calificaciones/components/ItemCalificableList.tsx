@@ -9,26 +9,25 @@ import './templates/CalificarCardTemplate.css';
 import { Alert } from '@/shared/components/Alert';
 
 interface ItemCalificableListProps {
-  categoryId: string;
+  tablaId: string;
   initialItems: ItemCalificable[];
-
 }
 
-export default function ItemCalificableList({ categoryId, initialItems }: ItemCalificableListProps) {
+export default function ItemCalificableList({ tablaId, initialItems }: ItemCalificableListProps) {
   const [items, setItems] = useState<ItemCalificable[]>(initialItems);
   const [error, setError] = useState<string | null>(null);
 
   const fetchUserRatings = useCallback(async () => {
     try {
       const deviceId = getOrCreateDeviceId();
-      const fetchedItems = await fetchItemsForCategory(categoryId, deviceId);
+      const fetchedItems = await fetchItemsForCategory(tablaId, deviceId);
       setItems(fetchedItems);
       setError(null);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido al cargar las calificaciones';
       setError(`Error al cargar calificaciones: ${errorMessage}`);
     }
-  }, [categoryId]);
+  }, [tablaId]);
 
   useEffect(() => {
 
@@ -38,14 +37,18 @@ export default function ItemCalificableList({ categoryId, initialItems }: ItemCa
 
 
   const handleRatingChange = async (itemId: string, rating: number) => {
-    try {
-      const updatedItem = await submitRating(itemId, rating);
+    // ⚡ Optimistic update — show star instantly
+    setItems(currentItems =>
+      currentItems.map(item =>
+        item.id === itemId ? { ...item, myRating: rating } : item
+      )
+    );
 
-      setItems(currentItems =>
-        currentItems.map(item =>
-          item.id === itemId ? updatedItem : item
-        )
-      );
+    try {
+      await submitRating(itemId, rating, tablaId);
+
+      // Refresh all items from the tablaId-scoped endpoint so counts are accurate
+      await fetchUserRatings();
 
       Alert.toast({
         title: '¡Gracias por tu voto!',
@@ -53,6 +56,12 @@ export default function ItemCalificableList({ categoryId, initialItems }: ItemCa
         position: 'bottom-end',
       });
     } catch (error: unknown) {
+      // Revert optimistic update on error
+      setItems(currentItems =>
+        currentItems.map(item =>
+          item.id === itemId ? { ...item, myRating: 0 } : item
+        )
+      );
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido al enviar la calificación';
       setError(`Error al enviar calificación: ${errorMessage}`);
     }

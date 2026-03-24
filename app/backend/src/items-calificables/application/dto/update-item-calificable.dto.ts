@@ -1,6 +1,8 @@
-// items-calificables/application/dto/update-item-calificable.dto.ts
-export class UpdateItemCalificableDto {
+import { PartialType } from '@nestjs/mapped-types';
+import { CreateItemCalificableDto } from './create-item-calificable.dto';
+
+export class UpdateItemCalificableDto extends PartialType(CreateItemCalificableDto) {
   nombre?: string;
   image?: string;
-  categoriaId?: string;
+  juegoId?: string;
 }

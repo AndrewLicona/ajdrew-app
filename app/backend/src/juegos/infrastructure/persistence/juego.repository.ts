@@ -43,7 +43,7 @@ export class JuegoRepository {
                         ['votaciones' as any]: {
                             orderBy: { createdAt: 'desc' }
                         },
-                        items: true,
+                        tablas: true,
                     }
                 },
                 votaciones: {

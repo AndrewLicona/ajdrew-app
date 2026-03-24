@@ -20,10 +20,8 @@ export class CategoriaRepository {
       where: juegoId !== undefined ? { juegoId } : {},
       include: {
         juego: true,
-        items: includeItems ? { take: 6 } : false,
         _count: {
           select: {
-            items: true,
             votaciones: true,
             tutoriales: true
           }

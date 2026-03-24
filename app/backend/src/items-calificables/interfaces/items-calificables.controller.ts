@@ -19,9 +19,19 @@ export class ItemsCalificablesController {
     return this.itemsCalificablesService.create(createItemCalificableDto);
   }
 
+  @Post('bulk')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'EDITOR')
+  createMany(@Body() items: CreateItemCalificableDto[]) {
+    return this.itemsCalificablesService.createMany(items);
+  }
+
+
   @Get()
   findAll(
     @Query('categoryId') categoryId?: string,
+    @Query('tablaId') tablaId?: string,
+    @Query('juegoId') juegoId?: string,
     @Query('search') search?: string,
     @Query('sortBy') sortBy?: string,
     @Query('order') order?: 'asc' | 'desc',
@@ -31,13 +41,15 @@ export class ItemsCalificablesController {
   ) {
     return this.itemsCalificablesService.findAll({
       categoryId,
+      tablaId,
+      ...(juegoId ? { juegoId } : {}),
       search,
       sortBy,
       order,
       page: page ? Number(page) : undefined,
       limit: limit ? Number(limit) : undefined,
       deviceId
-    });
+    } as any);
   }
 
   @Get(':id')
