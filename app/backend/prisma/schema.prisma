@@ -34,6 +34,7 @@ model Juego {
   votaciones  VotacionBracket[]
   items       ItemCalificable[] // NEW
   tablas      TablaCalificacion[]
+  socialConfig JuegoSocialConfig?
 }
 
 model Tutorial {
