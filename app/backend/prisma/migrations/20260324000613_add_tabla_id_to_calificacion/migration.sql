@@ -9,7 +9,12 @@
 ALTER TABLE "public"."ItemCalificable" DROP CONSTRAINT "ItemCalificable_categoriaId_fkey";
 
 -- AlterTable
-ALTER TABLE "BracketVote" ADD COLUMN     "chosenItemId" TEXT NOT NULL DEFAULT '';
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='BracketVote' AND column_name='chosenItemId') THEN
+        ALTER TABLE "BracketVote" ADD COLUMN "chosenItemId" TEXT NOT NULL DEFAULT '';
+    END IF;
+END $$;
 
 -- AlterTable
 ALTER TABLE "Calificacion" ADD COLUMN     "tablaId" TEXT;
