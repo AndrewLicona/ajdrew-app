@@ -8,7 +8,7 @@ echo "🚀 Iniciando despliegue..."
 # 1. Obtener los últimos cambios del repositorio
 echo "📥 Descargando últimos cambios de Git..."
 git fetch origin main
-git reset --hard origin main
+git reset --hard origin/main
 
 # Mostrar el commit actual para verificar que estamos en la versión correcta
 CURRENT_COMMIT=$(git rev-parse --short HEAD)
