@@ -1,4 +1,4 @@
-﻿-- CreateEnum
+-- CreateEnum
 CREATE TYPE "Rol" AS ENUM ('ADMIN', 'EDITOR');
 
 -- CreateTable
@@ -335,7 +335,7 @@ CREATE TABLE "XPublication" (
 -- CreateTable
 CREATE TABLE "FacebookAccount" (
     "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL DEFAULT 'Mi P├ígina de Facebook',
+    "name" TEXT NOT NULL DEFAULT 'Mi Página de Facebook',
     "pageId" TEXT NOT NULL,
     "pageAccessToken" TEXT NOT NULL,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
