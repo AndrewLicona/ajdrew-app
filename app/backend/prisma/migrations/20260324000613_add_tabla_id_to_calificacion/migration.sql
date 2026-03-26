@@ -9,7 +9,7 @@
 ALTER TABLE "public"."ItemCalificable" DROP CONSTRAINT "ItemCalificable_categoriaId_fkey";
 
 -- AlterTable
-ALTER TABLE "BracketVote" ADD COLUMN     "chosenItemId" TEXT NOT NULL;
+ALTER TABLE "BracketVote" ADD COLUMN     "chosenItemId" TEXT NOT NULL DEFAULT '';
 
 -- AlterTable
 ALTER TABLE "Calificacion" ADD COLUMN     "tablaId" TEXT;
