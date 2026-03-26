@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { Trophy, Crown, Star, Target } from 'lucide-react';
+import { Crown, Star, Target, Users } from 'lucide-react';
 
 interface Item {
     id: string;
@@ -60,67 +60,108 @@ export const BracketTree: React.FC<BracketTreeProps> = ({ matches, currentRound,
         else if (finalMatch.votosA >= finalMatch.votosB) finalWinner = finalMatch.itemA;
     }
 
-    const MATCH_HEIGHT = 100;
-    const GUTTER_WIDTH = 40;
+    const MATCH_HEIGHT = 320; 
+    const GUTTER_WIDTH = 100;
     const HEADER_HEIGHT = 60;
-    const FINAL_EXTRA_GAP = 80;
+    const FINAL_EXTRA_GAP = 100;
 
-    const renderMatchCard = (match: Match | null, isPlaceholder: boolean) => {
+    const renderMatchCard = (match: Match | null, isPlaceholder: boolean, side: 'left' | 'right' | 'center') => {
         const winnerA = match ? (match.votosA > match.votosB || (match.votosA === match.votosB && match.votosA > 0)) : false;
         const winnerB = match ? (match.votosB > match.votosA) : false;
         const isLive = match && match.ronda === currentRound && estado === 'ACTIVA';
 
+        const renderItem = (item: Item | null, votos: number, winner: boolean) => (
+            <div className={`
+                flex flex-col items-center p-1.5 rounded-xl w-full z-10 relative overflow-hidden transition-all duration-300
+                ${winner 
+                    ? 'bg-[var(--color-primary)]/10 border-2 border-[var(--color-primary)] shadow-[0_0_20px_rgba(34,197,94,0.3)]' 
+                    : 'bg-[#0a0a0a]/90 border border-white/10 shadow-lg'}
+                ${!item ? 'border-dashed opacity-40' : 'hover:scale-105'}
+                min-h-[120px]
+            `}>
+                {/* Image - Square container with contain to avoid any cutting */}
+                <div className="relative w-full aspect-square rounded-xl overflow-hidden border border-white/5 bg-black/40 shadow-inner group-hover:scale-105 transition-transform duration-700">
+                    {item?.image ? (
+                        <Image src={item.image} alt="" fill className="object-contain" />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center text-white/5 font-black text-xl italic uppercase">
+                             ?
+                        </div>
+                    )}
+                </div>
+
+                {/* Votes - Rating style */}
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-black/50 border border-white/5 mt-auto w-full justify-center">
+                    <div className="flex items-center gap-1">
+                        <Users size={12} className={winner ? 'text-[var(--color-primary)]' : 'text-white/30'} />
+                        <span className={`text-[11px] font-black ${winner ? 'text-[var(--color-primary)]' : 'text-white'}`}>
+                            {votos}
+                        </span>
+                    </div>
+                </div>
+
+                {/* Winner Badge */}
+                {winner && (
+                    <div className="absolute top-2 right-2 rotate-12">
+                        <Star size={14} className="text-yellow-400 fill-yellow-400 animate-pulse drop-shadow-glow" />
+                    </div>
+                )}
+            </div>
+        );
+
+        if (side === 'center') {
+            return (
+                <div className={`
+                    flex flex-row items-center justify-center gap-10 md:gap-16 w-auto h-full transition-all duration-1000 relative
+                    ${isPlaceholder ? 'opacity-30' : 'opacity-100'}
+                `}>
+                    {/* Team A Finalist */}
+                    <div className="w-32 md:w-44">
+                        {renderItem(match?.itemA || null, match?.votosA || 0, winnerA)}
+                    </div>
+
+                    {/* VS centered in final - Large and Epic */}
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30">
+                         <div className="flex flex-col items-center gap-2">
+                             <div className="px-4 py-1.5 bg-[var(--color-primary)] text-black font-black italic text-lg md:text-xl skew-x-[-15deg] shadow-[0_0_20px_rgba(34,197,94,0.5)] border-2 border-black">
+                                VS
+                             </div>
+                         </div>
+                    </div>
+
+                    {/* Team B Finalist */}
+                    <div className="w-32 md:w-44">
+                        {renderItem(match?.itemB || null, match?.votosB || 0, winnerB)}
+                    </div>
+                </div>
+            );
+        }
+
         return (
             <div className={`
-                flex flex-col gap-1 w-40 md:w-44 transition-all duration-700 relative group
+                flex flex-col justify-between w-32 md:w-40 h-[300px] transition-all duration-700 relative group
                 ${isPlaceholder ? 'opacity-30' : 'opacity-100'}
-                [--card-half-width:80px] md:[--card-half-width:88px]
+                [--card-half-width:64px] md:[--card-half-width:80px]
             `}>
                 {isLive && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-red-500 text-white text-[7px] font-black uppercase tracking-widest rounded-full animate-pulse z-10 shadow-[0_0_10px_rgba(239,68,68,0.5)]">
-                        LIVE
+                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1 bg-red-600 text-white text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] rounded-full animate-pulse z-20 shadow-[0_0_20px_rgba(220,38,38,0.6)] border border-red-400">
+                        LIVE NOW
                     </div>
                 )}
 
-                <div className={`
-                    bg-white/5 dark:bg-black/60 backdrop-blur-3xl border rounded-2xl overflow-hidden p-1.5
-                    ${match && finalWinner && (match.itemA?.id === finalWinner.id || match.itemB?.id === finalWinner.id) && estado === 'FINALIZADA'
-                        ? 'border-yellow-400 shadow-[0_0_25px_rgba(250,204,21,0.2)]'
-                        : isPlaceholder ? 'border-dashed border-black/5 dark:border-white/5' : 'border-black/5 dark:border-white/10 group-hover:border-[var(--color-primary, #22c55e)]/40 shadow-xl'}
-                    transition-all duration-500
-                `}>
-                    {/* Item A */}
-                    <div className={`flex items-center gap-2 px-2 py-2 rounded-xl transition-all duration-500 ${winnerA
-                        ? 'bg-[var(--color-primary, #22c55e)] text-white font-black'
-                        : 'text-white/90'
-                        }`}>
-                        <div className={`relative w-7 h-7 rounded-lg overflow-hidden shrink-0 border ${winnerA ? 'border-black/20' : 'border-black/5 dark:border-white/10 bg-black/20'}`}>
-                            {match?.itemA?.image && <Image src={match.itemA.image} alt="" fill className="object-cover" />}
-                        </div>
-                        <span className="text-[9px] uppercase truncate flex-1 tracking-tight font-black leading-none">
-                            {match?.itemA?.nombre || 'TBD'}
-                        </span>
-                        {match && <span className={`text-[9px] font-black ${winnerA ? 'text-white' : 'opacity-40'}`}>{match.votosA}</span>}
-                    </div>
+                {/* Connector lines inside the match - with Subtle Glow */}
+                {!isPlaceholder && (
+                    <div className={`absolute top-[70px] bottom-[70px] w-1/2 border-t-2 border-b-2 border-[var(--color-primary)]/20 z-0
+                        ${side === 'left' ? 'right-0 border-r-2 rounded-r-xl shadow-[2px_0_10px_rgba(34,197,94,0.2)]' : 'left-0 border-l-2 rounded-l-xl shadow-[-2px_0_10px_rgba(34,197,94,0.2)]'}
+                        group-hover:border-[var(--color-primary)]/60 group-hover:shadow-[0_0_15px_rgba(34,197,94,0.3)] transition-all duration-500
+                    `}></div>
+                )}
 
-                    <div className="h-1 flex items-center justify-center opacity-10">
-                        <div className="w-full h-[1px] bg-[var(--color-text)]"></div>
-                    </div>
+                {/* Team A */}
+                {renderItem(match?.itemA || null, match?.votosA || 0, winnerA)}
 
-                    {/* Item B */}
-                    <div className={`flex items-center gap-2 px-2 py-2 rounded-xl transition-all duration-500 ${winnerB
-                        ? 'bg-[var(--color-primary, #22c55e)] text-white font-black'
-                        : 'text-white/90'
-                        }`}>
-                        <div className={`relative w-7 h-7 rounded-lg overflow-hidden shrink-0 border ${winnerB ? 'border-black/20' : 'border-black/5 dark:border-white/10 bg-black/20'}`}>
-                            {match?.itemB?.image && <Image src={match.itemB.image} alt="" fill className="object-cover" />}
-                        </div>
-                        <span className="text-[9px] uppercase truncate flex-1 tracking-tight font-black leading-none">
-                            {match?.itemB?.nombre || 'TBD'}
-                        </span>
-                        {match && <span className={`text-[9px] font-black ${winnerB ? 'text-white' : 'opacity-40'}`}>{match.votosB}</span>}
-                    </div>
-                </div>
+                {/* Team B */}
+                {renderItem(match?.itemB || null, match?.votosB || 0, winnerB)}
             </div>
         );
     };
@@ -179,46 +220,57 @@ export const BracketTree: React.FC<BracketTreeProps> = ({ matches, currentRound,
                             >
                                 <div className={`relative flex items-center h-full w-full justify-center ${side === 'left' ? 'flex-row' : (side === 'right' ? 'flex-row-reverse' : '')}`}>
                                     {/* The Card wrapper is absolutely centered in the h-full container */}
-                                    <div className="relative flex items-center justify-center z-10">
-                                        {renderMatchCard(m, !m)}
+                                    <div className="relative flex items-center justify-center z-10 w-full h-full">
+                                        {renderMatchCard(m, !m, side)}
                                     </div>
 
                                     {side !== 'center' && roundIdx < totalRounds - 1 && (
                                         <div
                                             className={`absolute pointer-events-none top-0 bottom-0 ${side === 'left' ? 'left-full' : 'right-full'}`}
                                             style={{
-                                                width: connectorWidth,
+                                                width: isLastRoundOfWing ? 200 : (totalRounds - 1 - roundIdx) * GUTTER_WIDTH,
                                                 [side === 'left' ? 'left' : 'right']: '50%',
-                                                [side === 'left' ? 'marginLeft' : 'marginRight']: 'var(--card-half-width, 88px)',
+                                                [side === 'left' ? 'marginLeft' : 'marginRight']: 'var(--card-half-width, 80px)',
                                             }}
                                         >
-                                            <svg className="w-full h-full overflow-visible">
+                                            <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                                <defs>
+                                                    <filter id="glow-line" x="-50%" y="-50%" width="200%" height="200%">
+                                                        <feGaussianBlur stdDeviation="1.5" result="coloredBlur" />
+                                                        <feMerge>
+                                                            <feMergeNode in="coloredBlur" />
+                                                            <feMergeNode in="SourceGraphic" />
+                                                        </feMerge>
+                                                    </filter>
+                                                </defs>
                                                 {isLastRoundOfWing ? (
                                                     <line
-                                                        x1={side === 'left' ? "0" : "100%"}
-                                                        y1="50%"
-                                                        x2={side === 'left' ? "100%" : "0"}
-                                                        y2="50%"
+                                                        x1={side === 'left' ? "0" : "100"}
+                                                        y1="50"
+                                                        x2={side === 'left' ? "100" : "0"}
+                                                        y2="50"
                                                         stroke={lineColor}
-                                                        strokeWidth="3"
-                                                        style={{ opacity: lineOpacity }}
+                                                        strokeWidth="2"
+                                                        style={{ opacity: lineOpacity, filter: m ? 'url(#glow-line)' : 'none' }}
                                                         strokeDasharray={!m ? "4,4" : "0"}
                                                     />
                                                 ) : (
                                                     <path
                                                         d={side === 'left'
                                                             ? (mIdx % 2 === 0
-                                                                ? `M 0 50% L ${connectorWidth / 2} 50% L ${connectorWidth / 2} 100% L ${connectorWidth} 100%`
-                                                                : `M 0 50% L ${connectorWidth / 2} 50% L ${connectorWidth / 2} 0% L ${connectorWidth} 0%`)
+                                                                ? `M 0 50 C 40 50, 60 50, 60 75 L 60 75 C 60 100, 80 100, 100 100`
+                                                                : `M 0 50 C 40 50, 60 50, 60 25 L 60 25 C 60 0, 80 0, 100 0`)
                                                             : (mIdx % 2 === 0
-                                                                ? `M ${connectorWidth} 50% L ${connectorWidth / 2} 50% L ${connectorWidth / 2} 100% L 0 100%`
-                                                                : `M ${connectorWidth} 50% L ${connectorWidth / 2} 50% L ${connectorWidth / 2} 0% L 0 0%`)
+                                                                ? `M 100 50 C 60 50, 40 50, 40 75 L 40 75 C 40 100, 20 100, 0 100`
+                                                                : `M 100 50 C 60 50, 40 50, 40 25 L 40 25 C 40 0, 20 0, 0 0`)
                                                         }
                                                         stroke={lineColor}
-                                                        strokeWidth="2.5"
+                                                        strokeWidth="2"
                                                         fill="none"
-                                                        style={{ opacity: lineOpacity }}
+                                                        style={{ opacity: lineOpacity, filter: m ? 'url(#glow-line)' : 'none' }}
                                                         strokeDasharray={!m ? "4,4" : "0"}
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
                                                     />
                                                 )}
                                             </svg>
@@ -251,8 +303,8 @@ export const BracketTree: React.FC<BracketTreeProps> = ({ matches, currentRound,
                 </div>
             </div>
 
-            <div className="w-full overflow-x-auto pb-64 no-scrollbar cursor-grab active:cursor-grabbing">
-                <div className="flex items-center justify-center gap-0 min-w-max px-32 md:px-64 pt-56 md:pt-72 pb-20">
+            <div className="w-full overflow-x-auto pb-44 custom-scrollbar cursor-grab active:cursor-grabbing">
+                <div className="flex items-center justify-center gap-0 min-w-max px-20 md:px-44 pt-64 md:pt-96 pb-20">
 
                     {/* LEFT WING */}
                     {totalRounds > 1 && (
@@ -267,20 +319,20 @@ export const BracketTree: React.FC<BracketTreeProps> = ({ matches, currentRound,
                     )}
 
                     {/* CENTRAL FINAL AREA */}
-                    <div className="px-16 md:px-24 relative z-20">
+                    <div className="px-10 md:px-16 relative z-20">
                         {finalWinner && estado === 'FINALIZADA' && (
-                            <div className="absolute -top-40 md:-top-56 left-1/2 -translate-x-1/2 flex flex-col items-center">
+                            <div className="absolute -top-64 md:-top-80 left-1/2 -translate-x-1/2 flex flex-col items-center">
                                 <div className="relative mb-4 group/champion">
-                                    <div className="absolute -inset-4 bg-yellow-400/10 blur-xl rounded-full"></div>
-                                    <Crown size={48} className="absolute -top-10 left-1/2 -translate-x-1/2 text-yellow-400/80 drop-shadow-md z-10" fill="currentColor" />
-                                    <div className="relative w-24 h-24 md:w-28 md:h-28 rounded-[2rem] overflow-hidden border-2 border-yellow-400/50 shadow-lg shadow-yellow-400/10">
+                                    <div className="absolute -inset-8 bg-yellow-400/20 blur-2xl rounded-full mix-blend-screen"></div>
+                                    <Crown size={64} className="absolute -top-12 left-1/2 -translate-x-1/2 text-yellow-500 drop-shadow-xl z-20" fill="currentColor" />
+                                    <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-3xl overflow-hidden border-4 border-yellow-400 shadow-[0_0_40px_rgba(250,204,21,0.4)] bg-black">
                                         {finalWinner.image && <Image src={finalWinner.image} alt="" fill className="object-cover" />}
                                     </div>
-                                    <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-yellow-400 text-black text-[9px] font-black uppercase tracking-[0.4em] rounded-full shadow-lg whitespace-nowrap z-20">
+                                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 px-6 py-2 bg-gradient-to-r from-amber-600 via-yellow-400 to-amber-600 text-black text-[10px] md:text-xs font-black uppercase tracking-[0.5em] rounded-full shadow-2xl whitespace-nowrap z-20">
                                         CAMPEÓN
                                     </div>
                                 </div>
-                                <h3 className="text-lg md:text-xl font-black text-yellow-400 uppercase tracking-tighter italic text-center drop-shadow-md opacity-90">
+                                <h3 className="text-xl md:text-2xl font-black text-white uppercase tracking-tighter text-center drop-shadow-[0_0_10px_rgba(255,255,255,0.5)] bg-black/40 px-4 py-1 rounded-xl mt-2">
                                     {finalWinner.nombre}
                                 </h3>
                             </div>

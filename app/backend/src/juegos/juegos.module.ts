@@ -7,9 +7,9 @@ import { CategoriasModule } from '../categorias/categorias.module';
 import { CalificacionesModule } from '../calificaciones/calificaciones.module';
 
 @Module({
-    imports: [PrismaModule, CategoriasModule, CalificacionesModule],
-    controllers: [JuegosController],
-    providers: [JuegosService, JuegoRepository],
-    exports: [JuegosService],
+  imports: [PrismaModule, CategoriasModule, CalificacionesModule],
+  controllers: [JuegosController],
+  providers: [JuegosService, JuegoRepository],
+  exports: [JuegosService],
 })
-export class JuegosModule { }
+export class JuegosModule {}

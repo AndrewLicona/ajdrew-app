@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Share2, X, Link as LinkIcon, Check } from 'lucide-react';
+import { Share2, X, Link as LinkIcon } from 'lucide-react';
 import { FaWhatsapp, FaFacebookF, FaTwitter } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 

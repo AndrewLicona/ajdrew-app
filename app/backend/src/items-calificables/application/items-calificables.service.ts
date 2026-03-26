@@ -6,7 +6,9 @@ import { ItemCalificableRepository } from '../infrastructure/persistence/item-ca
 
 @Injectable()
 export class ItemsCalificablesService {
-  constructor(private readonly itemCalificableRepository: ItemCalificableRepository) { }
+  constructor(
+    private readonly itemCalificableRepository: ItemCalificableRepository,
+  ) {}
 
   create(createItemCalificableDto: CreateItemCalificableDto) {
     return this.itemCalificableRepository.create(createItemCalificableDto);
@@ -15,7 +17,6 @@ export class ItemsCalificablesService {
   createMany(items: CreateItemCalificableDto[]) {
     return this.itemCalificableRepository.createMany(items);
   }
-
 
   findAll(params: {
     categoryId?: string;

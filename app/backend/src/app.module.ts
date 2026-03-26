@@ -39,9 +39,6 @@ import { TablasCalificacionModule } from './tablas-calificacion/tablas-calificac
     TablasCalificacionModule,
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    PrismaService
-  ],
+  providers: [AppService, PrismaService],
 })
-export class AppModule { }
+export class AppModule {}

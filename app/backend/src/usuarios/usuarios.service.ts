@@ -4,25 +4,25 @@ import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class UsuariosService {
-    constructor(private readonly usuarioRepository: UsuarioRepository) { }
+  constructor(private readonly usuarioRepository: UsuarioRepository) {}
 
-    async findByEmail(email: string) {
-        return this.usuarioRepository.findByEmail(email);
-    }
+  async findByEmail(email: string) {
+    return this.usuarioRepository.findByEmail(email);
+  }
 
-    async findById(id: string) {
-        return this.usuarioRepository.findById(id);
-    }
+  async findById(id: string) {
+    return this.usuarioRepository.findById(id);
+  }
 
-    async create(data: any) {
-        const hashedPassword = await bcrypt.hash(data.password, 10);
-        return this.usuarioRepository.create({
-            ...data,
-            password: hashedPassword,
-        });
-    }
+  async create(data: any) {
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+    return this.usuarioRepository.create({
+      ...data,
+      password: hashedPassword,
+    });
+  }
 
-    async findAll() {
-        return this.usuarioRepository.findAll();
-    }
+  async findAll() {
+    return this.usuarioRepository.findAll();
+  }
 }

@@ -5,9 +5,9 @@ import { TutorialRepository } from './infrastructure/persistence/tutorial.reposi
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-    imports: [PrismaModule],
-    controllers: [TutorialesController],
-    providers: [TutorialesService, TutorialRepository],
-    exports: [TutorialesService],
+  imports: [PrismaModule],
+  controllers: [TutorialesController],
+  providers: [TutorialesService, TutorialRepository],
+  exports: [TutorialesService],
 })
-export class TutorialesModule { }
+export class TutorialesModule {}

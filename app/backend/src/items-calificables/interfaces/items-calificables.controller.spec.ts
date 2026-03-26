@@ -9,7 +9,9 @@ describe('ItemsCalificablesController', () => {
       controllers: [ItemsCalificablesController],
     }).compile();
 
-    controller = module.get<ItemsCalificablesController>(ItemsCalificablesController);
+    controller = module.get<ItemsCalificablesController>(
+      ItemsCalificablesController,
+    );
   });
 
   it('should be defined', () => {

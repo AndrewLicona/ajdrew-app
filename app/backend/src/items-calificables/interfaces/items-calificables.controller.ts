@@ -1,5 +1,17 @@
 // items-calificables/interfaces/items-calificables.controller.ts
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Req, Headers, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  Req,
+  Headers,
+  UseGuards,
+} from '@nestjs/common';
 import express from 'express';
 import { ItemsCalificablesService } from '../application/items-calificables.service';
 import { CreateItemCalificableDto } from '../application/dto/create-item-calificable.dto';
@@ -10,7 +22,9 @@ import { Roles } from '../../auth/guards/roles.decorator';
 
 @Controller('items-calificables')
 export class ItemsCalificablesController {
-  constructor(private readonly itemsCalificablesService: ItemsCalificablesService) { }
+  constructor(
+    private readonly itemsCalificablesService: ItemsCalificablesService,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -26,7 +40,6 @@ export class ItemsCalificablesController {
     return this.itemsCalificablesService.createMany(items);
   }
 
-
   @Get()
   findAll(
     @Query('categoryId') categoryId?: string,
@@ -37,7 +50,7 @@ export class ItemsCalificablesController {
     @Query('order') order?: 'asc' | 'desc',
     @Query('page') page?: number,
     @Query('limit') limit?: number,
-    @Headers('x-device-id') deviceId?: string
+    @Headers('x-device-id') deviceId?: string,
   ) {
     return this.itemsCalificablesService.findAll({
       categoryId,
@@ -48,7 +61,7 @@ export class ItemsCalificablesController {
       order,
       page: page ? Number(page) : undefined,
       limit: limit ? Number(limit) : undefined,
-      deviceId
+      deviceId,
     } as any);
   }
 
@@ -57,17 +70,16 @@ export class ItemsCalificablesController {
     return this.itemsCalificablesService.findOne(id, deviceId);
   }
 
-
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateItemCalificableDto: UpdateItemCalificableDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateItemCalificableDto: UpdateItemCalificableDto,
+  ) {
     return this.itemsCalificablesService.update(id, updateItemCalificableDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.itemsCalificablesService.remove(id);
-
   }
-
-
 }

@@ -1,4 +1,3 @@
-
 import { Module } from '@nestjs/common';
 import { CalificacionesService } from './application/calificaciones.service';
 import { CalificacionesController } from './interfaces/calificaciones.controller';
@@ -12,7 +11,12 @@ import { RankingImageGenerator } from './application/ranking-image-generator';
 @Module({
   imports: [PrismaModule, ItemsCalificablesModule, MediaModule],
   controllers: [CalificacionesController],
-  providers: [CalificacionesService, CalificacionRepository, RankingMediaService, RankingImageGenerator],
+  providers: [
+    CalificacionesService,
+    CalificacionRepository,
+    RankingMediaService,
+    RankingImageGenerator,
+  ],
   exports: [CalificacionesService, CalificacionRepository, RankingMediaService],
 })
-export class CalificacionesModule { }
+export class CalificacionesModule {}

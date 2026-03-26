@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+} from '@nestjs/common';
 import { CategoriasService } from '../application/categorias.service';
 import { CreateCategoriaDto } from '../application/dto/create-categoria.dto';
 import { UpdateCategoriaDto } from '../application/dto/update-categoria.dto';
@@ -8,7 +17,7 @@ import { Roles } from '../../auth/guards/roles.decorator';
 
 @Controller('categorias')
 export class CategoriasController {
-  constructor(private readonly categoriasService: CategoriasService) { }
+  constructor(private readonly categoriasService: CategoriasService) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -30,7 +39,10 @@ export class CategoriasController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'EDITOR')
-  update(@Param('id') id: string, @Body() updateCategoriaDto: UpdateCategoriaDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateCategoriaDto: UpdateCategoriaDto,
+  ) {
     return this.categoriasService.update(id, updateCategoriaDto);
   }
 

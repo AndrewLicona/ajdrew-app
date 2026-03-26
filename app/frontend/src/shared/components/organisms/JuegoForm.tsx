@@ -62,7 +62,7 @@ export const JuegoForm: React.FC<JuegoFormProps> = ({
         setError(null);
         try {
             await onSubmit(formData);
-        } catch (err) {
+        } catch {
             setError('Error al procesar el formulario. Revisa los datos.');
         } finally {
             setLoading(false);

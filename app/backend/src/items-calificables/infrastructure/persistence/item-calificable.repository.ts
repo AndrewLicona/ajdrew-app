@@ -1,4 +1,3 @@
-
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { CreateItemCalificableDto } from '../../application/dto/create-item-calificable.dto';
@@ -16,25 +15,25 @@ interface AggregationResult {
 
 @Injectable()
 export class ItemCalificableRepository {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(createItemCalificableDto: CreateItemCalificableDto) {
-    return this.prisma.itemCalificable.create({ 
+    return this.prisma.itemCalificable.create({
       data: {
         nombre: createItemCalificableDto.nombre,
         image: createItemCalificableDto.image,
         juegoId: createItemCalificableDto.juegoId,
-      }
+      },
     });
   }
 
   async createMany(items: CreateItemCalificableDto[]) {
     return this.prisma.itemCalificable.createMany({
-      data: items.map(item => ({
+      data: items.map((item) => ({
         nombre: item.nombre,
         image: item.image,
         juegoId: item.juegoId,
-      }))
+      })),
     });
   }
 
@@ -74,14 +73,17 @@ export class ItemCalificableRepository {
       include: { juego: { select: { id: true, nombre: true } } },
       skip,
       take,
-      orderBy: (sortBy && sortBy !== 'averageRating') ? { [sortBy]: order || 'desc' } : undefined
+      orderBy:
+        sortBy && sortBy !== 'averageRating'
+          ? { [sortBy]: order || 'desc' }
+          : undefined,
     });
 
     if (items.length === 0) {
       return { items: [], total };
     }
 
-    const itemIds = items.map(item => item.id);
+    const itemIds = items.map((item) => item.id);
 
     // Get average ratings and counts scoped to this tabla (if tablaId is set)
     const calificacionWhere: any = { itemId: { in: itemIds } };
@@ -94,17 +96,23 @@ export class ItemCalificableRepository {
       _count: { puntuacion: true },
     });
 
-    const userRatings = deviceId ? await this.prisma.calificacion.findMany({
-      where: {
-        ...calificacionWhere,
-        deviceId: deviceId,
-      },
-    }) : [];
+    const userRatings = deviceId
+      ? await this.prisma.calificacion.findMany({
+          where: {
+            ...calificacionWhere,
+            deviceId: deviceId,
+          },
+        })
+      : [];
 
-    const aggregateMap = new Map(aggregateData.map(data => [data.itemId, data]));
-    const userRatingsMap = new Map(userRatings.map(rating => [rating.itemId, rating]));
+    const aggregateMap = new Map(
+      aggregateData.map((data) => [data.itemId, data]),
+    );
+    const userRatingsMap = new Map(
+      userRatings.map((rating) => [rating.itemId, rating]),
+    );
 
-    const enrichedItems = items.map(item => {
+    const enrichedItems = items.map((item) => {
       const agg = aggregateMap.get(item.id) as any;
       const userRating = userRatingsMap.get(item.id) as any;
 
@@ -119,7 +127,9 @@ export class ItemCalificableRepository {
     // If not sorted by database, we might want to sort by averageRating if requested
     if (sortBy === 'averageRating') {
       enrichedItems.sort((a, b) =>
-        order === 'asc' ? a.averageRating - b.averageRating : b.averageRating - a.averageRating
+        order === 'asc'
+          ? a.averageRating - b.averageRating
+          : b.averageRating - a.averageRating,
       );
     }
 
@@ -127,7 +137,9 @@ export class ItemCalificableRepository {
   }
 
   async findOne(id: string, deviceId?: string) {
-    const item = await this.prisma.itemCalificable.findUnique({ where: { id } });
+    const item = await this.prisma.itemCalificable.findUnique({
+      where: { id },
+    });
     if (!item) {
       return null;
     }
@@ -146,12 +158,14 @@ export class ItemCalificableRepository {
     });
 
     // Get user's specific rating
-    const userRating = deviceId ? await this.prisma.calificacion.findFirst({
-      where: {
-        itemId: id,
-        deviceId: deviceId,
-      },
-    }) : null;
+    const userRating = deviceId
+      ? await this.prisma.calificacion.findFirst({
+          where: {
+            itemId: id,
+            deviceId: deviceId,
+          },
+        })
+      : null;
 
     // Enrich item with rating data
     return {

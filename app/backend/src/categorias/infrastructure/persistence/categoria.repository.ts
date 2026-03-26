@@ -1,4 +1,3 @@
-
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { CreateCategoriaDto } from '../../application/dto/create-categoria.dto';
@@ -6,12 +5,12 @@ import { UpdateCategoriaDto } from '../../application/dto/update-categoria.dto';
 
 @Injectable()
 export class CategoriaRepository {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(createCategoriaDto: CreateCategoriaDto) {
     const { nombre, activa, tipo, juegoId } = createCategoriaDto;
     return this.prisma.categoria.create({
-      data: { nombre, activa, tipo, juegoId }
+      data: { nombre, activa, tipo, juegoId },
     });
   }
 
@@ -23,18 +22,18 @@ export class CategoriaRepository {
         _count: {
           select: {
             votaciones: true,
-            tutoriales: true
-          }
-        }
+            tutoriales: true,
+          },
+        },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
   }
 
   async findOne(id: string) {
     return this.prisma.categoria.findUnique({
       where: { id },
-      include: { juego: true }
+      include: { juego: true },
     });
   }
 

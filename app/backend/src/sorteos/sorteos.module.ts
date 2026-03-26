@@ -5,9 +5,9 @@ import { SorteoRepository } from './infrastructure/persistence/sorteo.repository
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-    imports: [PrismaModule],
-    controllers: [SorteosController],
-    providers: [SorteosService, SorteoRepository],
-    exports: [SorteosService],
+  imports: [PrismaModule],
+  controllers: [SorteosController],
+  providers: [SorteosService, SorteoRepository],
+  exports: [SorteosService],
 })
-export class SorteosModule { }
+export class SorteosModule {}

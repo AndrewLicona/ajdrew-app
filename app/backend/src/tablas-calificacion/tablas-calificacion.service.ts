@@ -1,15 +1,31 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateTablaCalificacionDto, UpdateTablaCalificacionDto } from './dto/create-tabla-calificacion.dto';
+import {
+  CreateTablaCalificacionDto,
+  UpdateTablaCalificacionDto,
+} from './dto/create-tabla-calificacion.dto';
 
 @Injectable()
 export class TablasCalificacionService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private eventEmitter: EventEmitter2,
+  ) {}
 
   async create(createDto: CreateTablaCalificacionDto) {
-    const { nombre, slug, descripcion, image, estado, juegoId, categoriaId, itemsIds } = createDto;
-    
-    return this.prisma.tablaCalificacion.create({
+    const {
+      nombre,
+      slug,
+      descripcion,
+      image,
+      estado,
+      juegoId,
+      categoriaId,
+      itemsIds,
+    } = createDto;
+
+    const tabla = await this.prisma.tablaCalificacion.create({
       data: {
         nombre,
         slug,
@@ -18,12 +34,19 @@ export class TablasCalificacionService {
         estado: estado || 'ACTIVO',
         juegoId,
         categoriaId,
-        items: itemsIds ? {
-          create: itemsIds.map(itemId => ({ itemId }))
-        } : undefined
+        items: itemsIds
+          ? {
+              create: itemsIds.map((itemId) => ({ itemId })),
+            }
+          : undefined,
       },
-      include: { items: { include: { item: true } } }
+      include: { items: { include: { item: true } }, juego: true },
     });
+
+    // Emitir evento para publicación social automática
+    this.eventEmitter.emit('social.tabla.created', { tablaId: tabla.id });
+
+    return tabla;
   }
 
   async findAll(juegoId?: string, categoriaId?: string) {
@@ -36,9 +59,9 @@ export class TablasCalificacionService {
       include: {
         juego: true,
         categoria: true,
-        _count: { select: { items: true } }
+        _count: { select: { items: true } },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -49,14 +72,15 @@ export class TablasCalificacionService {
         juego: true,
         categoria: true,
         items: {
-          include: { 
-            item: true 
-          }
-        }
-      }
+          include: {
+            item: true,
+          },
+        },
+      },
     });
 
-    if (!tabla) throw new NotFoundException('Tabla de calificacion no encontrada');
+    if (!tabla)
+      throw new NotFoundException('Tabla de calificacion no encontrada');
 
     return tabla;
   }
@@ -64,25 +88,25 @@ export class TablasCalificacionService {
   async update(id: string, updateDto: UpdateTablaCalificacionDto) {
     const { itemsIds, ...rest } = updateDto;
 
-    let updateData: any = { ...rest };
+    const updateData: any = { ...rest };
 
     if (itemsIds) {
       await this.prisma.tablaItem.deleteMany({ where: { tablaId: id } });
       updateData.items = {
-        create: itemsIds.map(itemId => ({ itemId }))
+        create: itemsIds.map((itemId) => ({ itemId })),
       };
     }
 
     return this.prisma.tablaCalificacion.update({
       where: { id },
       data: updateData,
-      include: { items: { include: { item: true } } }
+      include: { items: { include: { item: true } } },
     });
   }
 
   async remove(id: string) {
     return this.prisma.tablaCalificacion.delete({
-      where: { id }
+      where: { id },
     });
   }
 }

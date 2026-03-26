@@ -8,13 +8,25 @@ import { ItemsCalificablesService } from '../../items-calificables/application/i
 export class CalificacionesService {
   constructor(
     private readonly calificacionRepository: CalificacionRepository,
-    @Inject(ItemsCalificablesService) private readonly itemsCalificablesService: ItemsCalificablesService,
-    ) {}
+    @Inject(ItemsCalificablesService)
+    private readonly itemsCalificablesService: ItemsCalificablesService,
+  ) {}
 
-  async create(createCalificacionDto: CreateCalificacionDto, ip?: string, deviceId?: string) {
-    await this.calificacionRepository.create(createCalificacionDto, ip, deviceId);
+  async create(
+    createCalificacionDto: CreateCalificacionDto,
+    ip?: string,
+    deviceId?: string,
+  ) {
+    await this.calificacionRepository.create(
+      createCalificacionDto,
+      ip,
+      deviceId,
+    );
     // Después de calificar, busca y devuelve el item actualizado, que ya incluye los promedios y myRating.
-    return this.itemsCalificablesService.findOne(createCalificacionDto.itemId, deviceId);
+    return this.itemsCalificablesService.findOne(
+      createCalificacionDto.itemId,
+      deviceId,
+    );
   }
 
   findAll() {
@@ -29,12 +41,17 @@ export class CalificacionesService {
     return calificacion;
   }
 
-  getAverageRating(itemId: string): Promise<{ average: number; count: number }> {
+  getAverageRating(
+    itemId: string,
+  ): Promise<{ average: number; count: number }> {
     return this.calificacionRepository.getAverageRating(itemId);
   }
 
   findMyRating(itemId: string, deviceId: string) {
-    return this.calificacionRepository.findByDeviceIdAndItemId(deviceId, itemId);
+    return this.calificacionRepository.findByDeviceIdAndItemId(
+      deviceId,
+      itemId,
+    );
   }
 
   async getRanking(tablaId?: string, juegoId?: string) {

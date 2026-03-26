@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Swal from 'sweetalert2';
 import {
     Plus,
@@ -19,7 +19,8 @@ import {
     X,
     Filter,
     Clock,
-    CalendarClock
+    CalendarClock,
+    Timer
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BracketForm } from '@/modules/votaciones/components/BracketForm';
@@ -45,6 +46,7 @@ interface Bracket {
     matches?: MatchMin[];
     rondaDuracion: number;
     proximoCierreAt?: string;
+    imageUrl?: string | null;
     itemsIds?: string[];
     categoriaId?: string;
 }
@@ -52,6 +54,44 @@ interface Bracket {
 interface Juego {
     id: string;
     nombre: string;
+}
+
+// ── Live Countdown ────────────────────────────────────────────────
+function useCountdown(targetIso?: string) {
+    const [diff, setDiff] = useState<number | null>(null);
+
+    useEffect(() => {
+        if (!targetIso) { setDiff(null); return; }
+        const update = () => {
+            const ms = new Date(targetIso).getTime() - Date.now();
+            setDiff(ms > 0 ? ms : 0);
+        };
+        update();
+        const id = setInterval(update, 1000);
+        return () => clearInterval(id);
+    }, [targetIso]);
+
+    return diff;
+}
+
+function Countdown({ targetIso }: { targetIso?: string }) {
+    const ms = useCountdown(targetIso);
+    if (ms === null || !targetIso) return null;
+    if (ms === 0) return <span className="text-[8px] font-black text-red-400 uppercase">¡Tiempo!</span>;
+
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    const s = Math.floor((ms % 60000) / 1000);
+    const fmt = h > 0
+        ? `${h}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`
+        : `${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
+
+    return (
+        <span className="flex items-center gap-1 text-[9px] font-black text-yellow-400 uppercase tabular-nums">
+            <Timer size={9} />
+            {fmt}
+        </span>
+    );
 }
 
 export default function VotacionesAdminPage() {
@@ -62,6 +102,12 @@ export default function VotacionesAdminPage() {
     const [editingBracket, setEditingBracket] = useState<Bracket | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedJuego, setSelectedJuego] = useState<string>('all');
+    const [expandedImage, setExpandedImage] = useState<string | null>(null);
+    const [slideIndexMap, setSlideIndexMap] = useState<Record<string, number>>({});
+
+    const getSlide = (id: string) => slideIndexMap[id] ?? 0;
+    const setSlide = (id: string, idx: number) =>
+        setSlideIndexMap(prev => ({ ...prev, [id]: idx }));
 
     const fetchData = async () => {
         try {
@@ -85,9 +131,7 @@ export default function VotacionesAdminPage() {
 
     const handleSave = async (data: any) => {
         try {
-            // Fix: ensure categoriaId is null if empty string to avoid Prisma errors
             if (data.categoriaId === '') data.categoriaId = null;
-
             const url = editingBracket ? `${process.env.NEXT_PUBLIC_API_URL}/votaciones/${editingBracket.id}` : `${process.env.NEXT_PUBLIC_API_URL}/votaciones`;
             const method = editingBracket ? 'PATCH' : 'POST';
 
@@ -123,9 +167,7 @@ export default function VotacionesAdminPage() {
     };
 
     const handleScheduleRound = async (id: string, currentSchedule?: string) => {
-        const defaultDt = currentSchedule
-            ? new Date(currentSchedule)
-            : new Date(Date.now() + 60 * 60 * 1000);
+        const defaultDt = currentSchedule ? new Date(currentSchedule) : new Date(Date.now() + 60 * 60 * 1000);
         const pad = (n: number) => String(n).padStart(2, '0');
         const defaultValue = `${defaultDt.getFullYear()}-${pad(defaultDt.getMonth() + 1)}-${pad(defaultDt.getDate())}T${pad(defaultDt.getHours())}:${pad(defaultDt.getMinutes())}`;
 
@@ -220,6 +262,21 @@ export default function VotacionesAdminPage() {
         return { votes, totalRounds: maxRound };
     };
 
+    const getBracketImages = (bracket: Bracket): string[] => {
+        if (!bracket.imageUrl) return [];
+        // Check if it's a JSON array of multiple VS images or Cloudinary URLs
+        if (bracket.imageUrl.startsWith('[')) {
+            try {
+                const arr: string[] = JSON.parse(bracket.imageUrl);
+                return arr.map(b => b.startsWith('http') || b.startsWith('/') || b.startsWith('data:') ? b : `data:image/png;base64,${b}`);
+            } catch { }
+        }
+        // Single image (legacy or champion)
+        if (bracket.imageUrl.startsWith('http') || bracket.imageUrl.startsWith('/')) return [bracket.imageUrl];
+        if (bracket.imageUrl.startsWith('data:')) return [bracket.imageUrl];
+        return [`data:image/png;base64,${bracket.imageUrl}`];
+    };
+
     const filteredBrackets = brackets.filter(b => {
         const matchesSearch = b.tematica.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesJuego = selectedJuego === 'all' || b.juegoId === selectedJuego;
@@ -228,7 +285,7 @@ export default function VotacionesAdminPage() {
 
     return (
         <div className="space-y-8 pb-32">
-            {/* Header section with Stats */}
+            {/* Header section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 text-center md:text-left">
                 <div className="flex flex-col items-center md:items-start">
                     <h1 className="text-3xl font-black text-white italic tracking-tighter uppercase leading-none">Torneos y Brackets</h1>
@@ -251,7 +308,7 @@ export default function VotacionesAdminPage() {
                 </Bt>
             </div>
 
-            {/* Global Controls */}
+            {/* Filters */}
             <div className="bg-[var(--color-card)] p-4 md:p-6 rounded-[2rem] border border-white/5 space-y-4">
                 <div className="flex flex-col lg:flex-row gap-4 items-center">
                     <div className="relative flex-1 w-full">
@@ -281,16 +338,20 @@ export default function VotacionesAdminPage() {
                 </div>
             </div>
 
-            {/* List: Final Refactored V8 Compact Cards */}
+            {/* Cards grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {loading ? (
-                    [1, 2, 3, 4].map(i => <div key={i} className="h-28 bg-white/5 rounded-2xl animate-pulse" />)
+                    [1, 2, 3, 4].map(i => <div key={i} className="h-40 bg-white/5 rounded-2xl animate-pulse" />)
                 ) : filteredBrackets.length === 0 ? (
                     <div className="col-span-full py-20 text-center opacity-20 italic">No se encontraron torneos.</div>
                 ) : (
                     <AnimatePresence mode="popLayout">
                         {filteredBrackets.map((bracket) => {
                             const { votes, totalRounds } = getStats(bracket);
+                            const imgs = getBracketImages(bracket);
+                            const slide = getSlide(bracket.id);
+                            const imgSrc = imgs[slide] ?? null;
+
                             return (
                                 <motion.div
                                     layout
@@ -298,127 +359,156 @@ export default function VotacionesAdminPage() {
                                     initial={{ opacity: 0, scale: 0.95 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.95 }}
-                                    className="bg-[var(--color-card)] rounded-2xl border border-white/5 hover:border-[var(--color-primary)]/30 transition-all p-3 flex items-center gap-4 group shadow-lg"
+                                    className="bg-[var(--color-card)] rounded-2xl border border-white/5 hover:border-[var(--color-primary)]/30 transition-all shadow-lg"
                                     data-testid={`bracket-card-${bracket.slug}`}
                                 >
-                                    {/* Info Section - Expanded since Trophy is gone */}
-
-                                    {/* Middle Info */}
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                                            <h3 className="text-sm font-black text-white uppercase italic tracking-tighter truncate leading-none">
-                                                {bracket.tematica}
-                                            </h3>
-                                            <select
-                                                value={bracket.estado}
-                                                onChange={(e) => handleStatusChange(bracket.id, e.target.value as any)}
-                                                className={`shrink-0 text-[7px] font-black px-2 py-1 rounded-md border transition-all tracking-widest outline-none cursor-pointer ${bracket.estado === 'ACTIVA'
-                                                    ? 'bg-green-500/10 text-green-500 border-green-500/20'
-                                                    : bracket.estado === 'BORRADOR'
-                                                        ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
-                                                        : 'bg-blue-500/10 text-blue-500 border-blue-500/20'
-                                                    }`}
-                                            >
-                                                <option value="BORRADOR" className="bg-[#111] text-white">BORRADOR</option>
-                                                <option value="ACTIVA" className="bg-[#111] text-white">ACTIVA</option>
-                                                <option value="FINALIZADA" className="bg-[#111] text-white">FINALIZADA</option>
-                                            </select>
-                                        </div>
-
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <span className="text-[10px] font-black text-white/20 uppercase tracking-[2px] truncate">{bracket.juego?.nombre || 'General'}</span>
-                                            <div className="w-1 h-1 rounded-full bg-white/10" />
-                                            {bracket.proximoCierreAt && bracket.estado === 'ACTIVA' && (
-                                                <>
-                                                    <span className="text-[8px] font-black text-yellow-500/60 uppercase">
-                                                        CIERRA: {new Date(bracket.proximoCierreAt).toLocaleString()}
-                                                    </span>
-                                                    <div className="w-1 h-1 rounded-full bg-white/10" />
-                                                </>
-                                            )}
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-[8px] font-black text-[var(--color-primary)]/60">RONDA {bracket.rondaActual} / {totalRounds}</span>
-                                                {bracket.estado === 'ACTIVA' && (
-                                                    <div className="flex items-center gap-1">
-                                                        <button
-                                                            onClick={async (e) => {
-                                                                e.stopPropagation();
-                                                                const res = await Swal.fire({
-                                                                    title: '¿Avanzar de Ronda?',
-                                                                    text: 'Se cerrarán los votos actuales y se generarán los nuevos enfrentamientos.',
-                                                                    icon: 'question',
-                                                                    showCancelButton: true,
-                                                                    confirmButtonText: 'Sí, avanzar',
-                                                                    confirmButtonColor: 'var(--color-primary)',
-                                                                    background: '#0a0f0a',
-                                                                    color: '#fff'
-                                                                });
-                                                                if (res.isConfirmed) {
-                                                                    try { await fetch(`${process.env.NEXT_PUBLIC_API_URL}/votaciones/${bracket.id}/advance-round`, { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }); fetchData(); } catch (e) { }
-                                                                }
-                                                            }}
-                                                            className="px-2 py-0.5 bg-[var(--color-primary)]/10 text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white text-[7px] font-black uppercase rounded border border-[var(--color-primary)]/20 transition-all flex items-center gap-1"
-                                                        >
-                                                            + ROUND
-                                                        </button>
-                                                        {/* Schedule button */}
-                                                        <button
-                                                            onClick={(e) => { e.stopPropagation(); handleScheduleRound(bracket.id, bracket.proximoCierreAt); }}
-                                                            title={bracket.proximoCierreAt ? `Programado: ${new Date(bracket.proximoCierreAt).toLocaleString()}` : 'Programar avance automático'}
-                                                            className={`p-0.5 rounded border text-[7px] font-black transition-all flex items-center gap-0.5 ${
-                                                                bracket.proximoCierreAt
-                                                                    ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/40 hover:bg-yellow-500/30'
-                                                                    : 'bg-white/5 text-white/30 border-white/10 hover:bg-white/10 hover:text-white'
-                                                            }`}
-                                                        >
-                                                            <CalendarClock size={11} />
-                                                        </button>
+                                    <div className="p-3 flex items-center gap-3">
+                                        {/* VS image mini-carousel */}
+                                        {imgs.length > 0 && (
+                                            <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-black/40 border border-white/10 shrink-0">
+                                                <button
+                                                    onClick={() => setExpandedImage(imgSrc!)}
+                                                    className="w-full h-full block group"
+                                                    title="Ver imagen VS"
+                                                >
+                                                    <img src={imgSrc!} alt="" className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-110" />
+                                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all flex items-center justify-center">
+                                                        <span className="opacity-0 group-hover:opacity-100 text-white text-[8px] font-black uppercase tracking-wider transition-opacity">VER</span>
                                                     </div>
+                                                </button>
+                                                {imgs.length > 1 && (
+                                                    <>
+                                                        <button
+                                                            onClick={e => { e.stopPropagation(); setSlide(bracket.id, (slide - 1 + imgs.length) % imgs.length); }}
+                                                            className="absolute left-0.5 top-1/2 -translate-y-1/2 w-4 h-4 bg-black/70 rounded-full text-white/80 hover:text-white flex items-center justify-center text-[8px] z-10 transition-all"
+                                                        >‹</button>
+                                                        <button
+                                                            onClick={e => { e.stopPropagation(); setSlide(bracket.id, (slide + 1) % imgs.length); }}
+                                                            className="absolute right-0.5 top-1/2 -translate-y-1/2 w-4 h-4 bg-black/70 rounded-full text-white/80 hover:text-white flex items-center justify-center text-[8px] z-10 transition-all"
+                                                        >›</button>
+                                                        <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 flex gap-0.5">
+                                                            {imgs.map((_, i) => (
+                                                                <div key={i} className={`w-1 h-1 rounded-full transition-all ${i === slide ? 'bg-[var(--color-primary)]' : 'bg-white/30'}`} />
+                                                            ))}
+                                                        </div>
+                                                    </>
                                                 )}
                                             </div>
-                                        </div>
+                                        )}
 
-                                        {/* Activity Stats */}
-                                        <div className="flex items-center gap-4">
-                                            <div className="flex items-center gap-1.5" title="Votos Totales">
-                                                <Activity size={12} className="text-red-500/60" />
-                                                <span className="text-[10px] font-black text-white/40">{votes}</span>
+                                        {/* Middle Info */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                                                <h3 className="text-sm font-black text-white uppercase italic tracking-tighter truncate leading-none">
+                                                    {bracket.tematica}
+                                                </h3>
+                                                <select
+                                                    value={bracket.estado}
+                                                    onChange={(e) => handleStatusChange(bracket.id, e.target.value as any)}
+                                                    className={`shrink-0 text-[7px] font-black px-2 py-1 rounded-md border transition-all tracking-widest outline-none cursor-pointer ${bracket.estado === 'ACTIVA'
+                                                        ? 'bg-green-500/10 text-green-500 border-green-500/20'
+                                                        : bracket.estado === 'BORRADOR'
+                                                            ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
+                                                            : 'bg-blue-500/10 text-blue-500 border-blue-500/20'
+                                                        }`}
+                                                >
+                                                    <option value="BORRADOR" className="bg-[#111] text-white">BORRADOR</option>
+                                                    <option value="ACTIVA" className="bg-[#111] text-white">ACTIVA</option>
+                                                    <option value="FINALIZADA" className="bg-[#111] text-white">FINALIZADA</option>
+                                                </select>
                                             </div>
-                                            <div className="flex items-center gap-1.5" title="Combates">
-                                                <Target size={12} className="text-blue-400 opacity-60" />
-                                                <span className="text-[10px] font-black text-white/40">{bracket._count.matches}</span>
+
+                                            <div className="flex items-center gap-2 flex-wrap mb-2">
+                                                <span className="text-[10px] font-black text-white/20 uppercase tracking-[2px] truncate">{bracket.juego?.nombre || 'General'}</span>
+                                                <div className="w-1 h-1 rounded-full bg-white/10" />
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[8px] font-black text-[var(--color-primary)]/60">RONDA {bracket.rondaActual} / {totalRounds}</span>
+                                                    {bracket.estado === 'ACTIVA' && (
+                                                        <div className="flex items-center gap-1">
+                                                            <button
+                                                                onClick={async (e) => {
+                                                                    e.stopPropagation();
+                                                                    const res = await Swal.fire({
+                                                                        title: '¿Avanzar de Ronda?',
+                                                                        text: 'Se cerrarán los votos actuales y se generarán los nuevos enfrentamientos.',
+                                                                        icon: 'question',
+                                                                        showCancelButton: true,
+                                                                        confirmButtonText: 'Sí, avanzar',
+                                                                        confirmButtonColor: 'var(--color-primary)',
+                                                                        background: '#0a0f0a',
+                                                                        color: '#fff'
+                                                                    });
+                                                                    if (res.isConfirmed) {
+                                                                        try { await fetch(`${process.env.NEXT_PUBLIC_API_URL}/votaciones/${bracket.id}/advance-round`, { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }); fetchData(); } catch (e) { }
+                                                                    }
+                                                                }}
+                                                                className="px-2 py-0.5 bg-[var(--color-primary)]/10 text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white text-[7px] font-black uppercase rounded border border-[var(--color-primary)]/20 transition-all flex items-center gap-1"
+                                                            >
+                                                                + ROUND
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); handleScheduleRound(bracket.id, bracket.proximoCierreAt); }}
+                                                                title={bracket.proximoCierreAt ? `Programado: ${new Date(bracket.proximoCierreAt).toLocaleString()}` : 'Programar avance automático'}
+                                                                className={`p-0.5 rounded border text-[7px] font-black transition-all flex items-center gap-0.5 ${bracket.proximoCierreAt
+                                                                    ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/40 hover:bg-yellow-500/30'
+                                                                    : 'bg-white/5 text-white/30 border-white/10 hover:bg-white/10 hover:text-white'
+                                                                    }`}
+                                                            >
+                                                                <CalendarClock size={11} />
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Live countdown */}
+                                            {bracket.estado === 'ACTIVA' && bracket.proximoCierreAt && (
+                                                <div className="flex items-center gap-2 mb-2 px-2 py-1 bg-yellow-500/5 rounded-lg border border-yellow-500/15 w-fit">
+                                                    <Countdown targetIso={bracket.proximoCierreAt} />
+                                                </div>
+                                            )}
+
+                                            {/* Activity Stats */}
+                                            <div className="flex items-center gap-4">
+                                                <div className="flex items-center gap-1.5" title="Votos Totales">
+                                                    <Activity size={12} className="text-red-500/60" />
+                                                    <span className="text-[10px] font-black text-white/40">{votes}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5" title="Combates">
+                                                    <Target size={12} className="text-blue-400 opacity-60" />
+                                                    <span className="text-[10px] font-black text-white/40">{bracket._count.matches}</span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    {/* Final Actions Vertical Stack */}
-                                    <div className="flex flex-col gap-1.5 border-l border-white/5 pl-3 shrink-0">
-                                        <div className="flex gap-1.5">
+                                        {/* Actions */}
+                                        <div className="flex flex-col gap-1.5 border-l border-white/5 pl-3 shrink-0">
+                                            <div className="flex gap-1.5">
+                                                <button
+                                                    onClick={() => {
+                                                        const participantIds = Array.isArray(bracket.matches) ? [...new Set(bracket.matches.flatMap((m: any) => [m.itemAId, m.itemBId]).filter(Boolean))] as string[] : [];
+                                                        setEditingBracket({ ...bracket, itemsIds: participantIds }); setShowForm(true);
+                                                    }}
+                                                    className="p-2 bg-white/5 text-white/30 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+                                                    title="Editar Detalles"
+                                                >
+                                                    <Edit2 size={14} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleToggleActive(bracket.id, bracket.activa)}
+                                                    className={`p-2 rounded-lg transition-all ${bracket.activa ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]' : 'bg-white/5 text-white/20 hover:text-white'}`}
+                                                    title={bracket.activa ? "Ocultar de la Web" : "Mostrar en la Web"}
+                                                >
+                                                    {bracket.activa ? <Eye size={14} /> : <EyeOff size={14} />}
+                                                </button>
+                                            </div>
                                             <button
-                                                onClick={() => {
-                                                    const participantIds = Array.isArray(bracket.matches) ? [...new Set(bracket.matches.flatMap((m: any) => [m.itemAId, m.itemBId]).filter(Boolean))] as string[] : [];
-                                                    setEditingBracket({ ...bracket, itemsIds: participantIds }); setShowForm(true);
-                                                }}
-                                                className="p-2 bg-white/5 text-white/30 hover:text-white hover:bg-white/10 rounded-lg transition-all"
-                                                title="Editar Detalles"
+                                                onClick={() => handleDelete(bracket.id, bracket.tematica)}
+                                                className="px-2 py-2 bg-red-500/5 text-red-500/40 hover:text-red-500 hover:bg-red-500/10 text-[9px] font-black uppercase tracking-tighter rounded-lg transition-all border border-transparent hover:border-red-500/20"
                                             >
-                                                <Edit2 size={14} />
-                                            </button>
-                                            <button
-                                                onClick={() => handleToggleActive(bracket.id, bracket.activa)}
-                                                className={`p-2 rounded-lg transition-all ${bracket.activa ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]' : 'bg-white/5 text-white/20 hover:text-white'}`}
-                                                title={bracket.activa ? "Ocultar de la Web" : "Mostrar en la Web"}
-                                            >
-                                                {bracket.activa ? <Eye size={14} /> : <EyeOff size={14} />}
+                                                ELIMINAR
                                             </button>
                                         </div>
-
-                                        <button
-                                            onClick={() => handleDelete(bracket.id, bracket.tematica)}
-                                            className="px-2 py-2 bg-red-500/5 text-red-500/40 hover:text-red-500 hover:bg-red-500/10 text-[9px] font-black uppercase tracking-tighter rounded-lg transition-all border border-transparent hover:border-red-500/20"
-                                        >
-                                            ELIMINAR
-                                        </button>
                                     </div>
                                 </motion.div>
                             );
@@ -426,6 +516,35 @@ export default function VotacionesAdminPage() {
                     </AnimatePresence>
                 )}
             </div>
+
+            {/* Image lightbox */}
+            <AnimatePresence>
+                {expandedImage && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setExpandedImage(null)}
+                        className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm cursor-pointer"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9 }}
+                            animate={{ scale: 1 }}
+                            exit={{ scale: 0.9 }}
+                            className="relative max-w-2xl w-full"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <img src={expandedImage} alt="Imagen del torneo" className="w-full rounded-2xl shadow-2xl" />
+                            <button
+                                onClick={() => setExpandedImage(null)}
+                                className="absolute -top-4 -right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all"
+                            >
+                                <X size={18} />
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Form Modal */}
             <AnimatePresence>

@@ -442,7 +442,7 @@ export const BracketForm: React.FC<BracketFormProps> = ({
                             ))}
                         </select>
                         {categories.length === 0 && formData.juegoId && (
-                            <p className="text-[10px] text-yellow-500 mt-1 italic">Este juego no tiene categorías de tipo "Votación".</p>
+                            <p className="text-[10px] text-yellow-500 mt-1 italic">Este juego no tiene categorías de tipo &quot;Votación&quot;.</p>
                         )}
                     </div>
                 </div>

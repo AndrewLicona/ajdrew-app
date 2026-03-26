@@ -3,8 +3,8 @@ import { MediaController } from './media.controller';
 import { CloudinaryProvider } from './cloudinary.provider';
 
 @Module({
-    controllers: [MediaController],
-    providers: [CloudinaryProvider],
-    exports: [CloudinaryProvider],
+  controllers: [MediaController],
+  providers: [CloudinaryProvider],
+  exports: [CloudinaryProvider],
 })
-export class MediaModule { }
+export class MediaModule {}

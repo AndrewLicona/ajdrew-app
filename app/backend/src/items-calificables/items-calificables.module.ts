@@ -1,4 +1,3 @@
-
 import { Module } from '@nestjs/common';
 import { ItemsCalificablesController } from './interfaces/items-calificables.controller';
 import { ItemsCalificablesService } from './application/items-calificables.service';

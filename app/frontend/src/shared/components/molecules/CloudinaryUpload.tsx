@@ -20,8 +20,6 @@ export const CloudinaryUpload: React.FC<CloudinaryUploadProps> = ({
     folder = "general"
 }) => {
     const [uploading, setUploading] = useState(false);
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const uploadPreset = "ml_default"; // Fallback typical preset or I might need to ask
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];

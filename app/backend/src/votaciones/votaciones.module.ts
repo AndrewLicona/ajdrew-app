@@ -9,9 +9,9 @@ import { VotacionesCronService } from './application/votaciones-cron.service';
 import { PublicacionesModule } from '../publicaciones/publicaciones.module';
 
 @Module({
-    imports: [PrismaModule, ScheduleModule.forRoot(), PublicacionesModule],
-    controllers: [VotacionesController],
-    providers: [VotacionesService, VotacionRepository, VotacionesCronService],
-    exports: [VotacionesService],
+  imports: [PrismaModule, ScheduleModule.forRoot(), PublicacionesModule],
+  controllers: [VotacionesController],
+  providers: [VotacionesService, VotacionRepository, VotacionesCronService],
+  exports: [VotacionesService],
 })
-export class VotacionesModule { }
+export class VotacionesModule {}

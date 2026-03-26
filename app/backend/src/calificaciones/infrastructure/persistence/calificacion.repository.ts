@@ -3,12 +3,15 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { CreateCalificacionDto } from '../../application/dto/create-calificacion.dto';
 
-
 @Injectable()
 export class CalificacionRepository {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
-  async create(createCalificacionDto: CreateCalificacionDto, ip?: string, deviceId?: string) {
+  async create(
+    createCalificacionDto: CreateCalificacionDto,
+    ip?: string,
+    deviceId?: string,
+  ) {
     const data = { ...createCalificacionDto, ip, deviceId };
     if (deviceId) {
       const existingRating = await this.prisma.calificacion.findFirst({
@@ -54,7 +57,9 @@ export class CalificacionRepository {
     });
   }
 
-  async getAverageRating(itemId: string): Promise<{ average: number; count: number }> {
+  async getAverageRating(
+    itemId: string,
+  ): Promise<{ average: number; count: number }> {
     const result = await this.prisma.calificacion.aggregate({
       _avg: {
         puntuacion: true,
@@ -72,7 +77,19 @@ export class CalificacionRepository {
     };
   }
 
-  async getRanking(tablaId?: string, limit?: number, juegoId?: string): Promise<Array<{ itemId: string; averageRating: number; ratingCount: number; itemName: string; itemImage?: string }>> {
+  async getRanking(
+    tablaId?: string,
+    limit?: number,
+    juegoId?: string,
+  ): Promise<
+    Array<{
+      itemId: string;
+      averageRating: number;
+      ratingCount: number;
+      itemName: string;
+      itemImage?: string;
+    }>
+  > {
     let itemIdsToFilter: string[] = [];
 
     if (tablaId) {
@@ -84,7 +101,7 @@ export class CalificacionRepository {
           itemId: true,
         },
       });
-      itemIdsToFilter = itemsInTabla.map(item => item.itemId);
+      itemIdsToFilter = itemsInTabla.map((item) => item.itemId);
 
       // If no items found in tabla, return empty ranking
       if (itemIdsToFilter.length === 0) {
@@ -95,12 +112,12 @@ export class CalificacionRepository {
         where: { juegoId },
         select: { id: true },
       });
-      itemIdsToFilter = itemsInGame.map(item => item.id);
+      itemIdsToFilter = itemsInGame.map((item) => item.id);
       if (itemIdsToFilter.length === 0) return [];
     }
 
-
-    const whereFilter: any = itemIdsToFilter.length > 0 ? { itemId: { in: itemIdsToFilter } } : {};
+    const whereFilter: any =
+      itemIdsToFilter.length > 0 ? { itemId: { in: itemIdsToFilter } } : {};
     // Always scope ranking to a specific tabla when provided
     if (tablaId) whereFilter.tablaId = tablaId;
 
@@ -123,7 +140,7 @@ export class CalificacionRepository {
 
     if (rankingData.length === 0) {
       // If there are items but no votes, we might want to return unranked items?
-      // For now, consistent with previous behavior, return empty. 
+      // For now, consistent with previous behavior, return empty.
       // User complaint was about positions not updating, implying they have votes.
       // If items have 0 votes they won't appear here.
       // We should arguably return items with 0 votes too if we want "all items".
@@ -132,7 +149,7 @@ export class CalificacionRepository {
       return [];
     }
 
-    const itemIds = rankingData.map(r => r.itemId);
+    const itemIds = rankingData.map((r) => r.itemId);
 
     const items = await this.prisma.itemCalificable.findMany({
       where: {
@@ -154,14 +171,14 @@ export class CalificacionRepository {
     }
 
     const itemsMap = new Map<string, ItemMap>(
-      items.map(item => [item.id, item] as [string, ItemMap])
+      items.map((item) => [item.id, item] as [string, ItemMap]),
     );
 
     // Filter out any items that might have been deleted but still have votes (integrity check)
     // and map to result
     const ranking = rankingData
-      .filter(r => itemsMap.has(r.itemId))
-      .map(r => {
+      .filter((r) => itemsMap.has(r.itemId))
+      .map((r) => {
         const item = itemsMap.get(r.itemId);
         return {
           itemId: r.itemId,

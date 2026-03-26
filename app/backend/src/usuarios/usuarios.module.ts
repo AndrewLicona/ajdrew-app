@@ -5,9 +5,9 @@ import { UsuarioRepository } from './infrastructure/persistence/usuario.reposito
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-    imports: [PrismaModule],
-    controllers: [UsuariosController],
-    providers: [UsuariosService, UsuarioRepository],
-    exports: [UsuariosService],
+  imports: [PrismaModule],
+  controllers: [UsuariosController],
+  providers: [UsuariosService, UsuarioRepository],
+  exports: [UsuariosService],
 })
-export class UsuariosModule { }
+export class UsuariosModule {}

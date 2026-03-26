@@ -14,7 +14,8 @@ async function bootstrap() {
       'http://localhost:3300',
       'http://localhost:8081',
       'http://localhost:3000',
-      /^http:\/\/192\.168\.\d+\.\d+(:\d+)?$/, 
+      'http://localhost:3001',
+      /^http:\/\/192\.168\.\d+\.\d+(:\d+)?$/,
       'http://frontend:3300',
       'http://frontend:80',
       'http://frontend',
@@ -32,15 +33,16 @@ async function bootstrap() {
   const port = 3000;
   await app.listen(port, '0.0.0.0'); // Listen on all interfaces
 
-
   Logger.log(`🚀 Servidor ejecutándose en:`, 'Bootstrap');
   Logger.log(`   - Local:   http://localhost:${port}`, 'Bootstrap');
   Logger.log(`   - Network: http://192.168.100.8:${port}`, 'Bootstrap');
-  Logger.log(`📊 Estado DB:  http://localhost:${port}/api/db-status`, 'Bootstrap');
-
+  Logger.log(
+    `📊 Estado DB:  http://localhost:${port}/api/db-status`,
+    'Bootstrap',
+  );
 }
 
-bootstrap().catch(err => {
+bootstrap().catch((err) => {
   console.error('Error al iniciar la aplicación:', err);
   process.exit(1);
 });

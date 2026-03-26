@@ -1,11 +1,26 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { TablasCalificacionService } from './tablas-calificacion.service';
-import { CreateTablaCalificacionDto, UpdateTablaCalificacionDto } from './dto/create-tabla-calificacion.dto';
+import {
+  CreateTablaCalificacionDto,
+  UpdateTablaCalificacionDto,
+} from './dto/create-tabla-calificacion.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('tablas-calificacion')
 export class TablasCalificacionController {
-  constructor(private readonly tablasCalificacionService: TablasCalificacionService) {}
+  constructor(
+    private readonly tablasCalificacionService: TablasCalificacionService,
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -28,8 +43,14 @@ export class TablasCalificacionController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTablaCalificacionDto: UpdateTablaCalificacionDto) {
-    return this.tablasCalificacionService.update(id, updateTablaCalificacionDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateTablaCalificacionDto: UpdateTablaCalificacionDto,
+  ) {
+    return this.tablasCalificacionService.update(
+      id,
+      updateTablaCalificacionDto,
+    );
   }
 
   @UseGuards(JwtAuthGuard)

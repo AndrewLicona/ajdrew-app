@@ -4,10 +4,7 @@ import { PrismaService } from './prisma/prisma.service';
 
 @Injectable()
 export class AppService {
-  constructor(
-    private prisma: PrismaService
-  ) {}
-
+  constructor(private prisma: PrismaService) {}
 
   async getDbStatus() {
     try {
@@ -19,12 +16,12 @@ export class AppService {
         status: 'OK',
         calificaciones: calificacionesCount,
         items: itemsCount,
-        categorias: categoriasCount
+        categorias: categoriasCount,
       };
     } catch (error) {
       return {
         status: 'ERROR',
-        error: error.message
+        error: error.message,
       };
     }
   }

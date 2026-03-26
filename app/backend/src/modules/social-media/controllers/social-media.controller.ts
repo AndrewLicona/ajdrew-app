@@ -1,11 +1,15 @@
-import { Controller, Get, Query, Res } from '@nestjs/common';
+import { Controller, Get, Post, Param, Query, Res } from '@nestjs/common';
 import { Response } from 'express';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { BracketMediaService } from '../services/bracket-media.service';
 import { AJDREW_THEME_GREEN } from '../generators/bracket-image.generator';
 
 @Controller('social-media')
 export class SocialMediaController {
-  constructor(private readonly bracketMedia: BracketMediaService) {}
+  constructor(
+    private readonly bracketMedia: BracketMediaService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   @Get('preview/bracket')
   async previewBracket(
@@ -42,5 +46,14 @@ export class SocialMediaController {
       'Cache-Control': 'no-cache',
     });
     res.send(buffer);
+  }
+
+  @Post('ranking/:categoriaId/publish')
+  async publishRankingManually(@Param('categoriaId') categoriaId: string) {
+    this.eventEmitter.emit('social.ranking.updated', { categoriaId });
+    return {
+      success: true,
+      message: 'Evento de publicación de ranking emitido.',
+    };
   }
 }

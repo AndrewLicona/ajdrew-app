@@ -1,4 +1,3 @@
-
 export class ItemCalificable {
   id: string;
   nombre: string;

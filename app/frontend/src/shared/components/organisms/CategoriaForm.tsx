@@ -57,7 +57,7 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
         setError(null);
         try {
             await onSubmit(formData);
-        } catch (err) {
+        } catch {
             setError('Error al procesar la categoría. Revisa los datos.');
         } finally {
             setLoading(false);

@@ -11,6 +11,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             const data = await res.json();
             const category = data.find((c: any) => c.id === params.id);
             if (category) {
+                let ogImages: string[] = [];
+                if (category.imageUrl) {
+                    if (category.imageUrl.startsWith('[')) {
+                        try {
+                            const parsed = JSON.parse(category.imageUrl);
+                            ogImages = parsed.map((u: string) => u.startsWith('http') || u.startsWith('/') || u.startsWith('data:') ? u : `data:image/png;base64,${u}`);
+                        } catch {}
+                    } else {
+                        ogImages = [category.imageUrl.startsWith('http') || category.imageUrl.startsWith('/') || category.imageUrl.startsWith('data:') ? category.imageUrl : `data:image/png;base64,${category.imageUrl}`];
+                    }
+                }
+
                 return {
                     title: `Ranking: ${category.nombre} | AJDREW`,
                     description: `Descubre el Top 5 Oficial de ${category.nombre} y mira quiénes dominan la lista.`,
@@ -18,7 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
                         title: `Ranking Oficial - ${category.nombre}`,
                         description: `Mira la lista completa y los puntajes más altos en este ranking.`,
                         type: 'website',
-                        images: category.imageUrl ? [category.imageUrl] : [],
+                        images: ogImages,
                     }
                 };
             }

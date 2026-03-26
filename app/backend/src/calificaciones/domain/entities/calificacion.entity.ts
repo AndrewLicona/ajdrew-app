@@ -1,4 +1,3 @@
-
 export class Calificacion {
   id: string;
   puntuacion: number;

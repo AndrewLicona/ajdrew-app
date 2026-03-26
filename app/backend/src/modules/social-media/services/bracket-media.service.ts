@@ -75,58 +75,63 @@ export class BracketMediaService {
     this.logger.log(`Generando imagen APERTURA para match ${event.matchId}`);
 
     try {
-      const result = await this.generarYSubir({
-        tipo: 'apertura',
-        ronda: event.ronda,
-        torneoNombre: event.torneoNombre,
-        cartaA: {
-          id: event.cartaAId,
-          nombre: event.cartaANombre,
-          juego: event.juego,
-          imagenUrl: event.cartaAImagenUrl,
-          votos: 0,
-          porcentaje: 50,
+      const result = await this.generarYSubir(
+        {
+          tipo: 'apertura',
+          ronda: event.ronda,
+          torneoNombre: event.torneoNombre,
+          cartaA: {
+            id: event.cartaAId,
+            nombre: event.cartaANombre,
+            juego: event.juego,
+            imagenUrl: event.cartaAImagenUrl,
+            votos: 0,
+            porcentaje: 50,
+          },
+          cartaB: {
+            id: event.cartaBId,
+            nombre: event.cartaBNombre,
+            juego: event.juego,
+            imagenUrl: event.cartaBImagenUrl,
+            votos: 0,
+            porcentaje: 50,
+          },
+          horasCierre: event.horasCierre,
+          theme: AJDREW_THEME_GREEN,
         },
-        cartaB: {
-          id: event.cartaBId,
-          nombre: event.cartaBNombre,
-          juego: event.juego,
-          imagenUrl: event.cartaBImagenUrl,
-          votos: 0,
-          porcentaje: 50,
-        },
-        horasCierre: event.horasCierre,
-        theme: AJDREW_THEME_GREEN,
-      }, event.matchId);
+        event.matchId,
+      );
 
       this.logger.log(`Imagen apertura lista: ${result.cloudinaryUrl}`);
-      
+
       if (result.cloudinaryUrl) {
         // Tarea 6: Publicar a Meta
         await this.meta.publishPhaseAnnouncement(
           event.matchId,
           1, // Placeholder round, o mapear
-          result.cloudinaryUrl
+          result.cloudinaryUrl,
         );
 
         // Publicar a X
-        await this.x.publishPhaseAnnouncement(
-          event.matchId,
-          1,
-          result.buffer
-        );
+        await this.x.publishPhaseAnnouncement(event.matchId, 1, result.buffer);
 
         // Update bracket imageUrl
-        const match = await this.prisma.bracketMatch.findUnique({ where: { id: event.matchId }, select: { bracketId: true } });
+        const match = await this.prisma.bracketMatch.findUnique({
+          where: { id: event.matchId },
+          select: { bracketId: true },
+        });
         if (match) {
-            await this.prisma.votacionBracket.update({
-                where: { id: match.bracketId },
-                data: { imageUrl: result.cloudinaryUrl }
-            });
+          await this.prisma.votacionBracket.update({
+            where: { id: match.bracketId },
+            data: { imageUrl: result.cloudinaryUrl },
+          });
         }
       }
     } catch (err) {
-      this.logger.error(`Error generando imagen apertura: ${err.message}`, err.stack);
+      this.logger.error(
+        `Error generando imagen apertura: ${err.message}`,
+        err.stack,
+      );
     }
   }
 
@@ -135,62 +140,74 @@ export class BracketMediaService {
     this.logger.log(`Generando imagen RESULTADO para match ${event.matchId}`);
 
     try {
-      const result = await this.generarYSubir({
-        tipo: 'resultado',
-        ronda: event.ronda,
-        torneoNombre: event.torneoNombre,
-        cartaA: {
-          id: event.cartaAId,
-          nombre: event.cartaANombre,
-          juego: event.juego,
-          imagenUrl: event.cartaAImagenUrl,
-          votos: event.cartaAVotos,
-          porcentaje: event.cartaAPorcentaje,
-          esGanador: event.ganadorId === event.cartaAId,
+      const result = await this.generarYSubir(
+        {
+          tipo: 'resultado',
+          ronda: event.ronda,
+          torneoNombre: event.torneoNombre,
+          cartaA: {
+            id: event.cartaAId,
+            nombre: event.cartaANombre,
+            juego: event.juego,
+            imagenUrl: event.cartaAImagenUrl,
+            votos: event.cartaAVotos,
+            porcentaje: event.cartaAPorcentaje,
+            esGanador: event.ganadorId === event.cartaAId,
+          },
+          cartaB: {
+            id: event.cartaBId,
+            nombre: event.cartaBNombre,
+            juego: event.juego,
+            imagenUrl: event.cartaBImagenUrl,
+            votos: event.cartaBVotos,
+            porcentaje: event.cartaBPorcentaje,
+            esGanador: event.ganadorId === event.cartaBId,
+          },
+          theme: AJDREW_THEME_GREEN,
         },
-        cartaB: {
-          id: event.cartaBId,
-          nombre: event.cartaBNombre,
-          juego: event.juego,
-          imagenUrl: event.cartaBImagenUrl,
-          votos: event.cartaBVotos,
-          porcentaje: event.cartaBPorcentaje,
-          esGanador: event.ganadorId === event.cartaBId,
-        },
-        theme: AJDREW_THEME_GREEN,
-      }, event.matchId);
+        event.matchId,
+      );
 
       this.logger.log(`Imagen resultado lista: ${result.cloudinaryUrl}`);
-      
+
       if (result.cloudinaryUrl) {
         // Publicar Ganador
-        const winnerName = event.ganadorId === event.cartaAId ? event.cartaANombre : event.cartaBNombre;
-        
+        const winnerName =
+          event.ganadorId === event.cartaAId
+            ? event.cartaANombre
+            : event.cartaBNombre;
+
         await this.meta.publishMatchResult(
           event.matchId,
           1,
           result.cloudinaryUrl,
-          winnerName
+          winnerName,
         );
 
         await this.x.publishMatchResult(
           event.matchId,
           1,
           result.buffer,
-          winnerName
+          winnerName,
         );
 
         // Update bracket imageUrl
-        const match = await this.prisma.bracketMatch.findUnique({ where: { id: event.matchId }, select: { bracketId: true } });
+        const match = await this.prisma.bracketMatch.findUnique({
+          where: { id: event.matchId },
+          select: { bracketId: true },
+        });
         if (match) {
-            await this.prisma.votacionBracket.update({
-                where: { id: match.bracketId },
-                data: { imageUrl: result.cloudinaryUrl }
-            });
+          await this.prisma.votacionBracket.update({
+            where: { id: match.bracketId },
+            data: { imageUrl: result.cloudinaryUrl },
+          });
         }
       }
     } catch (err) {
-      this.logger.error(`Error generando imagen resultado: ${err.message}`, err.stack);
+      this.logger.error(
+        `Error generando imagen resultado: ${err.message}`,
+        err.stack,
+      );
     }
   }
 
@@ -199,11 +216,11 @@ export class BracketMediaService {
     matchId: string,
   ): Promise<BracketImageResult> {
     const buffer = await generarImagenBracket(opts);
-    
+
     // Adaptación a CloudinaryProvider: espera un objeto con buffer
     const pseudoFile = { buffer };
     const folder = `brackets/${matchId}`;
-    
+
     const cloudinaryUrl = await this.cloudinary.uploadImage(pseudoFile, folder);
 
     return {

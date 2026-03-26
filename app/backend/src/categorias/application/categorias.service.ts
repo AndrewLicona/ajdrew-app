@@ -1,4 +1,3 @@
-
 import { Injectable } from '@nestjs/common';
 import { CreateCategoriaDto } from './dto/create-categoria.dto';
 import { UpdateCategoriaDto } from './dto/update-categoria.dto';
@@ -6,7 +5,7 @@ import { CategoriaRepository } from '../infrastructure/persistence/categoria.rep
 
 @Injectable()
 export class CategoriasService {
-  constructor(private readonly categoriaRepository: CategoriaRepository) { }
+  constructor(private readonly categoriaRepository: CategoriaRepository) {}
 
   create(createCategoriaDto: CreateCategoriaDto) {
     return this.categoriaRepository.create(createCategoriaDto);
