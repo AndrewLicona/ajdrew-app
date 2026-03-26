@@ -35,7 +35,7 @@ ENV PORT=3000
 
 # Copiar solo lo necesario
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/app/backend/package.json /app/app/backend/tsconfig.json ./app/backend/
+COPY --from=builder /app/app/backend/package.json /app/app/backend/tsconfig.json /app/app/backend/create-admin.ts ./app/backend/
 COPY --from=builder /app/app/backend/node_modules ./app/backend/node_modules
 COPY --from=builder /app/app/backend/dist ./app/backend/dist
 COPY --from=builder /app/app/backend/prisma ./app/backend/prisma
