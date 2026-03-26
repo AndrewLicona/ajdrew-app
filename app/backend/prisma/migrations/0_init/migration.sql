@@ -1,38 +1,32 @@
-/*
-  Warnings:
+﻿-- CreateEnum
+CREATE TYPE "Rol" AS ENUM ('ADMIN', 'EDITOR');
 
-  - You are about to drop the column `categoriaId` on the `ItemCalificable` table. All the data in the column will be lost.
-  - Added the required column `chosenItemId` to the `BracketVote` table without a default value. This is not possible if the table is not empty.
+-- CreateTable
+CREATE TABLE "Usuario" (
+    "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "nombre" TEXT NOT NULL,
+    "rol" "Rol" NOT NULL DEFAULT 'EDITOR',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
-*/
--- DropForeignKey
-ALTER TABLE "public"."ItemCalificable" DROP CONSTRAINT "ItemCalificable_categoriaId_fkey";
+    CONSTRAINT "Usuario_pkey" PRIMARY KEY ("id")
+);
 
--- AlterTable
-DO $$ 
-BEGIN 
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='BracketVote' AND column_name='chosenItemId') THEN
-        ALTER TABLE "BracketVote" ADD COLUMN "chosenItemId" TEXT NOT NULL DEFAULT '';
-    END IF;
-END $$;
+-- CreateTable
+CREATE TABLE "Juego" (
+    "id" TEXT NOT NULL,
+    "nombre" TEXT NOT NULL,
+    "slug" TEXT NOT NULL,
+    "descripcion" TEXT,
+    "image" TEXT,
+    "activo" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
--- AlterTable
-ALTER TABLE "Calificacion" ADD COLUMN     "tablaId" TEXT;
-
--- AlterTable
-ALTER TABLE "Categoria" ADD COLUMN     "imageUrl" TEXT;
-
--- AlterTable
-ALTER TABLE "ItemCalificable" DROP COLUMN "categoriaId",
-ADD COLUMN     "juegoId" TEXT;
-
--- AlterTable
-ALTER TABLE "Sorteo" ADD COLUMN     "externalUrl" TEXT,
-ADD COLUMN     "image" TEXT,
-ADD COLUMN     "numGanadores" INTEGER NOT NULL DEFAULT 1;
-
--- AlterTable
-ALTER TABLE "VotacionBracket" ADD COLUMN     "imageUrl" TEXT;
+    CONSTRAINT "Juego_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "Tutorial" (
@@ -73,6 +67,32 @@ CREATE TABLE "TutorialStep" (
 );
 
 -- CreateTable
+CREATE TABLE "Categoria" (
+    "id" TEXT NOT NULL,
+    "nombre" TEXT NOT NULL,
+    "activa" BOOLEAN NOT NULL DEFAULT true,
+    "tipo" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "juegoId" TEXT,
+    "imageUrl" TEXT,
+
+    CONSTRAINT "Categoria_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ItemCalificable" (
+    "id" TEXT NOT NULL,
+    "nombre" TEXT NOT NULL,
+    "juegoId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "image" TEXT,
+
+    CONSTRAINT "ItemCalificable_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "TablaCalificacion" (
     "id" TEXT NOT NULL,
     "nombre" TEXT NOT NULL,
@@ -98,6 +118,38 @@ CREATE TABLE "TablaItem" (
 );
 
 -- CreateTable
+CREATE TABLE "Calificacion" (
+    "id" TEXT NOT NULL,
+    "puntuacion" INTEGER NOT NULL,
+    "ip" TEXT,
+    "itemId" TEXT NOT NULL,
+    "tablaId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deviceId" TEXT,
+
+    CONSTRAINT "Calificacion_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "VotacionBracket" (
+    "id" TEXT NOT NULL,
+    "tematica" TEXT NOT NULL,
+    "slug" TEXT NOT NULL,
+    "estado" TEXT NOT NULL DEFAULT 'BORRADOR',
+    "rondaActual" INTEGER NOT NULL DEFAULT 1,
+    "juegoId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "categoriaId" TEXT,
+    "activa" BOOLEAN NOT NULL DEFAULT true,
+    "proximoCierreAt" TIMESTAMP(3),
+    "rondaDuracion" INTEGER NOT NULL DEFAULT 0,
+    "imageUrl" TEXT,
+
+    CONSTRAINT "VotacionBracket_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Publicacion" (
     "id" TEXT NOT NULL,
     "titulo" TEXT NOT NULL,
@@ -108,6 +160,51 @@ CREATE TABLE "Publicacion" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Publicacion_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "BracketMatch" (
+    "id" TEXT NOT NULL,
+    "bracketId" TEXT NOT NULL,
+    "ronda" INTEGER NOT NULL,
+    "itemAId" TEXT,
+    "itemBId" TEXT,
+    "votosA" INTEGER NOT NULL DEFAULT 0,
+    "votosB" INTEGER NOT NULL DEFAULT 0,
+    "ganadorId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "BracketMatch_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "BracketVote" (
+    "id" TEXT NOT NULL,
+    "matchId" TEXT NOT NULL,
+    "deviceId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "chosenItemId" TEXT NOT NULL,
+
+    CONSTRAINT "BracketVote_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Sorteo" (
+    "id" TEXT NOT NULL,
+    "titulo" TEXT NOT NULL,
+    "descripcion" TEXT,
+    "premio" TEXT NOT NULL,
+    "fechaFin" TIMESTAMP(3) NOT NULL,
+    "estado" TEXT NOT NULL DEFAULT 'ACTIVO',
+    "juegoId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "externalUrl" TEXT,
+    "image" TEXT,
+    "numGanadores" INTEGER NOT NULL DEFAULT 1,
+
+    CONSTRAINT "Sorteo_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -238,7 +335,7 @@ CREATE TABLE "XPublication" (
 -- CreateTable
 CREATE TABLE "FacebookAccount" (
     "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL DEFAULT 'Mi Página de Facebook',
+    "name" TEXT NOT NULL DEFAULT 'Mi P├ígina de Facebook',
     "pageId" TEXT NOT NULL,
     "pageAccessToken" TEXT NOT NULL,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
@@ -310,6 +407,32 @@ CREATE TABLE "YoutubePublication" (
     CONSTRAINT "YoutubePublication_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "JuegoSocialConfig" (
+    "id" TEXT NOT NULL,
+    "juegoId" TEXT NOT NULL,
+    "discordEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "discordWebhookIds" TEXT[],
+    "xEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "xAccountIds" TEXT[],
+    "facebookEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "facebookAccountIds" TEXT[],
+    "instagramEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "instagramAccountIds" TEXT[],
+    "youtubeEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "youtubeAccountIds" TEXT[],
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "JuegoSocialConfig_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Usuario_email_key" ON "Usuario"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Juego_slug_key" ON "Juego"("slug");
+
 -- CreateIndex
 CREATE UNIQUE INDEX "Tutorial_slug_key" ON "Tutorial"("slug");
 
@@ -318,6 +441,12 @@ CREATE UNIQUE INDEX "TablaCalificacion_slug_key" ON "TablaCalificacion"("slug");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "TablaItem_tablaId_itemId_key" ON "TablaItem"("tablaId", "itemId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "VotacionBracket_slug_key" ON "VotacionBracket"("slug");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "BracketVote_matchId_deviceId_key" ON "BracketVote"("matchId", "deviceId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "SorteoParticipante_sorteoId_usuarioId_key" ON "SorteoParticipante"("sorteoId", "usuarioId");
@@ -334,6 +463,9 @@ CREATE INDEX "SorteoEntry_participanteId_idx" ON "SorteoEntry"("participanteId")
 -- CreateIndex
 CREATE UNIQUE INDEX "ParticipanteTask_participanteId_taskId_key" ON "ParticipanteTask"("participanteId", "taskId");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "JuegoSocialConfig_juegoId_key" ON "JuegoSocialConfig"("juegoId");
+
 -- AddForeignKey
 ALTER TABLE "Tutorial" ADD CONSTRAINT "Tutorial_categoriaId_fkey" FOREIGN KEY ("categoriaId") REFERENCES "Categoria"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
@@ -342,6 +474,9 @@ ALTER TABLE "Tutorial" ADD CONSTRAINT "Tutorial_juegoId_fkey" FOREIGN KEY ("jueg
 
 -- AddForeignKey
 ALTER TABLE "TutorialStep" ADD CONSTRAINT "TutorialStep_tutorialId_fkey" FOREIGN KEY ("tutorialId") REFERENCES "Tutorial"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Categoria" ADD CONSTRAINT "Categoria_juegoId_fkey" FOREIGN KEY ("juegoId") REFERENCES "Juego"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ItemCalificable" ADD CONSTRAINT "ItemCalificable_juegoId_fkey" FOREIGN KEY ("juegoId") REFERENCES "Juego"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -359,7 +494,34 @@ ALTER TABLE "TablaItem" ADD CONSTRAINT "TablaItem_tablaId_fkey" FOREIGN KEY ("ta
 ALTER TABLE "TablaItem" ADD CONSTRAINT "TablaItem_itemId_fkey" FOREIGN KEY ("itemId") REFERENCES "ItemCalificable"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Calificacion" ADD CONSTRAINT "Calificacion_itemId_fkey" FOREIGN KEY ("itemId") REFERENCES "ItemCalificable"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Calificacion" ADD CONSTRAINT "Calificacion_tablaId_fkey" FOREIGN KEY ("tablaId") REFERENCES "TablaCalificacion"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "VotacionBracket" ADD CONSTRAINT "VotacionBracket_categoriaId_fkey" FOREIGN KEY ("categoriaId") REFERENCES "Categoria"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "VotacionBracket" ADD CONSTRAINT "VotacionBracket_juegoId_fkey" FOREIGN KEY ("juegoId") REFERENCES "Juego"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BracketMatch" ADD CONSTRAINT "BracketMatch_bracketId_fkey" FOREIGN KEY ("bracketId") REFERENCES "VotacionBracket"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BracketMatch" ADD CONSTRAINT "BracketMatch_ganadorId_fkey" FOREIGN KEY ("ganadorId") REFERENCES "ItemCalificable"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BracketMatch" ADD CONSTRAINT "BracketMatch_itemAId_fkey" FOREIGN KEY ("itemAId") REFERENCES "ItemCalificable"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BracketMatch" ADD CONSTRAINT "BracketMatch_itemBId_fkey" FOREIGN KEY ("itemBId") REFERENCES "ItemCalificable"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BracketVote" ADD CONSTRAINT "BracketVote_matchId_fkey" FOREIGN KEY ("matchId") REFERENCES "BracketMatch"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Sorteo" ADD CONSTRAINT "Sorteo_juegoId_fkey" FOREIGN KEY ("juegoId") REFERENCES "Juego"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "SorteoParticipante" ADD CONSTRAINT "SorteoParticipante_sorteoId_fkey" FOREIGN KEY ("sorteoId") REFERENCES "Sorteo"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -411,3 +573,7 @@ ALTER TABLE "YoutubePublication" ADD CONSTRAINT "YoutubePublication_accountId_fk
 
 -- AddForeignKey
 ALTER TABLE "YoutubePublication" ADD CONSTRAINT "YoutubePublication_bracketId_fkey" FOREIGN KEY ("bracketId") REFERENCES "VotacionBracket"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "JuegoSocialConfig" ADD CONSTRAINT "JuegoSocialConfig_juegoId_fkey" FOREIGN KEY ("juegoId") REFERENCES "Juego"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
