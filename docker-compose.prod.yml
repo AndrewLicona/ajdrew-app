@@ -37,6 +37,21 @@ services:
     networks:
       - ajdrew-net
 
+  # 🔴 Redis — cola de publicaciones sociales (BullMQ)
+  redis:
+    image: redis:7-alpine
+    container_name: ajdrew-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ajdrew-net
+
   # ⚙️ Backend NestJS
   backend:
     build:
@@ -52,8 +67,12 @@ services:
       - FRONTEND_URL=${FRONTEND_URL:-https://ajdrew.site}
       - PORT=3000
       - BACKEND_INTERNAL_PORT=3000
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - ajdrew-net
@@ -71,6 +90,9 @@ services:
       dockerfile: app/frontend/Dockerfile.prod
       args:
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+        - NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=${NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}
+        - NEXT_PUBLIC_ENABLE_ADS=${NEXT_PUBLIC_ENABLE_ADS:-false}
+        - NEXT_PUBLIC_ADSENSE_PUB_ID=${NEXT_PUBLIC_ADSENSE_PUB_ID:-}
     container_name: ajdrew-frontend
     restart: unless-stopped
     env_file:
@@ -87,35 +109,12 @@ services:
       - ajdrew-net
     depends_on:
       - backend
-    # ✅ Healthcheck removido para primer deploy por petición del usuario
-    # healthcheck:
-    #   test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1" ]
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 5
-    #   start_period: 120s
-    # 🧭 Prisma Studio (Opcional - Comentar si no se usa)
-    # prisma-studio:
-    #   build:
-    #     context: .
-    #     dockerfile: app/backend/Dockerfile.prod
-    #   container_name: prisma-studio
-    #   command: >
-    #     sh -c "cd /app/app/backend && 
-    #            npx prisma studio --hostname 0.0.0.0 --port 5555"
-    #   ports:
-    #     - "5556:5555"
-    #   environment:
-    #     - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
-    #   depends_on:
-    #     db:
-    #       condition: service_healthy
-    #   networks:
-    #     - ajdrew-net
 
-    # 🗂️ Volúmenes y redes
+  # 🗂️ Volúmenes y redes
 volumes:
   postgres_data:
+    driver: local
+  redis_data:
     driver: local
 
 networks:

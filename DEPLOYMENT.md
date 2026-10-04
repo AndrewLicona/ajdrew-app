@@ -45,13 +45,32 @@ JWT_EXPIRATION=7d
 CLOUDINARY_CLOUD_NAME=tu_cloud_name
 CLOUDINARY_API_KEY=tu_api_key
 CLOUDINARY_API_SECRET=tu_api_secret
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=tu_cloud_name
 
 # =====================================
 # 🌐 URLS (CRÍTICO - Reemplaza con tu dominio)
 # =====================================
 NEXT_PUBLIC_API_URL=https://tudominio.com/api
+INTERNAL_API_URL=http://backend:3000/api
 FRONTEND_URL=https://tudominio.com
 ALLOWED_ORIGINS=https://tudominio.com,https://www.tudominio.com
+
+# =====================================
+# 🔴 REDIS (BullMQ — cola social)
+# =====================================
+REDIS_HOST=redis
+REDIS_PORT=6379
+
+# =====================================
+# 📢 ADSENSE (dejar false hasta tener tráfico)
+# =====================================
+NEXT_PUBLIC_ENABLE_ADS=false
+# NEXT_PUBLIC_ADSENSE_PUB_ID=ca-pub-XXXXXXXXXXXXXXXXX
+
+# =====================================
+# 🤖 DISCORD (ya funciona)
+# =====================================
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
 
 # =====================================
 # ⚙️ OTROS
