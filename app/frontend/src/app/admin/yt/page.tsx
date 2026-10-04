@@ -23,9 +23,13 @@ interface YTViaje {
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
-function authHeaders() {
+function authHeaders(): Record<string, string> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-  return token ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
 }
 
 const EMPTY: Partial<YTViaje> = {
