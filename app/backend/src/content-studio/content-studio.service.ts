@@ -352,16 +352,24 @@ export class ContentStudioService implements OnModuleInit {
     let skipped = 0;
     for (const tmpl of DEFAULT_TEMPLATES) {
       try {
-        await this.prisma.socialTemplate.create({
-          data: tmpl,
+        const existing = await this.prisma.socialTemplate.findUnique({
+          where: {
+            tipo_plataforma: {
+              tipo: tmpl.tipo,
+              plataforma: tmpl.plataforma,
+            },
+          },
         });
-        inserted++;
-      } catch (e: any) {
-        if (e.code === 'P2002') {
-          skipped++;
+        if (!existing) {
+          await this.prisma.socialTemplate.create({
+            data: tmpl,
+          });
+          inserted++;
         } else {
-          throw e;
+          skipped++;
         }
+      } catch (e: any) {
+        skipped++;
       }
     }
     this.logger.log(

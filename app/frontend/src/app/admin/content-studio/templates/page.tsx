@@ -24,12 +24,20 @@ export default function TemplatesPage() {
   const [previewData, setPreviewData] = useState<any>(null);
 
   const load = async () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       const data = await listTemplates();
       setTemplates(data);
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      if (!e?.message?.includes('Unauthorized') && !e?.message?.includes('401')) {
+        console.error(e);
+      }
     } finally {
       setLoading(false);
     }

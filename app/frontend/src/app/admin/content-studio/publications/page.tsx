@@ -37,6 +37,12 @@ export default function PublicationsPage() {
   const [retrying, setRetrying] = useState<string | null>(null);
 
   const load = async () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await listPublications({
@@ -47,8 +53,10 @@ export default function PublicationsPage() {
       });
       setPublications(res.publications);
       setTotalPages(res.pagination.totalPages);
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      if (!e?.message?.includes('Unauthorized') && !e?.message?.includes('401')) {
+        console.error(e);
+      }
     } finally {
       setLoading(false);
     }

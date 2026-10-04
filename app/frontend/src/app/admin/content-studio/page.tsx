@@ -35,12 +35,20 @@ export default function ContentStudioDashboard() {
   }, [filterEstado]);
 
   const loadPublications = async () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await listPublications({ estado: filterEstado || undefined, limit: 10 });
       setPublications(res.publications);
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      if (!e?.message?.includes('Unauthorized') && !e?.message?.includes('401')) {
+        console.error(e);
+      }
     } finally {
       setLoading(false);
     }
