@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Instalar pnpm y herramientas de construcción para bcrypt (módulos nativos)
 RUN apk add --no-cache python3 make g++ && \
-    corepack enable && corepack prepare pnpm@latest --activate
+    npm install -g pnpm@10.18.0
 
 # Copiar archivos necesarios
 COPY pnpm-lock.yaml pnpm-workspace.yaml ./
