@@ -13,6 +13,8 @@ import {
 import { RankingImageGenerator } from '../../../calificaciones/application/ranking-image-generator';
 import { VsImageGenerator } from '../generators/vs-image.generator';
 import { CloudinaryProvider } from '../../../media/cloudinary.provider';
+import { SocialTextBuilder } from '../../../content-studio/text-builder.service';
+import { SocialQueueProducer } from '../../../social-queue/social-queue.producer';
 
 @Injectable()
 export class SocialPublicationListener {
@@ -27,6 +29,8 @@ export class SocialPublicationListener {
     private rankingImageGenerator: RankingImageGenerator,
     private vsImageGenerator: VsImageGenerator,
     private cloudinary: CloudinaryProvider,
+    private textBuilder: SocialTextBuilder,
+    private socialQueue: SocialQueueProducer,
   ) {}
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -56,17 +60,53 @@ export class SocialPublicationListener {
       // Usar la imagen del tutorial o del juego
       const imageUrl = tutorial.image || (tutorial as any).juego?.image;
 
-      // Texto para redes sociales
-      const text = this.buildTutorialText(tutorial);
+      // Texto para redes sociales (lee template de DB, fallback a default)
+      const text = await this.textBuilder.build('tutorial_published', 'discord', tutorial);
+      const textX = await this.textBuilder.build('tutorial_published', 'x', tutorial);
+      const textMeta = await this.textBuilder.build('tutorial_published', 'meta', tutorial);
 
-      // Publicar en Discord
-      await this.discordService.publishTutorial(tutorial, text, imageUrl || '');
+      // Crear registros en SocialPublication y encolar para retry automatico
+      const pubDiscord = await this.createSocialPublication({
+        evento: 'tutorial.published',
+        referenciaTipo: 'tutorial',
+        referenciaId: tutorial.id,
+        plataforma: 'discord',
+        textoFinal: text,
+        imageUrl: imageUrl,
+      });
+      const pubX = await this.createSocialPublication({
+        evento: 'tutorial.published',
+        referenciaTipo: 'tutorial',
+        referenciaId: tutorial.id,
+        plataforma: 'x',
+        textoFinal: textX,
+        imageUrl: imageUrl,
+      });
+      const pubMeta = await this.createSocialPublication({
+        evento: 'tutorial.published',
+        referenciaTipo: 'tutorial',
+        referenciaId: tutorial.id,
+        plataforma: 'meta',
+        textoFinal: textMeta,
+        imageUrl: imageUrl,
+      });
 
-      // Publicar en X
-      await this.xService.publishTutorial(tutorial, text, imageUrl || '');
-
-      // Publicar en Meta (Facebook e Instagram)
-      await this.metaService.publishTutorial(tutorial, text, imageUrl || '');
+      // Encolar (no publicar directo)
+      await this.socialQueue.enqueue({
+        publicationId: pubDiscord.id,
+        plataforma: 'discord',
+        payload: { evento: 'tutorial', data: tutorial, text, imageUrl: imageUrl || '' },
+      });
+      await this.socialQueue.enqueue({
+        publicationId: pubX.id,
+        plataforma: 'x',
+        payload: { evento: 'tutorial', data: tutorial, text: textX, imageUrl: imageUrl || '' },
+      });
+      await this.socialQueue.enqueue({
+        publicationId: pubMeta.id,
+        plataforma: 'meta',
+        payload: { evento: 'tutorial', data: tutorial, text: textMeta, imageUrl: imageUrl || '' },
+      });
 
       this.logger.log(`Tutorial published successfully: ${tutorial.titulo}`);
     } catch (error) {
@@ -107,14 +147,15 @@ export class SocialPublicationListener {
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
       const sorteoUrl = `${frontendUrl}/sorteos/${sorteo.id}`;
 
-      // Texto para redes sociales
-      const text = this.buildSorteoCreatedText(sorteo);
+      // Texto para redes sociales (lee template de DB, fallback a default)
+      const text = await this.textBuilder.build('sorteo_created', 'discord', sorteo);
+      const textX = await this.textBuilder.build('sorteo_created', 'x', sorteo);
 
       // Publicar en Discord con imagen generada
       await this.discordService.publishSorteoCreated(sorteo, text, imageBuffer);
 
       // Publicar en X
-      await this.xService.publishSorteoCreated(sorteo, text, imageBuffer);
+      await this.xService.publishSorteoCreated(sorteo, textX, imageBuffer);
 
       // Subir imagen a Cloudinary para Meta y YouTube
       const pseudoFile = { buffer: imageBuffer };
@@ -194,8 +235,11 @@ export class SocialPublicationListener {
         )
         .slice(0, 3);
 
-      // Texto para redes sociales
-      const text = this.buildSorteoWinnersText(sorteo, winnerNames);
+      // Texto para redes sociales (lee template de DB, fallback a default)
+      const dataWithWinners = { ...sorteo, ganadores: winnerNames.join(', ') };
+      const text = await this.textBuilder.build('sorteo_winners', 'discord', dataWithWinners);
+      const textX = await this.textBuilder.build('sorteo_winners', 'x', dataWithWinners);
+      const textMeta = await this.textBuilder.build('sorteo_winners', 'meta', dataWithWinners);
 
       // Publicar en Discord
       await this.discordService.publishSorteoWinners(
@@ -208,7 +252,7 @@ export class SocialPublicationListener {
       // Publicar en X
       await this.xService.publishSorteoWinners(
         sorteo,
-        text,
+        textX,
         imageBuffer,
         winnerNames,
       );
@@ -221,7 +265,7 @@ export class SocialPublicationListener {
       if (cloudinaryUrl) {
         await this.metaService.publishSorteoWinners(
           sorteo,
-          text,
+          textMeta,
           cloudinaryUrl,
           winnerNames,
         );
@@ -300,8 +344,10 @@ export class SocialPublicationListener {
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
       const rankingUrl = `${frontendUrl}/calificaciones/${tabla.id}`;
 
-      // Texto para redes sociales
-      const text = this.buildRankingText(tabla, topItems);
+      // Texto para redes sociales (lee template de DB, fallback a default)
+      const dataWithTop = { ...tabla, topItems };
+      const text = await this.textBuilder.build('ranking_updated', 'discord', dataWithTop);
+      const textX = await this.textBuilder.build('ranking_updated', 'x', dataWithTop);
 
       // Subir imagen a Cloudinary
       const pseudoFile = { buffer: imageBuffer };
@@ -383,7 +429,10 @@ export class SocialPublicationListener {
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
       const tablaUrl = `${frontendUrl}/calificaciones/${tabla.slug || tabla.id}`;
 
-      const text = this.buildTablaCreatedText(tabla);
+      // Texto para redes sociales (lee template de DB, fallback a default)
+      const text = await this.textBuilder.build('tabla_created', 'discord', tabla);
+      const textX = await this.textBuilder.build('tabla_created', 'x', tabla);
+      const textMeta = await this.textBuilder.build('tabla_created', 'meta', tabla);
 
       // Subir imagen de creación a Cloudinary
       const pseudoFile = { buffer: imageBuffer };
@@ -398,10 +447,10 @@ export class SocialPublicationListener {
       await this.discordService.publishRanking(tabla as any, text, cloudinaryUrl);
 
       // Publicar en X
-      await this.xService.publishRanking(tabla as any, text, imageBuffer);
+      await this.xService.publishRanking(tabla as any, textX, imageBuffer);
 
       // Publicar en Meta
-      await this.metaService.publishRanking(tabla as any, text, cloudinaryUrl);
+      await this.metaService.publishRanking(tabla as any, textMeta, cloudinaryUrl);
 
       this.logger.log(`Tabla created published successfully: ${tabla.nombre}`);
     } catch (error) {
@@ -434,7 +483,7 @@ export class SocialPublicationListener {
         return;
       }
 
-      const text = this.buildBracketCreatedText(bracket);
+      const text = await this.textBuilder.build('bracket_created', 'discord', bracket);
 
       const matchedGames = bracket.matches.filter(m => m.itemA && m.itemB);
 
@@ -521,7 +570,7 @@ export class SocialPublicationListener {
 
       if (!bracket) return;
 
-      const text = this.buildPhaseAnnouncementText(bracket, payload.round);
+      const text = await this.textBuilder.build('bracket_phase', 'discord', { ...bracket, ronda: payload.round });
 
       // Generar imagen de la fase (lista de matches)
       const mappedMatches = payload.matches
@@ -602,7 +651,13 @@ export class SocialPublicationListener {
 
       if (!bracket || !winner) return;
 
-      const text = `👑 ¡TENEMOS CAMPEÓN! 👑\n\nTorneo: ${bracket.tematica}\nGanador: ${winner.nombre}\n\nGracias por participar. ¡Pronto nuevos torneos!\n\najdrew.site #EliteRankings`;
+      // Texto desde DB (fallback a default) - Content Studio
+      const dataForTemplate = {
+        ...bracket,
+        premioItem: winner.nombre,
+        ganadorImage: winner.image,
+      };
+      const text = await this.textBuilder.build('bracket_champion', 'discord', dataForTemplate);
 
       // Simplemente usamos el anuncio de fase final (round 999 simboliza fin)
       const imageUrl = winner.image || '';
@@ -626,119 +681,33 @@ export class SocialPublicationListener {
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // HELPERS - TEXTOS
+  // HELPERS
   // ──────────────────────────────────────────────────────────────────────────
 
-  private buildTutorialText(tutorial: any): string {
-    const gameEmoji = tutorial.juego?.nombre?.includes('FC') ? '⚽' : '🎮';
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const url = `${frontendUrl}/tutoriales/${tutorial.slug}`;
-
-    return (
-      `${gameEmoji} ¡NUEVO TUTORIAL! ${tutorial.titulo}\n\n` +
-      `📚 ${tutorial.descripcion?.slice(0, 100) || 'Aprende con esta guía completa'}\n\n` +
-      `👉 ${url}\n\n` +
-      `@AJDREWGameplays #Tutorial #${tutorial.juego?.nombre?.replace(/\s+/g, '') || 'Gaming'}`
-    );
-  }
-
-  private buildSorteoCreatedText(sorteo: any): string {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const url = `${frontendUrl}/sorteos/${sorteo.id}`;
-    const diasRestantes = Math.ceil(
-      (sorteo.fechaFin.getTime() - Date.now()) / (1000 * 60 * 60 * 24),
-    );
-
-    return (
-      `🎁 ¡NUEVO SORTEO! ${sorteo.titulo}\n\n` +
-      `🏆 Premio: ${sorteo.premio}\n` +
-      `⏰ Faltan ${diasRestantes} días\n\n` +
-      `👉 ${url}\n\n` +
-      `@AJDREWGameplays #Sorteo #Giveaway #${sorteo.juego?.nombre?.replace(/\s+/g, '') || 'Gaming'}`
-    );
-  }
-
-  private buildSorteoWinnersText(sorteo: any, winnerNames: string[]): string {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const url = `${frontendUrl}/sorteos/${sorteo.id}`;
-
-    return (
-      `🏆 ¡GANADORES DEL SORTEO! ${sorteo.titulo}\n\n` +
-      `✨ Ganadores: ${winnerNames.join(', ')}\n` +
-      `🎉 ¡Felicidades a todos!\n\n` +
-      `👉 ${url}\n\n` +
-      `@AJDREWGameplays #Sorteo #Ganadores #${sorteo.juego?.nombre?.replace(/\s+/g, '') || 'Gaming'}`
-    );
-  }
-
-  private buildRankingText(categoria: any, topItems: any[]): string {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const url = `${frontendUrl}/calificaciones/${categoria.id}`;
-
-    const top3 = topItems
-      .map(
-        (item, i) =>
-          `#${i + 1} ${item.itemName} (${item.averageRating.toFixed(1)}★)`,
-      )
-      .join('\n');
-
-    return (
-      `📊 ¡RANKING ACTUALIZADO! ${categoria.nombre}\n\n` +
-      `🏆 TOP 3:\n${top3}\n\n` +
-      `👉 ${url}\n\n` +
-      `@AJDREWGameplays #Ranking #Top #${categoria.juego?.nombre?.replace(/\s+/g, '') || 'Gaming'}`
-    );
-  }
-
-  private async saveBracketImage(
-    imageBuffer: Buffer,
-    bracketId: string,
-  ): Promise<string> {
-    // Obsoleto: Usar CloudinaryProvider directamente en los handlers
-    return '';
-  }
-
-  private buildTablaCreatedText(tabla: any): string {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const url = `${frontendUrl}/calificaciones/${tabla.slug || tabla.id}`;
-
-    const itemCount = tabla.items?.length || 0;
-
-    return (
-      `📊 ¡NUEVA TABLA DE CALIFICACIÓN! ${tabla.nombre}\n\n` +
-      `🎮 ${itemCount} participantes listos para ser calificados\n` +
-      `⭐ ¡Entra y vota por tus favoritos!\n\n` +
-      `👉 ${url}\n\n` +
-      `@AJDREWGameplays #Ranking #Calificacion #${tabla.juego?.nombre?.replace(/\s+/g, '') || 'Gaming'}`
-    );
-  }
-
-  private buildBracketCreatedText(bracket: any): string {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const url = `${frontendUrl}/votaciones/${bracket.slug}`;
-
-    const matchCount = bracket.matches?.length || 0;
-    const totalParticipants = matchCount * 2;
-
-    return (
-      `🏆 ¡NUEVO TORNEO! ${bracket.tematica}\n\n` +
-      `⚔️ ${totalParticipants} participantes en un bracket épico\n` +
-      `🎮 ${bracket.juego?.nombre || 'Gaming'}\n\n` +
-      `👉 ${url}\n\n` +
-      `@AJDREWGameplays #Bracket #Votacion #${bracket.juego?.nombre?.replace(/\s+/g, '') || 'Gaming'}`
-    );
-  }
-
-  private buildPhaseAnnouncementText(bracket: any, round: number): string {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const url = `${frontendUrl}/votaciones/${bracket.slug}`;
-
-    return (
-      `⚔️ ¡NUEVA RONDA! ${bracket.tematica}\n\n` +
-      `🔥 La Ronda ${round} ya está disponible.\n\n` +
-      `🗳️ ¡Entra y vota por tus favoritos!\n` +
-      `👉 ${url}\n\n` +
-      `@AJDREWGameplays #EliteRankings #Bracket #${bracket.juego?.nombre?.replace(/\s+/g, '') || 'Gaming'}`
-    );
+  /**
+   * Crea un registro SocialPublication para trazabilidad y lo retorna con su ID.
+   */
+  private async createSocialPublication(params: {
+    evento: string;
+    referenciaTipo: string;
+    referenciaId: string;
+    plataforma: 'discord' | 'x' | 'meta' | 'youtube';
+    textoFinal: string;
+    imageUrl?: string;
+    imageBuffer?: Buffer;
+    metadata?: any;
+  }) {
+    return this.prisma.socialPublication.create({
+      data: {
+        evento: params.evento,
+        referenciaTipo: params.referenciaTipo,
+        referenciaId: params.referenciaId,
+        plataforma: params.plataforma,
+        textoFinal: params.textoFinal,
+        imageUrl: params.imageUrl,
+        estado: 'PENDIENTE',
+        metadata: params.metadata,
+      },
+    });
   }
 }

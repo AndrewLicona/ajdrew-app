@@ -464,4 +464,36 @@ export class MetaService {
       this.logger.error('Error publishing bracket created to Meta', error);
     }
   }
+
+  /**
+   * Obtiene metricas de un post publicado en Facebook o Instagram.
+   * Devuelve likes, comments, shares, reach.
+   *
+   * TODO Fase 3: Implementar llamadas reales a Graph API:
+   *   - FB: /{post-id}/insights?metric=post_impressions,post_engaged_users
+   *   - IG: /{media-id}/insights?metric=impressions,reach,engagement
+   * Por ahora devuelve estructura vacia para que el cron no falle.
+   */
+  async getPostMetrics(publicationId: string): Promise<any | null> {
+    const pub = await this.prisma.socialPublication.findUnique({
+      where: { id: publicationId },
+    });
+    if (!pub || !pub.metadata) return null;
+
+    const postId = (pub.metadata as any)?.postId;
+    if (!postId) return null;
+
+    // TODO: Implementar llamadas reales a Meta Graph
+    // const insights = await axios.get(`https://graph.facebook.com/v18.0/${postId}/insights?...`);
+
+    return {
+      likes: 0,
+      comments: 0,
+      shares: 0,
+      reach: 0,
+      impressions: 0,
+      capturedAt: new Date().toISOString(),
+      placeholder: true,
+    };
+  }
 }

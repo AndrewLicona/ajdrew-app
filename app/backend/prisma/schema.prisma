@@ -20,20 +20,20 @@ model Usuario {
 }
 
 model Juego {
-  id          String            @id @default(cuid())
-  nombre      String
-  slug        String            @unique
-  descripcion String?
-  image       String?
-  activo      Boolean           @default(true)
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  categorias  Categoria[]
-  sorteos     Sorteo[]
-  tutoriales  Tutorial[]
-  votaciones  VotacionBracket[]
-  items       ItemCalificable[] // NEW
-  tablas      TablaCalificacion[]
+  id           String              @id @default(cuid())
+  nombre       String
+  slug         String              @unique
+  descripcion  String?
+  image        String?
+  activo       Boolean             @default(true)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  categorias   Categoria[]
+  sorteos      Sorteo[]
+  tutoriales   Tutorial[]
+  votaciones   VotacionBracket[]
+  items        ItemCalificable[] // NEW
+  tablas       TablaCalificacion[]
   socialConfig JuegoSocialConfig?
 }
 
@@ -74,15 +74,15 @@ model TutorialStep {
 }
 
 model Categoria {
-  id         String            @id @default(cuid())
+  id         String              @id @default(cuid())
   nombre     String
-  activa     Boolean           @default(true)
+  activa     Boolean             @default(true)
   tipo       String
-  createdAt  DateTime          @default(now())
-  updatedAt  DateTime          @updatedAt
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
   juegoId    String?
-  imageUrl   String?           
-  juego      Juego?            @relation(fields: [juegoId], references: [id])
+  imageUrl   String?
+  juego      Juego?              @relation(fields: [juegoId], references: [id])
   tutoriales Tutorial[]
   votaciones VotacionBracket[]
   tablas     TablaCalificacion[]
@@ -91,7 +91,7 @@ model Categoria {
 model ItemCalificable {
   id             String         @id @default(cuid())
   nombre         String
-  juegoId        String?        
+  juegoId        String?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
   image          String?
@@ -100,37 +100,37 @@ model ItemCalificable {
   matchesSideB   BracketMatch[] @relation("MatchSideB")
   calificaciones Calificacion[]
   juego          Juego?         @relation(fields: [juegoId], references: [id])
-  
-  tablas         TablaItem[]
+
+  tablas TablaItem[]
 }
 
 model TablaCalificacion {
-  id          String   @id @default(uuid())
+  id          String  @id @default(uuid())
   nombre      String
-  slug        String   @unique
+  slug        String  @unique
   descripcion String?
   image       String?
-  estado      String   @default("ACTIVO")
-  
-  juegoId     String
-  juego       Juego    @relation(fields: [juegoId], references: [id], onDelete: Cascade)
-  
+  estado      String  @default("ACTIVO")
+
+  juegoId String
+  juego   Juego  @relation(fields: [juegoId], references: [id], onDelete: Cascade)
+
   categoriaId String?
   categoria   Categoria? @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
 
-  items       TablaItem[]
+  items          TablaItem[]
   calificaciones Calificacion[]
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model TablaItem {
-  id         String @id @default(uuid())
-  tablaId    String
-  tabla      TablaCalificacion @relation(fields: [tablaId], references: [id], onDelete: Cascade)
-  itemId     String
-  item       ItemCalificable @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  id      String            @id @default(uuid())
+  tablaId String
+  tabla   TablaCalificacion @relation(fields: [tablaId], references: [id], onDelete: Cascade)
+  itemId  String
+  item    ItemCalificable   @relation(fields: [itemId], references: [id], onDelete: Cascade)
 
   @@unique([tablaId, itemId])
 }
@@ -148,22 +148,22 @@ model Calificacion {
 }
 
 model VotacionBracket {
-  id              String         @id @default(cuid())
-  tematica        String
-  slug            String         @unique
-  estado          String         @default("BORRADOR")
-  rondaActual     Int            @default(1)
-  juegoId         String
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  categoriaId     String?
-  activa          Boolean        @default(true)
-  proximoCierreAt DateTime?
-  rondaDuracion   Int            @default(0)
-  imageUrl        String?        // NEW: Current share image
-  matches         BracketMatch[]
-  categoria       Categoria?     @relation(fields: [categoriaId], references: [id])
-  juego           Juego          @relation(fields: [juegoId], references: [id])
+  id                  String               @id @default(cuid())
+  tematica            String
+  slug                String               @unique
+  estado              String               @default("BORRADOR")
+  rondaActual         Int                  @default(1)
+  juegoId             String
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  categoriaId         String?
+  activa              Boolean              @default(true)
+  proximoCierreAt     DateTime?
+  rondaDuracion       Int                  @default(0)
+  imageUrl            String? // NEW: Current share image
+  matches             BracketMatch[]
+  categoria           Categoria?           @relation(fields: [categoriaId], references: [id])
+  juego               Juego                @relation(fields: [juegoId], references: [id])
   discordPublications DiscordPublication[]
   xPublications       XPublication[]
   metaPublications    MetaPublication[]
@@ -303,29 +303,29 @@ enum Rol {
 }
 
 model DiscordWebhook {
-  id          String   @id @default(uuid())
-  name        String
-  webhookUrl  String   @db.Text
-  channelId   String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  id         String   @id @default(uuid())
+  name       String
+  webhookUrl String   @db.Text
+  channelId  String?
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
   publications DiscordPublication[]
 }
 
 model DiscordPublication {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   webhookId   String
   bracketId   String
   round       Int
   messageId   String?
   imageUrl    String?
-  status      String   @default("pending")
+  status      String    @default("pending")
   error       String?
   publishedAt DateTime?
-  createdAt   DateTime @default(now())
-  
+  createdAt   DateTime  @default(now())
+
   webhook DiscordWebhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
   bracket VotacionBracket @relation(fields: [bracketId], references: [id], onDelete: Cascade)
 }
@@ -345,16 +345,16 @@ model XAccount {
 }
 
 model XPublication {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   accountId   String
   bracketId   String
   round       Int
   tweetId     String?
   imageUrl    String?
-  status      String   @default("pending")
+  status      String    @default("pending")
   error       String?
   publishedAt DateTime?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
 
   account XAccount        @relation(fields: [accountId], references: [id], onDelete: Cascade)
   bracket VotacionBracket @relation(fields: [bracketId], references: [id], onDelete: Cascade)
@@ -385,22 +385,22 @@ model InstagramAccount {
 }
 
 model MetaPublication {
-  id                String   @id @default(uuid())
-  platform          String   // "facebook" or "instagram"
-  facebookAccountId String?
+  id                 String    @id @default(uuid())
+  platform           String // "facebook" or "instagram"
+  facebookAccountId  String?
   instagramAccountId String?
-  bracketId         String
-  round             Int
-  postId            String?  // ID from Meta
-  imageUrl          String?
-  status            String   @default("pending") // "published", "failed"
-  error             String?
-  publishedAt       DateTime?
-  createdAt         DateTime @default(now())
+  bracketId          String
+  round              Int
+  postId             String? // ID from Meta
+  imageUrl           String?
+  status             String    @default("pending") // "published", "failed"
+  error              String?
+  publishedAt        DateTime?
+  createdAt          DateTime  @default(now())
 
-  facebookAccount  FacebookAccount? @relation(fields: [facebookAccountId], references: [id], onDelete: Cascade)
+  facebookAccount  FacebookAccount?  @relation(fields: [facebookAccountId], references: [id], onDelete: Cascade)
   instagramAccount InstagramAccount? @relation(fields: [instagramAccountId], references: [id], onDelete: Cascade)
-  bracket          VotacionBracket  @relation(fields: [bracketId], references: [id], onDelete: Cascade)
+  bracket          VotacionBracket   @relation(fields: [bracketId], references: [id], onDelete: Cascade)
 }
 
 model YoutubeAccount {
@@ -418,16 +418,16 @@ model YoutubeAccount {
 }
 
 model YoutubePublication {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   accountId   String
   bracketId   String
   round       Int
   videoId     String?
   imageUrl    String?
-  status      String   @default("pending")
+  status      String    @default("pending")
   error       String?
   publishedAt DateTime?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
 
   account YoutubeAccount  @relation(fields: [accountId], references: [id], onDelete: Cascade)
   bracket VotacionBracket @relation(fields: [bracketId], references: [id], onDelete: Cascade)
@@ -435,30 +435,90 @@ model YoutubePublication {
 
 // Configuración de redes sociales por juego
 model JuegoSocialConfig {
-  id        String   @id @default(uuid())
-  juegoId   String   @unique
-  juego     Juego    @relation(fields: [juegoId], references: [id], onDelete: Cascade)
+  id      String @id @default(uuid())
+  juegoId String @unique
+  juego   Juego  @relation(fields: [juegoId], references: [id], onDelete: Cascade)
 
   // Discord
-  discordEnabled   Boolean   @default(true)
+  discordEnabled    Boolean  @default(true)
   discordWebhookIds String[]
 
   // X/Twitter
-  xEnabled     Boolean @default(true)
-  xAccountIds  String[]
+  xEnabled    Boolean  @default(true)
+  xAccountIds String[]
 
   // Facebook
-  facebookEnabled    Boolean @default(true)
+  facebookEnabled    Boolean  @default(true)
   facebookAccountIds String[]
 
   // Instagram
-  instagramEnabled    Boolean @default(true)
+  instagramEnabled    Boolean  @default(true)
   instagramAccountIds String[]
 
   // YouTube
-  youtubeEnabled   Boolean @default(true)
+  youtubeEnabled    Boolean  @default(true)
   youtubeAccountIds String[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Content Studio (Fase 1): plantillas editables + trazabilidad + analytics
+// ──────────────────────────────────────────────────────────────────────────
+
+/// Plantilla de texto para una publicación social, por tipo de evento y plataforma.
+/// Los placeholders usan sintaxis {{clave}} o {{clave.subclave}}.
+/// Ejemplo: "¡Sorteo de {{premio}} en {{juego.nombre}}!"
+model SocialTemplate {
+  id         String   @id @default(cuid())
+  tipo       String // 'sorteo_created' | 'sorteo_winners' | 'tutorial_published' | 'bracket_created' | 'bracket_phase' | 'bracket_champion' | 'tabla_created' | 'ranking_updated'
+  plataforma String // 'discord' | 'x' | 'meta' | 'youtube'
+  template   String   @db.Text
+  activo     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([tipo, plataforma])
+  @@index([tipo])
+}
+
+/// Trazabilidad de cada publicación generada por el sistema.
+/// Permite ver qué se publicó, dónde, cuándo, y reintentar los fallos.
+model SocialPublication {
+  id             String    @id @default(cuid())
+  evento         String // 'sorteo.created' | 'sorteo.winners' | 'tutorial.published' | 'bracket.phase.started' | etc
+  referenciaTipo String // 'sorteo' | 'tutorial' | 'bracket' | 'ranking'
+  referenciaId   String
+  plataforma     String // 'discord' | 'x' | 'meta' | 'youtube'
+  estado         String    @default("PENDIENTE") // 'PENDIENTE' | 'PUBLICADO' | 'FALLIDO' | 'PROGRAMADO'
+  textoFinal     String    @db.Text
+  imageUrl       String?
+  errorMsg       String?   @db.Text
+  publicadoAt    DateTime?
+  programadoPara DateTime?
+  intentos       Int       @default(0)
+  metadata       Json?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([estado, programadoPara])
+  @@index([referenciaTipo, referenciaId])
+  @@index([plataforma, createdAt])
+  @@index([evento])
+}
+
+/// Métricas capturadas desde cada plataforma (likes, retweets, reach, etc).
+model SocialAnalytics {
+  id             String   @id @default(cuid())
+  publicationId  String?
+  plataforma     String
+  referenciaTipo String?
+  referenciaId   String?
+  metricas       Json // { likes, retweets, reach, clicks, impressions }
+  capturadoEn    DateTime @default(now())
+
+  @@index([publicationId])
+  @@index([plataforma, capturadoEn])
+  @@index([referenciaTipo, referenciaId])
 }

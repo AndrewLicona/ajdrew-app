@@ -1,10 +1,12 @@
 services:
-  # 🌐 NGINX — Proxy inverso
+  # NGINX - Proxy inverso
   nginx:
     build: ./app/nginx
     container_name: ajdrew-nginx
     ports:
       - "80:80"
+    volumes:
+      - ./app/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - backend
       - frontend
@@ -12,7 +14,7 @@ services:
     networks:
       - ajdrew-net
 
-  # 🗃️ Base de datos PostgreSQL
+  # Base de datos PostgreSQL
   db:
     image: postgres:16-alpine
     container_name: ajdrew-db
@@ -35,7 +37,24 @@ services:
     networks:
       - ajdrew-net
 
-  # ⚙️ Backend (NestJS)
+  # Redis - Cola para BullMQ (Fase 2: retry queue para publicaciones sociales)
+  redis:
+    image: redis:7-alpine
+    container_name: ajdrew-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ajdrew-net
+
+  # Backend (NestJS)
   backend:
     build:
       context: .
@@ -49,8 +68,12 @@ services:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://${DB_USER:-user}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-ajdrew_db}
       - FRONTEND_URL=http://localhost:3001
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     ports:
       - "3000:3000"
@@ -62,7 +85,7 @@ services:
     networks:
       - ajdrew-net
 
-  # 💻 Frontend (Next.js)
+  # Frontend (Next.js)
   frontend:
     build:
       context: .
@@ -82,11 +105,11 @@ services:
       - .:/app
       - /app/node_modules
       - /app/app/frontend/node_modules
-    command: sh -c "pnpm install && pnpm build && pnpm start"    
+    command: sh -c "pnpm install && pnpm build && pnpm start"
     networks:
       - ajdrew-net
 
-  # 🧭 Prisma Studio (opcional)
+  # Prisma Studio (opcional)
   prisma-studio:
     image: node:20-alpine
     container_name: prisma-studio-dev
@@ -108,9 +131,11 @@ services:
       - .:/app
       - /app/node_modules
 
-# 🗂️ Volúmenes y redes
+# Volumenes y redes
 volumes:
   postgres_data:
+    driver: local
+  redis_data:
     driver: local
 
 networks:

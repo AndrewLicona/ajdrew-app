@@ -406,4 +406,40 @@ export class XService {
     );
     return { success: !!tweet.data, tweetId: tweet.data?.id };
   }
+
+  /**
+   * Obtiene metricas de un tweet publicado.
+   * Devuelve likes, retweets, replies, quotes, impressions.
+   *
+   * TODO Fase 3: Implementar llamada real a `twitterClient.v2.singleTweet(id)`
+   * con `tweetFields: ['public_metrics', 'non_public_metrics']`.
+   * Por ahora devuelve estructura vacia para que el cron no falle.
+   */
+  async getTweetMetrics(publicationId: string): Promise<any | null> {
+    // Buscar el tweetId guardado en metadata
+    const pub = await this.prisma.socialPublication.findUnique({
+      where: { id: publicationId },
+    });
+    if (!pub || !pub.metadata) return null;
+
+    const tweetId = (pub.metadata as any)?.tweetId;
+    if (!tweetId) return null;
+
+    // TODO: Implementar llamada real
+    // const tweet = await this.twitterClient.v2.singleTweet(tweetId, {
+    //   'tweet.fields': ['public_metrics', 'non_public_metrics'],
+    // });
+    // return tweet.data?.public_metrics;
+
+    // Placeholder mientras se implementa la integracion real
+    return {
+      likes: 0,
+      retweets: 0,
+      replies: 0,
+      quotes: 0,
+      impressions: 0,
+      capturedAt: new Date().toISOString(),
+      placeholder: true,
+    };
+  }
 }

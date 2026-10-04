@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import { Eye, EyeOff, Lock, Mail, ChevronRight } from 'lucide-react';
+import { FcGoogle } from 'react-icons/fc';
 import { motion } from 'framer-motion';
 
 export default function LoginPage() {
@@ -82,6 +83,28 @@ export default function LoginPage() {
                     <form onSubmit={handleLogin} className="space-y-5" data-testid="login-form">
                         <div className="space-y-2">
                             <label className="text-[10px] font-black text-white/30 uppercase tracking-[2px] ml-1">Email Corporativo</label>
+                        </div>
+
+                        {/* Separador + Google OAuth */}
+                        <div className="relative my-6">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-white/5"></div>
+                            </div>
+                            <div className="relative flex justify-center text-[9px] uppercase tracking-widest">
+                                <span className="bg-[#0a0f0a] px-3 text-white/30 font-black">o continua con</span>
+                            </div>
+                        </div>
+
+                        <a
+                            href={`${process.env.NEXT_PUBLIC_API_URL}/auth/google`}
+                            data-testid="google-login-button"
+                            className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white text-gray-800 rounded-2xl hover:bg-white/90 transition-all active:scale-[0.98] font-bold text-sm"
+                        >
+                            <FcGoogle size={20} />
+                            Continuar con Google
+                        </a>
+
+                        <div className="space-y-2">
                             <div className="relative group">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[var(--color-primary)] transition-colors" size={18} />
                                 <input

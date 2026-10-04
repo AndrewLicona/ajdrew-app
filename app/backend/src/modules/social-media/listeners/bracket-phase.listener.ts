@@ -8,6 +8,7 @@ import { YoutubeService } from '../services/youtube.service';
 import { VsImageGenerator } from '../generators/vs-image.generator';
 
 import { CloudinaryProvider } from '../../../media/cloudinary.provider';
+import { SocialTextBuilder } from '../../../content-studio/text-builder.service';
 
 @Injectable()
 export class BracketPhaseListener {
@@ -21,6 +22,7 @@ export class BracketPhaseListener {
     private youtubeService: YoutubeService,
     private vsImageGenerator: VsImageGenerator,
     private cloudinary: CloudinaryProvider,
+    private textBuilder: SocialTextBuilder,
   ) {}
 
   // ──────────────────────────────────────────────────────────────────────────

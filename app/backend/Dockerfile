@@ -13,6 +13,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY app/backend/package.json ./app/backend/package.json
 COPY packages/shared/package.json ./packages/shared/package.json
+COPY app/backend/prisma ./app/backend/prisma
 
 # Instalar dependencias del workspace
 RUN pnpm install

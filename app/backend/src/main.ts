@@ -35,7 +35,6 @@ async function bootstrap() {
 
   Logger.log(`🚀 Servidor ejecutándose en:`, 'Bootstrap');
   Logger.log(`   - Local:   http://localhost:${port}`, 'Bootstrap');
-  Logger.log(`   - Network: http://192.168.100.8:${port}`, 'Bootstrap');
   Logger.log(
     `📊 Estado DB:  http://localhost:${port}/api/db-status`,
     'Bootstrap',

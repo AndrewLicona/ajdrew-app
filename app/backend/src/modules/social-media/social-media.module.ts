@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { DiscordService } from './services/discord.service';
 import { XService } from './services/x.service';
@@ -16,9 +16,20 @@ import { MediaModule } from '../../media/media.module';
 import { SocialMediaController } from './controllers/social-media.controller';
 import { RankingImageGenerator } from '../../calificaciones/application/ranking-image-generator';
 import { VsImageGenerator } from './generators/vs-image.generator';
+import { ContentStudioModule } from '../../content-studio/content-studio.module';
+import { SocialTextBuilder } from '../../content-studio/text-builder.service';
+import { SocialQueueModule } from '../../social-queue/social-queue.module';
+import { AnalyticsCronService } from './cron/analytics-cron.service';
 
 @Module({
-  imports: [MediaModule],
+  imports: [
+    MediaModule,
+    ContentStudioModule,
+    // Forward ref para evitar ciclo: SocialQueueModule importa a este modulo
+    // (necesita los services) y este modulo importa a SocialQueueModule
+    // (necesita el producer para los listeners).
+    forwardRef(() => SocialQueueModule),
+  ],
   controllers: [
     AdminDiscordController,
     AdminXController,
@@ -38,6 +49,8 @@ import { VsImageGenerator } from './generators/vs-image.generator';
     SocialPublicationListener,
     RankingImageGenerator,
     VsImageGenerator,
+    SocialTextBuilder,
+    AnalyticsCronService,
   ],
   exports: [
     DiscordService,
@@ -46,6 +59,7 @@ import { VsImageGenerator } from './generators/vs-image.generator';
     YoutubeService,
     BracketImageService,
     BracketMediaService,
+    SocialTextBuilder,
   ],
 })
 export class SocialMediaModule {}
