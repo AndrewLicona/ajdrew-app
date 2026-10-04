@@ -61,7 +61,7 @@ services:
       dockerfile: app/backend/Dockerfile.prod
       network: host
     container_name: ajdrew-backend
-    command: sh -c "npx prisma migrate deploy && node dist/main.js"
+    command: sh -c "npx prisma db push --accept-data-loss && node dist/main.js"
     restart: unless-stopped
     env_file:
       - .env
