@@ -1,0 +1,12 @@
+import { Module } from '@nestjs/common';
+import { YtController } from './yt.controller';
+import { YtService } from './yt.service';
+import { PrismaModule } from '../prisma/prisma.module';
+
+@Module({
+  imports: [PrismaModule],
+  controllers: [YtController],
+  providers: [YtService],
+  exports: [YtService],
+})
+export class YtModule {}

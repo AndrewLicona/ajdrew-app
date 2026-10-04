@@ -22,6 +22,7 @@ import { TablasCalificacionModule } from './tablas-calificacion/tablas-calificac
 import { ContentStudioModule } from './content-studio/content-studio.module';
 import { SocialQueueModule } from './social-queue/social-queue.module';
 import { AuthGoogleModule } from './auth-google/auth-google.module';
+import { YtModule } from './yt/yt.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { AuthGoogleModule } from './auth-google/auth-google.module';
     ContentStudioModule,
     SocialQueueModule,
     AuthGoogleModule,
+    YtModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

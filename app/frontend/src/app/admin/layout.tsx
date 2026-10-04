@@ -65,6 +65,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: 'Votaciones', href: '/admin/votaciones', icon: Vote },
         { name: 'Tutoriales', href: '/admin/tutoriales', icon: Package },
         { name: 'Sorteos', href: '/admin/sorteos', icon: Gift },
+        { name: 'YT Viajes', href: '/admin/yt', icon: Youtube },
         { name: 'Usuarios', href: '/admin/usuarios', icon: Users },
         { name: 'Integraciones', href: '/admin/integraciones', icon: Share2 },
     ];

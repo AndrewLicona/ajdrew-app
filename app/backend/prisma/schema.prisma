@@ -527,3 +527,41 @@ model SocialAnalytics {
   @@index([plataforma, capturadoEn])
   @@index([referenciaTipo, referenciaId])
 }
+
+// ─── Módulo YouTube Landing (/yt/[slug]) ─────────────────────────────────
+
+/// Página de destino vinculada a un video de YouTube.
+/// Cada "viaje" corresponde a un video publicado en el canal.
+model YTViaje {
+  id          String     @id @default(cuid())
+  slug        String     @unique // Ej: "toty-ranking-fc-mobile-2024"
+  titulo      String
+  descripcion String?
+  youtubeUrl  String     // URL completa del video de YouTube
+  thumbnail   String?    // URL de Cloudinary (override de thumbnail)
+  activo      Boolean    @default(true)
+  // Recurso relacionado (ranking, sorteo, votación, tutorial)
+  recursoTipo String?    // "ranking" | "sorteo" | "votacion" | "tutorial"
+  recursoId   String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  visitas     YTVisita[]
+
+  @@index([slug])
+  @@index([activo])
+}
+
+/// Registro de cada visita a una página /yt/[slug].
+/// Anónima — solo guarda deviceId hasheado + timestamp.
+model YTVisita {
+  id        String   @id @default(cuid())
+  viajeId   String
+  deviceId  String   // Hash anónimo del device
+  accion    String   @default("view") // "view" | "click_vote" | "click_sorteo" | etc.
+  createdAt DateTime @default(now())
+
+  viaje YTViaje @relation(fields: [viajeId], references: [id], onDelete: Cascade)
+
+  @@index([viajeId, createdAt])
+  @@index([deviceId])
+}
