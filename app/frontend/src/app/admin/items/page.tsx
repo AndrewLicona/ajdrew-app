@@ -30,6 +30,8 @@ interface Item {
     nombre: string;
     image: string;
     juegoId?: string;
+    version?: string;
+    grl?: number;
     averageRating: number;
     ratingCount: number;
 }
@@ -413,6 +415,20 @@ export default function ItemsAdminPage() {
                                 <h3 className="text-xs font-black text-white uppercase italic tracking-tighter truncate mb-1">
                                     {item.nombre}
                                 </h3>
+                                {(item.version || item.grl) && (
+                                    <div className="flex items-center gap-1 flex-wrap">
+                                        {item.version && (
+                                            <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[var(--color-primary)]/20 text-[var(--color-primary)] font-bold uppercase tracking-wide">
+                                                {item.version}
+                                            </span>
+                                        )}
+                                        {item.grl && (
+                                            <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-yellow-500/20 text-yellow-400 font-bold">
+                                                GRL {item.grl}
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
                             {/* Actions */}
@@ -472,7 +488,9 @@ export default function ItemsAdminPage() {
                                 initialData={editingItem ? {
                                     nombre: editingItem.nombre,
                                     image: editingItem.image,
-                                    juegoId: editingItem.juegoId
+                                    juegoId: editingItem.juegoId,
+                                    version: editingItem.version,
+                                    grl: editingItem.grl,
                                 } : undefined}
                                 games={juegos}
                                 onSubmit={handleSave}

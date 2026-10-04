@@ -91,6 +91,8 @@ model Categoria {
 model ItemCalificable {
   id             String         @id @default(cuid())
   nombre         String
+  version        String?        // Ej: "TOTY 24", "TOTS", "Base", "Big Time" — opcional
+  grl            Int?           // Media/rating de la carta (97, 101, etc.) — opcional
   juegoId        String?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
@@ -102,6 +104,9 @@ model ItemCalificable {
   juego          Juego?         @relation(fields: [juegoId], references: [id])
 
   tablas TablaItem[]
+
+  // Solo bloquea duplicados exactos (nombre + version + juego). Si version es null, no aplica.
+  @@unique([nombre, version, juegoId])
 }
 
 model TablaCalificacion {

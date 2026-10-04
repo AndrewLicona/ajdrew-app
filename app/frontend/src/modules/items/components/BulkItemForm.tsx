@@ -16,6 +16,8 @@ interface ItemFormData {
     nombre: string;
     image: string;
     juegoId?: string;
+    version?: string;
+    grl?: number;
 }
 
 interface BulkItemFormProps {
@@ -27,6 +29,8 @@ interface BulkItemFormProps {
 interface FileItem {
     file: File;
     name: string;
+    version?: string;
+    grl?: number;
 }
 
 export const BulkItemForm: React.FC<BulkItemFormProps> = ({
@@ -58,6 +62,14 @@ export const BulkItemForm: React.FC<BulkItemFormProps> = ({
 
     const handleNameChange = (index: number, newName: string) => {
         setFileItems(prev => prev.map((item, i) => i === index ? { ...item, name: newName } : item));
+    };
+
+    const handleVersionChange = (index: number, newVersion: string) => {
+        setFileItems(prev => prev.map((item, i) => i === index ? { ...item, version: newVersion || undefined } : item));
+    };
+
+    const handleGrlChange = (index: number, newGrl: string) => {
+        setFileItems(prev => prev.map((item, i) => i === index ? { ...item, grl: newGrl ? parseInt(newGrl, 10) : undefined } : item));
     };
 
     const uploadFile = async (file: File): Promise<string | null> => {
@@ -97,7 +109,9 @@ export const BulkItemForm: React.FC<BulkItemFormProps> = ({
                 uploadedItems.push({
                     nombre: item.name,
                     image: url,
-                    juegoId: selectedJuegoId || undefined
+                    juegoId: selectedJuegoId || undefined,
+                    version: item.version || undefined,
+                    grl: item.grl || undefined,
                 });
             }
             completed++;
@@ -187,28 +201,44 @@ export const BulkItemForm: React.FC<BulkItemFormProps> = ({
                 </div>
 
                 {fileItems.length > 0 && !uploading && (
-                    <div className="max-h-64 overflow-y-auto pr-2 space-y-2 custom-scrollbar border border-white/5 bg-black/20 rounded-xl p-2">
+                    <div className="max-h-80 overflow-y-auto pr-2 space-y-2 custom-scrollbar border border-white/5 bg-black/20 rounded-xl p-2">
                         {fileItems.map((item, i) => (
-                            <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 gap-3 bg-black/40 border border-white/5 rounded-lg">
-                                <div className="flex items-center gap-3 w-full sm:w-2/3">
-                                    <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-white/10 relative">
+                            <div key={i} className="flex flex-col p-3 gap-2 bg-black/40 border border-white/5 rounded-lg">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-white/10">
                                         <img src={URL.createObjectURL(item.file)} className="w-full h-full object-cover" alt="preview" />
                                     </div>
-                                    <div className="flex flex-col w-full">
-                                        <div className="relative">
-                                            <Edit2 size={10} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
-                                            <Input
-                                                value={item.name}
-                                                onChange={(e: any) => handleNameChange(i, e.target.value)}
-                                                className="h-8 pl-8 text-xs bg-black/50 border-white/10 focus:border-[var(--color-primary)]/50 focus:bg-black w-full"
-                                                placeholder="Nombre del ítem"
-                                            />
-                                        </div>
+                                    <div className="flex-1 relative">
+                                        <Edit2 size={10} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 z-10" />
+                                        <Input
+                                            value={item.name}
+                                            onChange={(e: any) => handleNameChange(i, e.target.value)}
+                                            className="h-8 pl-8 text-xs bg-black/50 border-white/10 focus:border-[var(--color-primary)]/50 focus:bg-black w-full"
+                                            placeholder="Nombre del ítem"
+                                        />
                                     </div>
+                                    <button type="button" onClick={() => removeFile(i)} className="p-2 hover:text-red-500 hover:bg-red-500/10 rounded-lg text-white/40 transition-colors shrink-0">
+                                        <X size={16} />
+                                    </button>
                                 </div>
-                                <button type="button" onClick={() => removeFile(i)} className="p-2 self-end sm:self-auto hover:text-red-500 hover:bg-red-500/10 rounded-lg text-white/40 transition-colors">
-                                    <X size={16} />
-                                </button>
+                                {/* Versión y GRL opcionales — útil para FC Mobile / eFootball */}
+                                <div className="flex gap-2 pl-13">
+                                    <Input
+                                        value={item.version || ''}
+                                        onChange={(e: any) => handleVersionChange(i, e.target.value)}
+                                        className="h-7 text-[11px] bg-black/50 border-white/10 flex-1"
+                                        placeholder="Versión (ej: TOTY, Base)"
+                                    />
+                                    <Input
+                                        type="number"
+                                        value={item.grl ?? ''}
+                                        onChange={(e: any) => handleGrlChange(i, e.target.value)}
+                                        className="h-7 text-[11px] bg-black/50 border-white/10 w-20"
+                                        placeholder="GRL"
+                                        min={1}
+                                        max={200}
+                                    />
+                                </div>
                             </div>
                         ))}
                     </div>

@@ -16,6 +16,8 @@ interface ItemFormData {
     nombre: string;
     image: string;
     juegoId?: string;
+    version?: string;
+    grl?: number;
 }
 
 interface ItemFormProps {
@@ -37,6 +39,8 @@ export const ItemForm: React.FC<ItemFormProps> = ({
         nombre: '',
         image: '',
         juegoId: '',
+        version: '',
+        grl: undefined,
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -56,7 +60,11 @@ export const ItemForm: React.FC<ItemFormProps> = ({
         setLoading(true);
         setError(null);
         try {
-            await onSubmit(formData);
+            await onSubmit({
+                ...formData,
+                version: formData.version?.trim() || undefined,
+                grl: formData.grl || undefined,
+            });
         } catch (err: any) {
             setError(err.message || 'Error al guardar el ítem.');
         } finally {
@@ -66,7 +74,10 @@ export const ItemForm: React.FC<ItemFormProps> = ({
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData(prev => ({
+            ...prev,
+            [name]: name === 'grl' ? (value ? parseInt(value, 10) : undefined) : value,
+        }));
     };
 
     return (
@@ -118,6 +129,37 @@ export const ItemForm: React.FC<ItemFormProps> = ({
                             </option>
                         ))}
                     </select>
+                </div>
+
+                {/* Campos opcionales para cartas con versiones (FC Mobile, eFootball) */}
+                <div className="grid grid-cols-2 gap-3">
+                    <div>
+                        <Label htmlFor="version">
+                            Versión <span className="text-white/30 text-[10px] ml-1">(Opcional)</span>
+                        </Label>
+                        <Input
+                            id="version"
+                            name="version"
+                            value={formData.version || ''}
+                            onChange={handleChange}
+                            placeholder="Ej: TOTY 24, TOTS, Base..."
+                        />
+                    </div>
+                    <div>
+                        <Label htmlFor="grl">
+                            GRL / Media <span className="text-white/30 text-[10px] ml-1">(Opcional)</span>
+                        </Label>
+                        <Input
+                            id="grl"
+                            name="grl"
+                            type="number"
+                            min={1}
+                            max={200}
+                            value={formData.grl ?? ''}
+                            onChange={handleChange}
+                            placeholder="Ej: 97, 101..."
+                        />
+                    </div>
                 </div>
 
                 <div className="pt-2">

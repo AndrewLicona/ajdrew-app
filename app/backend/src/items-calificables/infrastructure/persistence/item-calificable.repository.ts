@@ -23,6 +23,8 @@ export class ItemCalificableRepository {
         nombre: createItemCalificableDto.nombre,
         image: createItemCalificableDto.image,
         juegoId: createItemCalificableDto.juegoId,
+        version: createItemCalificableDto.version,
+        grl: createItemCalificableDto.grl,
       },
     });
   }
@@ -33,6 +35,8 @@ export class ItemCalificableRepository {
         nombre: item.nombre,
         image: item.image,
         juegoId: item.juegoId,
+        version: item.version,
+        grl: item.grl,
       })),
     });
   }
