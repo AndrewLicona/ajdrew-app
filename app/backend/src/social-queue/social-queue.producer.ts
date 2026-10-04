@@ -10,7 +10,7 @@ import { Queue, JobsOptions } from 'bullmq';
  * con el campo homonimo de los JobData.
  */
 export interface DiscordPayload {
-  evento: 'tutorial' | 'sorteo_created' | 'sorteo_winners' | 'bracket_phase' | 'bracket_champion' | 'ranking' | 'tabla';
+  evento: 'tutorial' | 'sorteo_created' | 'sorteo_winners' | 'bracket_created' | 'bracket_phase' | 'bracket_champion' | 'ranking' | 'tabla';
   data: any;
   text: string;
   imageUrl?: string;
@@ -18,21 +18,21 @@ export interface DiscordPayload {
 }
 
 export interface XPayload {
-  evento: 'tutorial' | 'sorteo_created' | 'sorteo_winners' | 'bracket_created' | 'bracket_phase' | 'ranking';
+  evento: 'tutorial' | 'sorteo_created' | 'sorteo_winners' | 'bracket_created' | 'bracket_phase' | 'bracket_champion' | 'ranking' | 'tabla';
   data: any;
   text: string;
   imageBuffer?: Buffer;
 }
 
 export interface MetaPayload {
-  evento: 'tutorial' | 'sorteo_created' | 'sorteo_winners' | 'bracket_created' | 'bracket_champion' | 'ranking';
+  evento: 'tutorial' | 'sorteo_created' | 'sorteo_winners' | 'bracket_created' | 'bracket_phase' | 'bracket_champion' | 'ranking' | 'tabla';
   data: any;
   text: string;
   imageUrl: string; // Cloudinary URL para Meta (necesario para FB/IG)
 }
 
 export interface YoutubePayload {
-  evento: 'sorteo_created';
+  evento: 'sorteo_created' | 'bracket_phase' | 'ranking';
   data: any;
   imageUrl: string;
   title: string;

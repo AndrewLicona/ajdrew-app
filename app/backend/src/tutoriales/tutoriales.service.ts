@@ -65,7 +65,11 @@ export class TutorialesService {
       });
     }
 
-    return this.repository.update(id, data);
+    const updated = await this.repository.update(id, data);
+    if (data.activo === true) {
+      this.eventEmitter.emit('social.tutorial.published', { tutorialId: id });
+    }
+    return updated;
   }
 
   async incrementUtilidad(id: string) {

@@ -28,8 +28,12 @@ export class SorteosService {
     return this.repository.findOne(id);
   }
 
-  update(id: string, data: any) {
-    return this.repository.update(id, data);
+  async update(id: string, data: any) {
+    const updated = await this.repository.update(id, data);
+    if (data.estado === 'ACTIVO' || (data.premio && updated.estado === 'ACTIVO')) {
+      this.eventEmitter.emit('social.sorteo.created', { sorteoId: id });
+    }
+    return updated;
   }
 
   async participar(sorteoId: string, dto: ParticiparSorteoDto) {

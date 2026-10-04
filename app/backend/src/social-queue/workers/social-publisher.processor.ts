@@ -131,7 +131,6 @@ export class SocialPublisherProcessor extends WorkerHost {
   private async handleDiscord(payload: any): Promise<void> {
     const { evento, data, text, imageUrl, imageBuffer } = payload;
 
-    // Llamada polimorfica al servicio correspondiente segun el tipo de evento
     switch (evento) {
       case 'tutorial':
         await this.discord.publishTutorial(data, text, imageUrl || '');
@@ -147,16 +146,23 @@ export class SocialPublisherProcessor extends WorkerHost {
           data.ganadores || [],
         );
         break;
+      case 'bracket_created':
+        await this.discord.publishPhaseAnnouncement(
+          data.bracketId || data.id,
+          1,
+          imageUrl,
+        );
+        break;
       case 'bracket_phase':
         await this.discord.publishPhaseAnnouncement(
-          data.bracketId,
-          data.round,
+          data.bracketId || data.id,
+          data.round || 1,
           imageUrl,
         );
         break;
       case 'bracket_champion':
         await this.discord.publishPhaseAnnouncement(
-          data.bracketId,
+          data.bracketId || data.id,
           999,
           imageUrl,
         );
@@ -192,12 +198,19 @@ export class SocialPublisherProcessor extends WorkerHost {
         );
         break;
       case 'bracket_created':
-        await this.x.publishBracketCreated(data, text, imageBuffer);
-        break;
       case 'bracket_phase':
         await this.x.publishBracketCreated(data, text, imageBuffer);
         break;
+      case 'bracket_champion':
+        await this.x.publishMatchResult(
+          data.bracketId || data.id,
+          999,
+          imageBuffer,
+          data.ganadorNombre || data.premioItem || 'Ganador',
+        );
+        break;
       case 'ranking':
+      case 'tabla':
         await this.x.publishRanking(data, text, imageBuffer);
         break;
       default:
@@ -230,12 +243,19 @@ export class SocialPublisherProcessor extends WorkerHost {
       case 'bracket_created':
         await this.meta.publishBracketCreated(data, text, imageUrl);
         break;
+      case 'bracket_phase':
+        await this.meta.publishPhaseAnnouncement(
+          data.bracketId || data.id,
+          data.round || 1,
+          imageUrl,
+        );
+        break;
       case 'bracket_champion':
         await this.meta.publishMatchResult(
-          data.bracketId,
+          data.bracketId || data.id,
           999,
           imageUrl,
-          data.ganadorNombre,
+          data.ganadorNombre || data.premioItem || 'Ganador',
         );
         break;
       case 'ranking':
@@ -248,21 +268,27 @@ export class SocialPublisherProcessor extends WorkerHost {
   }
 
   /**
-   * Sube Short a YouTube a partir de una imagen + titulo + descripcion.
+   * Sube Short o video a YouTube a partir de una imagen o evento.
    */
   private async handleYoutube(payload: any): Promise<void> {
     const { evento, data, imageUrl, title, description, tags } = payload;
 
-    if (evento !== 'sorteo_created') {
-      throw new Error(`YouTube solo soporta sorteos por ahora, recibio: ${evento}`);
+    if (evento === 'sorteo_created' || evento === 'ranking') {
+      await this.youtube.publishVideoFromImage(
+        imageUrl,
+        title || `¡Novedad en AJDREW! - ${data?.titulo || data?.nombre || ''}`,
+        description || `Participa y vota en AJDREW.`,
+        tags || ['Gaming', 'AJDREW'],
+        data,
+      );
+    } else if (evento === 'bracket_phase') {
+      await this.youtube.publishPhaseAnnouncement(
+        data.bracketId || data.id,
+        data.round || 1,
+        imageUrl,
+      );
+    } else {
+      this.logger.log(`YouTube omitido para evento ${evento}`);
     }
-
-    await this.youtube.publishVideoFromImage(
-      imageUrl,
-      title,
-      description,
-      tags,
-      data,
-    );
   }
 }

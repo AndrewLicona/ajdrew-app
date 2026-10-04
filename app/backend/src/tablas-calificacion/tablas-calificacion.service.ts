@@ -97,11 +97,16 @@ export class TablasCalificacionService {
       };
     }
 
-    return this.prisma.tablaCalificacion.update({
+    const updated = await this.prisma.tablaCalificacion.update({
       where: { id },
       data: updateData,
       include: { items: { include: { item: true } } },
     });
+
+    // Replicar en redes sociales la actualización del ranking
+    this.eventEmitter.emit('social.ranking.updated', { categoriaId: id });
+
+    return updated;
   }
 
   async remove(id: string) {
