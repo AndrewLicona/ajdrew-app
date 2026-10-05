@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Upload, X, Loader2, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, Loader2, Image as ImageIcon, AlertCircle } from 'lucide-react';
 import Image from 'next/image';
 import { Bt } from '../atoms/Button';
 import { Label } from '../atoms/Label';
@@ -20,29 +20,53 @@ export const CloudinaryUpload: React.FC<CloudinaryUploadProps> = ({
     folder = "general"
 }) => {
     const [uploading, setUploading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'ajdrew_unsigned';
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
+        // Validar tamaño (máx 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            setError('El archivo es muy grande (máx 10MB)');
+            return;
+        }
+
         setUploading(true);
-        const formData = new FormData();
-        formData.append('file', file);
+        setError(null);
 
         try {
+            // Upload directo desde el navegador a Cloudinary (sin pasar por el backend)
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', uploadPreset);
+            formData.append('folder', `ajdrew/${folder}`);
+
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/media/upload?folder=${folder}`,
+                `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
                 {
                     method: 'POST',
                     body: formData,
                 }
             );
-            const data = await response.json();
-            if (data.url) {
-                onChange(data.url);
+
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData?.error?.message || 'Error al subir imagen');
             }
-        } catch (error) {
-            console.error('Error uploading to internal API:', error);
+
+            const data = await response.json();
+            if (data.secure_url) {
+                onChange(data.secure_url);
+            } else {
+                throw new Error('No se recibió URL de la imagen');
+            }
+        } catch (err: any) {
+            console.error('Error uploading to Cloudinary:', err);
+            setError(err.message || 'Error al subir la imagen. Intenta de nuevo.');
         } finally {
             setUploading(false);
         }
@@ -58,6 +82,7 @@ export const CloudinaryUpload: React.FC<CloudinaryUploadProps> = ({
                         src={value}
                         alt="Preview"
                         fill
+                        unoptimized
                         className="object-contain"
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
@@ -72,17 +97,32 @@ export const CloudinaryUpload: React.FC<CloudinaryUploadProps> = ({
                     </div>
                 </div>
             ) : (
-                <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-[var(--color-primary)]/20 rounded-xl cursor-pointer hover:bg-[var(--color-primary)]/5 hover:border-[var(--color-primary)]/40 transition-all group">
+                <label className={`flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl transition-all group ${
+                    error
+                        ? 'border-red-500/40 bg-red-500/5'
+                        : 'border-[var(--color-primary)]/20 cursor-pointer hover:bg-[var(--color-primary)]/5 hover:border-[var(--color-primary)]/40'
+                }`}>
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
                         {uploading ? (
-                            <Loader2 className="w-10 h-10 text-[var(--color-primary)] animate-spin mb-3" />
+                            <>
+                                <Loader2 className="w-10 h-10 text-[var(--color-primary)] animate-spin mb-3" />
+                                <p className="text-sm text-[var(--color-text-secondary)]">Subiendo imagen...</p>
+                            </>
+                        ) : error ? (
+                            <>
+                                <AlertCircle className="w-10 h-10 text-red-400 mb-3" />
+                                <p className="text-sm text-red-400 text-center px-4">{error}</p>
+                                <p className="text-xs text-[var(--color-text-secondary)] mt-2 opacity-60">Haz clic para intentar de nuevo</p>
+                            </>
                         ) : (
-                            <Upload className="w-10 h-10 text-[var(--color-text-secondary)] group-hover:text-[var(--color-primary)] transition-colors mb-3" />
+                            <>
+                                <Upload className="w-10 h-10 text-[var(--color-text-secondary)] group-hover:text-[var(--color-primary)] transition-colors mb-3" />
+                                <p className="mb-2 text-sm text-[var(--color-text-secondary)]">
+                                    <span className="font-bold">Haz clic para subir</span> o arrastra y suelta
+                                </p>
+                                <p className="text-xs text-[var(--color-text-secondary)] opacity-60">PNG, JPG o WEBP (máx. 10MB)</p>
+                            </>
                         )}
-                        <p className="mb-2 text-sm text-[var(--color-text-secondary)]">
-                            <span className="font-bold">Haz clic para subir</span> o arrastra y suelta
-                        </p>
-                        <p className="text-xs text-[var(--color-text-secondary)] opacity-60">PNG, JPG o WEBP (MAX. 2MB)</p>
                     </div>
                     <input
                         type="file"
