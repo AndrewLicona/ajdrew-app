@@ -16,7 +16,7 @@ COPY packages/shared/package.json ./packages/shared/
 COPY app/backend/prisma ./app/backend/prisma
 
 # Instalar dependencias
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
 # Copiar el resto del código
 COPY . .
