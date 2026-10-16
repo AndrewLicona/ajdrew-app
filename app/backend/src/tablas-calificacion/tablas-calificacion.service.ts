@@ -104,7 +104,7 @@ export class TablasCalificacionService {
     });
 
     // Replicar en redes sociales la actualización del ranking
-    this.eventEmitter.emit('social.ranking.updated', { categoriaId: id });
+    this.eventEmitter.emit('social.ranking.updated', { tablaId: id });
 
     return updated;
   }

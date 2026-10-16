@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { PrismaService } from '../prisma/prisma.service';
 import { VotacionRepository } from './infrastructure/persistence/votacion.repository';
 import {
   CreateBracketDto,
@@ -16,6 +17,7 @@ import { RondaNombre } from '../modules/social-media/generators/bracket-image.ge
 export class VotacionesService {
   constructor(
     private readonly repository: VotacionRepository,
+    private readonly prisma: PrismaService,
     private readonly publicacionesService: PublicacionesService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -99,7 +101,7 @@ export class VotacionesService {
       // Enrich matches with user vote info
       const matchesWithVotes = await Promise.all(
         (bracket.matches || []).map(async (match: any) => {
-          const vote = await (this.repository as any).getVote(
+          const vote = await this.repository.getVote(
             match.id,
             deviceId,
           );
@@ -214,12 +216,12 @@ export class VotacionesService {
           bracket.juego.nombre,
           match.itemAId!,
           match.itemA?.nombre || '?',
-          (match.itemA as any)?.imagenUrl || (match.itemA as any)?.image || '',
+          match.itemA?.image || '',
           match.votosA,
           totalVotos > 0 ? Math.round((match.votosA / totalVotos) * 100) : 50,
           match.itemBId!,
           match.itemB?.nombre || '?',
-          (match.itemB as any)?.imagenUrl || (match.itemB as any)?.image || '',
+          match.itemB?.image || '',
           match.votosB,
           totalVotos > 0 ? Math.round((match.votosB / totalVotos) * 100) : 50,
           ganadorId!,
@@ -271,9 +273,9 @@ export class VotacionesService {
 
     // Apertura de NUEVOS matches
     for (const m of nextMatches) {
-      const itemA = await (this.repository as any).findOneItem(m.itemAId);
+      const itemA = await this.repository.findOneItem(m.itemAId);
       const itemB = m.itemBId
-        ? await (this.repository as any).findOneItem(m.itemBId)
+        ? await this.repository.findOneItem(m.itemBId)
         : null;
 
       this.eventEmitter.emit(
@@ -285,10 +287,10 @@ export class VotacionesService {
           bracket.juego.nombre,
           itemA?.id || '',
           itemA?.nombre || '?',
-          itemA?.imagenUrl || itemA?.image || '',
+          itemA?.image || '',
           itemB?.id || 'null',
           itemB?.nombre || 'BYE',
-          itemB?.imagenUrl || itemB?.image || '',
+          itemB?.image || '',
           (bracket as any).rondaDuracion || 24,
         ),
       );
@@ -330,33 +332,63 @@ export class VotacionesService {
       );
     }
 
+    // Validate deadline (proximoCierreAt)
+    if (bracket.proximoCierreAt && new Date() > new Date(bracket.proximoCierreAt)) {
+      throw new BadRequestException('El tiempo para votar en esta ronda ha expirado');
+    }
+
     const isA = match.itemAId === itemId;
     const isB = match.itemBId === itemId;
 
     if (!isA && !isB)
       throw new BadRequestException('El ítem no pertenece a este match');
 
-    const existingVote = await this.repository.getVote(matchId, deviceId);
+    // Use transaction to prevent race conditions
+    return this.prisma.$transaction(async (tx) => {
+      const existingVote = await tx.bracketVote.findUnique({
+        where: {
+          matchId_deviceId: { matchId, deviceId },
+        },
+      });
 
-    if (existingVote) {
-      if (existingVote.chosenItemId === itemId) {
-        throw new BadRequestException('Ya has votado por este ítem');
+      if (existingVote) {
+        if (existingVote.chosenItemId === itemId) {
+          throw new BadRequestException('Ya has votado por este ítem');
+        }
+
+        // User is changing their vote
+        const oldIsA = match.itemAId === existingVote.chosenItemId;
+        
+        // Decrement old vote
+        await tx.bracketMatch.update({
+          where: { id: matchId },
+          data: oldIsA ? { votosA: { decrement: 1 } } : { votosB: { decrement: 1 } },
+        });
+        
+        // Increment new vote
+        await tx.bracketMatch.update({
+          where: { id: matchId },
+          data: isA ? { votosA: { increment: 1 } } : { votosB: { increment: 1 } },
+        });
+        
+        // Update vote record
+        return tx.bracketVote.update({
+          where: { id: existingVote.id },
+          data: { chosenItemId: itemId },
+        });
       }
 
-      // User is changing their vote
-      const oldIsA = match.itemAId === existingVote.chosenItemId;
-      // 1. Decrement old
-      await this.repository.updateMatchVote(matchId, oldIsA, -1);
-      // 2. Increment new
-      await this.repository.updateMatchVote(matchId, isA, 1);
-      // 3. Update vote record
-      return this.repository.updateVoteChoice(existingVote.id, itemId);
-    }
+      // Record new vote
+      await tx.bracketVote.create({
+        data: { matchId, deviceId, chosenItemId: itemId },
+      });
 
-    // Record vote for this device first to prevent race conditions
-    await this.repository.recordVote(matchId, deviceId, itemId);
-
-    return this.repository.updateMatchVote(matchId, isA, 1);
+      // Increment vote count
+      return tx.bracketMatch.update({
+        where: { id: matchId },
+        data: isA ? { votosA: { increment: 1 } } : { votosB: { increment: 1 } },
+      });
+    });
   }
 
   async remove(id: string) {

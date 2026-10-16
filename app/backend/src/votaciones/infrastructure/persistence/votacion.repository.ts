@@ -49,7 +49,7 @@ export class VotacionRepository {
       },
       include: {
         juego: true,
-        ['categoria' as any]: true,
+        categoria: true,
         matches: {
           include: {
             itemA: true,
@@ -88,7 +88,7 @@ export class VotacionRepository {
   }
 
   async findOneItem(id: string) {
-    return (this.prisma as any).itemCalificable.findUnique({
+    return this.prisma.itemCalificable.findUnique({
       where: { id },
     });
   }
@@ -100,7 +100,7 @@ export class VotacionRepository {
   }
 
   async getVote(matchId: string, deviceId: string) {
-    return (this.prisma as any).bracketVote.findUnique({
+    return this.prisma.bracketVote.findUnique({
       where: {
         matchId_deviceId: { matchId, deviceId },
       },
@@ -108,13 +108,13 @@ export class VotacionRepository {
   }
 
   async recordVote(matchId: string, deviceId: string, chosenItemId: string) {
-    return (this.prisma as any).bracketVote.create({
+    return this.prisma.bracketVote.create({
       data: { matchId, deviceId, chosenItemId },
     });
   }
 
   async updateVoteChoice(voteId: string, chosenItemId: string) {
-    return (this.prisma as any).bracketVote.update({
+    return this.prisma.bracketVote.update({
       where: { id: voteId },
       data: { chosenItemId },
     });

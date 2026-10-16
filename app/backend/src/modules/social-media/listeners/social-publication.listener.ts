@@ -1,11 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { DiscordService } from '../services/discord.service';
-import { XService } from '../services/x.service';
-import { MetaService } from '../services/meta.service';
-import { YoutubeService } from '../services/youtube.service';
-
 import {
   generarImagenSorteo,
   SorteoImageData,
@@ -14,7 +9,9 @@ import { RankingImageGenerator } from '../../../calificaciones/application/ranki
 import { VsImageGenerator } from '../generators/vs-image.generator';
 import { CloudinaryProvider } from '../../../media/cloudinary.provider';
 import { SocialTextBuilder } from '../../../content-studio/text-builder.service';
-import { SocialQueueProducer } from '../../../social-queue/social-queue.producer';
+import { MetaService } from '../services/meta.service';
+import { YoutubeService } from '../services/youtube.service';
+import { DiscordService } from '../services/discord.service';
 
 @Injectable()
 export class SocialPublicationListener {
@@ -22,24 +19,89 @@ export class SocialPublicationListener {
 
   constructor(
     private prisma: PrismaService,
-    private discordService: DiscordService,
-    private xService: XService,
-    private metaService: MetaService,
-    private youtubeService: YoutubeService,
     private rankingImageGenerator: RankingImageGenerator,
     private vsImageGenerator: VsImageGenerator,
     private cloudinary: CloudinaryProvider,
     private textBuilder: SocialTextBuilder,
-    private socialQueue: SocialQueueProducer,
+    private metaService: MetaService,
+    private youtubeService: YoutubeService,
+    private discordService: DiscordService,
   ) {}
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // TUTORIALES
-  // ──────────────────────────────────────────────────────────────────────────
+  private readonly PLATAFORMAS = ['discord', 'x', 'meta', 'youtube'] as const;
+
+  private async uploadToCloudinary(buffer: Buffer, folder: string): Promise<string | null> {
+    try {
+      const pseudoFile = { buffer };
+      return await this.cloudinary.uploadImage(pseudoFile, folder);
+    } catch (error) {
+      this.logger.error(`Error subiendo a Cloudinary: ${error.message}`);
+      return null;
+    }
+  }
+
+  private async createPublications(
+    evento: string,
+    referenciaTipo: string,
+    referenciaId: string,
+    data: any,
+    imageUrl: string | null | undefined,
+    imageBuffer: Buffer | undefined,
+    customTexts?: Record<string, string>,
+  ) {
+    const results: any[] = [];
+
+    for (const plataforma of this.PLATAFORMAS) {
+      if (plataforma === 'youtube' && !imageUrl) continue;
+
+      let textoFinal = customTexts?.[plataforma];
+      if (!textoFinal) {
+        try {
+          textoFinal = await this.textBuilder.build(evento.replace('.', '_'), plataforma, data);
+        } catch {
+          textoFinal = '';
+        }
+      }
+
+      if (!textoFinal) continue;
+
+      const pub = await this.prisma.socialPublication.create({
+        data: {
+          evento,
+          referenciaTipo,
+          referenciaId,
+          plataforma,
+          estado: 'GENERADO',
+          textoFinal,
+          imageUrl,
+          metadata: {
+            source: 'auto-generated',
+            juegoId: data?.juegoId,
+            juegoNombre: data?.juego?.nombre,
+            hasImageBuffer: !!imageBuffer,
+          },
+        },
+      });
+
+      if (imageBuffer && !imageUrl && (plataforma === 'meta' || plataforma === 'youtube')) {
+        const uploadedUrl = await this.uploadToCloudinary(imageBuffer, `${referenciaTipo}/${referenciaId}`);
+        if (uploadedUrl) {
+          await this.prisma.socialPublication.update({
+            where: { id: pub.id },
+            data: { imageUrl: uploadedUrl },
+          });
+        }
+      }
+
+      results.push(pub);
+    }
+
+    return results;
+  }
 
   @OnEvent('social.tutorial.published')
   async handleTutorialPublished(payload: { tutorialId: string }) {
-    this.logger.log(`Handling tutorial published event: ${payload.tutorialId}`);
+    this.logger.log(`Generando contenido social para tutorial: ${payload.tutorialId}`);
 
     try {
       const tutorial = await this.prisma.tutorial.findUnique({
@@ -47,80 +109,45 @@ export class SocialPublicationListener {
         include: { juego: true },
       });
 
-      if (!tutorial || !tutorial.activo) {
-        this.logger.warn(
-          `Tutorial not found or not active: ${payload.tutorialId}`,
-        );
-        return;
+      if (!tutorial || !tutorial.activo) return;
+
+      const imageUrl = tutorial.image || tutorial.juego?.image;
+      const textoDefault = `📚 ¡NUEVO TUTORIAL! ${tutorial.titulo}\n\n${tutorial.descripcion || ''}\n\nAprende más en: ${process.env.FRONTEND_URL || 'https://ajdrew.site'}/tutoriales/${tutorial.slug}\n\n#AJDREW #Tutorial #${tutorial.juego?.nombre?.replace(/\s+/g, '') || 'Gaming'}`;
+
+      if (imageUrl) {
+        try {
+          await this.metaService.publishTutorial(tutorial, textoDefault, imageUrl);
+          await this.youtubeService.publishVideoFromImage(
+            imageUrl,
+            `Tutorial: ${tutorial.titulo}`,
+            tutorial.descripcion || 'Tutorial oficial de AJDREW',
+            ['Tutorial', 'AJDREW', tutorial.juego?.nombre || 'Gaming'],
+            { tutorialId: tutorial.id },
+          );
+          await this.discordService.publishTutorial(tutorial, textoDefault, imageUrl);
+        } catch (e) {
+          this.logger.error(`Error publicando tutorial en redes externas: ${e.message}`);
+        }
       }
 
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-      const tutorialUrl = `${frontendUrl}/tutoriales/${tutorial.slug}`;
+      await this.createPublications(
+        'tutorial.published',
+        'tutorial',
+        tutorial.id,
+        tutorial,
+        imageUrl,
+        undefined,
+      );
 
-      // Usar la imagen del tutorial o del juego
-      const imageUrl = tutorial.image || (tutorial as any).juego?.image;
-
-      // Texto para redes sociales (lee template de DB, fallback a default)
-      const text = await this.textBuilder.build('tutorial_published', 'discord', tutorial);
-      const textX = await this.textBuilder.build('tutorial_published', 'x', tutorial);
-      const textMeta = await this.textBuilder.build('tutorial_published', 'meta', tutorial);
-
-      // Crear registros en SocialPublication y encolar para retry automatico
-      const pubDiscord = await this.createSocialPublication({
-        evento: 'tutorial.published',
-        referenciaTipo: 'tutorial',
-        referenciaId: tutorial.id,
-        plataforma: 'discord',
-        textoFinal: text,
-        imageUrl: imageUrl,
-      });
-      const pubX = await this.createSocialPublication({
-        evento: 'tutorial.published',
-        referenciaTipo: 'tutorial',
-        referenciaId: tutorial.id,
-        plataforma: 'x',
-        textoFinal: textX,
-        imageUrl: imageUrl,
-      });
-      const pubMeta = await this.createSocialPublication({
-        evento: 'tutorial.published',
-        referenciaTipo: 'tutorial',
-        referenciaId: tutorial.id,
-        plataforma: 'meta',
-        textoFinal: textMeta,
-        imageUrl: imageUrl,
-      });
-
-      // Encolar (no publicar directo)
-      await this.socialQueue.enqueue({
-        publicationId: pubDiscord.id,
-        plataforma: 'discord',
-        payload: { evento: 'tutorial', data: tutorial, text, imageUrl: imageUrl || '' },
-      });
-      await this.socialQueue.enqueue({
-        publicationId: pubX.id,
-        plataforma: 'x',
-        payload: { evento: 'tutorial', data: tutorial, text: textX, imageUrl: imageUrl || '' },
-      });
-      await this.socialQueue.enqueue({
-        publicationId: pubMeta.id,
-        plataforma: 'meta',
-        payload: { evento: 'tutorial', data: tutorial, text: textMeta, imageUrl: imageUrl || '' },
-      });
-
-      this.logger.log(`Tutorial published successfully: ${tutorial.titulo}`);
+      this.logger.log(`Contenido generado para tutorial: ${tutorial.titulo}`);
     } catch (error) {
-      this.logger.error('Error handling tutorial published event', error);
+      this.logger.error('Error generando contenido para tutorial', error);
     }
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // SORTEOS - CREACIÓN
-  // ──────────────────────────────────────────────────────────────────────────
-
   @OnEvent('social.sorteo.created')
   async handleSorteoCreated(payload: { sorteoId: string }) {
-    this.logger.log(`Handling sorteo created event: ${payload.sorteoId}`);
+    this.logger.log(`Generando contenido social para sorteo: ${payload.sorteoId}`);
 
     try {
       const sorteo = await this.prisma.sorteo.findUnique({
@@ -128,12 +155,8 @@ export class SocialPublicationListener {
         include: { juego: true },
       });
 
-      if (!sorteo || sorteo.estado !== 'ACTIVO') {
-        this.logger.warn(`Sorteo not found or not active: ${payload.sorteoId}`);
-        return;
-      }
+      if (!sorteo || sorteo.estado !== 'ACTIVO') return;
 
-      // Generar imagen del sorteo
       const imageData: SorteoImageData = {
         titulo: sorteo.titulo,
         premio: sorteo.premio,
@@ -143,120 +166,45 @@ export class SocialPublicationListener {
       };
 
       const imageBuffer = await generarImagenSorteo(imageData);
+      const cloudinaryUrl = await this.uploadToCloudinary(imageBuffer, `sorteos/${sorteo.id}`);
+      const finalImageUrl = cloudinaryUrl || sorteo.image;
 
-      // Subir imagen a Cloudinary para Meta y YouTube
-      const pseudoFile = { buffer: imageBuffer };
-      const folder = `sorteos/${sorteo.id}`;
-      const cloudinaryUrl = await this.cloudinary.uploadImage(pseudoFile, folder);
+      const textoDefault = `🎁 ¡NUEVO SORTEO! ${sorteo.titulo}\n\nPremio: ${sorteo.premio}\n\nParticipa en: ${process.env.FRONTEND_URL || 'https://ajdrew.site'}/sorteos\n\n#AJDREW #Sorteo #${sorteo.juego?.nombre?.replace(/\s+/g, '') || 'Gaming'}`;
 
-      // Textos por plataforma desde DB o fallback
-      const text = await this.textBuilder.build('sorteo_created', 'discord', sorteo);
-      const textX = await this.textBuilder.build('sorteo_created', 'x', sorteo);
-      const textMeta = await this.textBuilder.build('sorteo_created', 'meta', sorteo);
-
-      // Registrar publicaciones en SocialPublication
-      const pubDiscord = await this.createSocialPublication({
-        evento: 'sorteo.created',
-        referenciaTipo: 'sorteo',
-        referenciaId: sorteo.id,
-        plataforma: 'discord',
-        textoFinal: text,
-        imageUrl: cloudinaryUrl || undefined,
-      });
-
-      const pubX = await this.createSocialPublication({
-        evento: 'sorteo.created',
-        referenciaTipo: 'sorteo',
-        referenciaId: sorteo.id,
-        plataforma: 'x',
-        textoFinal: textX,
-        imageUrl: cloudinaryUrl || undefined,
-      });
-
-      const pubMeta = await this.createSocialPublication({
-        evento: 'sorteo.created',
-        referenciaTipo: 'sorteo',
-        referenciaId: sorteo.id,
-        plataforma: 'meta',
-        textoFinal: textMeta,
-        imageUrl: cloudinaryUrl || undefined,
-      });
-
-      // Encolar en BullMQ con reintentos
-      await this.socialQueue.enqueue({
-        publicationId: pubDiscord.id,
-        plataforma: 'discord',
-        payload: {
-          evento: 'sorteo_created',
-          data: sorteo,
-          text,
-          imageBuffer,
-          imageUrl: cloudinaryUrl || undefined,
-        },
-      });
-
-      await this.socialQueue.enqueue({
-        publicationId: pubX.id,
-        plataforma: 'x',
-        payload: {
-          evento: 'sorteo_created',
-          data: sorteo,
-          text: textX,
-          imageBuffer,
-        },
-      });
-
-      if (cloudinaryUrl) {
-        await this.socialQueue.enqueue({
-          publicationId: pubMeta.id,
-          plataforma: 'meta',
-          payload: {
-            evento: 'sorteo_created',
-            data: sorteo,
-            text: textMeta,
-            imageUrl: cloudinaryUrl,
-          },
-        });
-
-        const pubYoutube = await this.createSocialPublication({
-          evento: 'sorteo.created',
-          referenciaTipo: 'sorteo',
-          referenciaId: sorteo.id,
-          plataforma: 'youtube',
-          textoFinal: `¡NUEVO SORTEO! - ${sorteo.titulo}`,
-          imageUrl: cloudinaryUrl,
-        });
-
-        await this.socialQueue.enqueue({
-          publicationId: pubYoutube.id,
-          plataforma: 'youtube',
-          payload: {
-            evento: 'sorteo_created',
-            data: { sorteoId: sorteo.id },
-            imageUrl: cloudinaryUrl,
-            title: `¡NUEVO SORTEO! - ${sorteo.titulo}`,
-            description: `Participa en el sorteo de ${sorteo.premio} en Elite Rankings.`,
-            tags: ['Sorteo', 'Giveaway', sorteo.juego?.nombre || 'Gaming'],
-          },
-        });
+      if (finalImageUrl) {
+        try {
+          await this.metaService.publishSorteoCreated(sorteo, textoDefault, finalImageUrl);
+          await this.youtubeService.publishVideoFromImage(
+            finalImageUrl,
+            `Sorteo: ${sorteo.titulo} - Gana ${sorteo.premio}`,
+            `Participa en el sorteo de AJDREW. Premio: ${sorteo.premio}`,
+            ['Sorteo', 'AJDREW', sorteo.juego?.nombre || 'Gaming'],
+            { sorteoId: sorteo.id },
+          );
+          await this.discordService.publishSorteoCreated(sorteo, textoDefault, imageBuffer);
+        } catch (e) {
+          this.logger.error(`Error publicando sorteo en redes externas: ${e.message}`);
+        }
       }
 
-      this.logger.log(`Sorteo encolado en redes sociales: ${sorteo.titulo}`);
+      await this.createPublications(
+        'sorteo.created',
+        'sorteo',
+        sorteo.id,
+        sorteo,
+        finalImageUrl,
+        imageBuffer,
+      );
+
+      this.logger.log(`Contenido generado para sorteo: ${sorteo.titulo}`);
     } catch (error) {
-      this.logger.error('Error handling sorteo created event', error);
+      this.logger.error('Error generando contenido para sorteo', error);
     }
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // SORTEOS - GANADORES
-  // ──────────────────────────────────────────────────────────────────────────
-
   @OnEvent('social.sorteo.winners')
-  async handleSorteoWinners(payload: {
-    sorteoId: string;
-    winnerIds: string[];
-  }) {
-    this.logger.log(`Handling sorteo winners event: ${payload.sorteoId}`);
+  async handleSorteoWinners(payload: { sorteoId: string; winnerIds: string[] }) {
+    this.logger.log(`Generando contenido social para ganadores de sorteo: ${payload.sorteoId}`);
 
     try {
       const sorteo = await this.prisma.sorteo.findUnique({
@@ -267,10 +215,7 @@ export class SocialPublicationListener {
         },
       });
 
-      if (!sorteo) {
-        this.logger.warn(`Sorteo not found: ${payload.sorteoId}`);
-        return;
-      }
+      if (!sorteo) return;
 
       const imageData: SorteoImageData = {
         titulo: sorteo.titulo,
@@ -281,127 +226,66 @@ export class SocialPublicationListener {
       };
 
       const imageBuffer = await generarImagenSorteo(imageData);
-
-      // Subir imagen a Cloudinary
-      const pseudoFile = { buffer: imageBuffer };
-      const folder = `sorteos/${sorteo.id}/winners`;
-      const cloudinaryUrl = await this.cloudinary.uploadImage(pseudoFile, folder);
+      const cloudinaryUrl = await this.uploadToCloudinary(imageBuffer, `sorteos/${sorteo.id}/winners`);
+      const finalImageUrl = cloudinaryUrl || sorteo.image;
 
       const winnerNames = sorteo.ganadores
-        .map(
-          (g) =>
-            g.usuario?.nombre ||
-            g.nombreManual ||
-            g.usuario?.email ||
-            g.emailManual ||
-            'Participante',
-        )
+        .map((g) => g.usuario?.nombre || g.nombreManual || g.usuario?.email || g.emailManual || 'Participante')
         .slice(0, 3);
 
       const dataWithWinners = { ...sorteo, ganadores: winnerNames.join(', ') };
-      const text = await this.textBuilder.build('sorteo_winners', 'discord', dataWithWinners);
-      const textX = await this.textBuilder.build('sorteo_winners', 'x', dataWithWinners);
-      const textMeta = await this.textBuilder.build('sorteo_winners', 'meta', dataWithWinners);
+      const textoDefault = `🏆 ¡GANADORES DEL SORTEO! ${sorteo.titulo}\n\nFelicidades a los ganadores: ${winnerNames.join(', ')}\n\n#AJDREW #SorteoGanadores`;
 
-      const pubDiscord = await this.createSocialPublication({
-        evento: 'sorteo.winners',
-        referenciaTipo: 'sorteo',
-        referenciaId: sorteo.id,
-        plataforma: 'discord',
-        textoFinal: text,
-        imageUrl: cloudinaryUrl || undefined,
-      });
-
-      const pubX = await this.createSocialPublication({
-        evento: 'sorteo.winners',
-        referenciaTipo: 'sorteo',
-        referenciaId: sorteo.id,
-        plataforma: 'x',
-        textoFinal: textX,
-        imageUrl: cloudinaryUrl || undefined,
-      });
-
-      const pubMeta = await this.createSocialPublication({
-        evento: 'sorteo.winners',
-        referenciaTipo: 'sorteo',
-        referenciaId: sorteo.id,
-        plataforma: 'meta',
-        textoFinal: textMeta,
-        imageUrl: cloudinaryUrl || undefined,
-      });
-
-      await this.socialQueue.enqueue({
-        publicationId: pubDiscord.id,
-        plataforma: 'discord',
-        payload: {
-          evento: 'sorteo_winners',
-          data: { ...sorteo, ganadores: winnerNames },
-          text,
-          imageBuffer,
-          imageUrl: cloudinaryUrl || undefined,
-        },
-      });
-
-      await this.socialQueue.enqueue({
-        publicationId: pubX.id,
-        plataforma: 'x',
-        payload: {
-          evento: 'sorteo_winners',
-          data: { ...sorteo, ganadores: winnerNames },
-          text: textX,
-          imageBuffer,
-        },
-      });
-
-      if (cloudinaryUrl) {
-        await this.socialQueue.enqueue({
-          publicationId: pubMeta.id,
-          plataforma: 'meta',
-          payload: {
-            evento: 'sorteo_winners',
-            data: { ...sorteo, ganadores: winnerNames },
-            text: textMeta,
-            imageUrl: cloudinaryUrl,
-          },
-        });
+      if (finalImageUrl) {
+        try {
+          await this.metaService.publishSorteoWinners(sorteo, textoDefault, finalImageUrl, winnerNames);
+          await this.youtubeService.publishVideoFromImage(
+            finalImageUrl,
+            `Ganadores Sorteo: ${sorteo.titulo}`,
+            `Resultados y ganadores del sorteo ${sorteo.titulo}`,
+            ['Sorteo', 'Ganadores', 'AJDREW'],
+            { sorteoId: sorteo.id },
+          );
+          await this.discordService.publishSorteoWinners(sorteo, textoDefault, imageBuffer, winnerNames);
+        } catch (e) {
+          this.logger.error(`Error publicando ganadores en redes externas: ${e.message}`);
+        }
       }
 
-      this.logger.log(`Sorteo winners encolado en redes sociales: ${sorteo.titulo}`);
+      await this.createPublications(
+        'sorteo.winners',
+        'sorteo',
+        sorteo.id,
+        dataWithWinners,
+        finalImageUrl,
+        imageBuffer,
+      );
+
+      this.logger.log(`Contenido generado para ganadores: ${sorteo.titulo}`);
     } catch (error) {
-      this.logger.error('Error handling sorteo winners event', error);
+      this.logger.error('Error generando contenido para ganadores', error);
     }
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // RANKINGS - ACTUALIZACIÓN
-  // ──────────────────────────────────────────────────────────────────────────
-
   @OnEvent('social.ranking.updated')
-  async handleRankingUpdated(payload: { categoriaId: string }) {
-    this.logger.log(`Handling ranking updated event: ${payload.categoriaId}`);
+  async handleRankingUpdated(payload: { tablaId: string }) {
+    this.logger.log(`Generando contenido social para ranking: ${payload.tablaId}`);
 
     try {
-      // payload.categoriaId puede ser el ID de una TablaCalificacion (lo más usual para rankings)
       const tabla = await this.prisma.tablaCalificacion.findUnique({
-        where: { id: payload.categoriaId },
-        include: { juego: true },
+        where: { id: payload.tablaId },
+        include: { juego: true, categoria: true },
       });
 
-      if (!tabla) {
-        this.logger.warn(`TablaCalificacion not found: ${payload.categoriaId}`);
-        return;
-      }
+      if (!tabla) return;
 
-      // Obtener top 5 items de la tabla
       const itemsInTabla = await this.prisma.tablaItem.findMany({
         where: { tablaId: tabla.id },
         select: { itemId: true },
       });
       const itemIds = itemsInTabla.map((i) => i.itemId);
-
       if (itemIds.length === 0) return;
 
-      // Agrupar calificaciones para promedios
       const rankingData = await this.prisma.calificacion.groupBy({
         by: ['itemId'],
         where: { itemId: { in: itemIds }, tablaId: tabla.id },
@@ -417,7 +301,6 @@ export class SocialPublicationListener {
 
       const itemsMap = new Map(items.map((i) => [i.id, i]));
 
-      // Preparar datos para generar imagen
       const topItems = rankingData
         .filter((r) => itemsMap.has(r.itemId))
         .map((r) => {
@@ -434,133 +317,55 @@ export class SocialPublicationListener {
         topItems,
       );
 
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-      const rankingUrl = `${frontendUrl}/calificaciones/${tabla.id}`;
+      const cloudinaryUrl = await this.uploadToCloudinary(imageBuffer, `rankings/${tabla.id}`);
+      const finalImageUrl = cloudinaryUrl || tabla.image;
 
-      // Texto para redes sociales (lee template de DB, fallback a default)
       const dataWithTop = { ...tabla, topItems };
-      const text = await this.textBuilder.build('ranking_updated', 'discord', dataWithTop);
-      const textX = await this.textBuilder.build('ranking_updated', 'x', dataWithTop);
-      const textMeta = await this.textBuilder.build('ranking_updated', 'meta', dataWithTop);
+      const textoDefault = `📊 ¡RANKING ACTUALIZADO! ${tabla.nombre}\n\nConsulta los mejores valorados en AJDREW: ${process.env.FRONTEND_URL || 'https://ajdrew.site'}/calificaciones/${tabla.id}\n\n#AJDREW #Ranking #${tabla.juego?.nombre?.replace(/\s+/g, '') || 'Gaming'}`;
 
-      // Subir imagen a Cloudinary
-      const pseudoFile = { buffer: imageBuffer };
-      const folder = `rankings/${tabla.id}`;
-      const cloudinaryUrl = await this.cloudinary.uploadImage(pseudoFile, folder);
-
-      const pubDiscord = await this.createSocialPublication({
-        evento: 'ranking.updated',
-        referenciaTipo: 'ranking',
-        referenciaId: tabla.id,
-        plataforma: 'discord',
-        textoFinal: text,
-        imageUrl: cloudinaryUrl || undefined,
-      });
-
-      const pubX = await this.createSocialPublication({
-        evento: 'ranking.updated',
-        referenciaTipo: 'ranking',
-        referenciaId: tabla.id,
-        plataforma: 'x',
-        textoFinal: textX,
-        imageUrl: cloudinaryUrl || undefined,
-      });
-
-      const pubMeta = await this.createSocialPublication({
-        evento: 'ranking.updated',
-        referenciaTipo: 'ranking',
-        referenciaId: tabla.id,
-        plataforma: 'meta',
-        textoFinal: textMeta,
-        imageUrl: cloudinaryUrl || undefined,
-      });
-
-      await this.socialQueue.enqueue({
-        publicationId: pubDiscord.id,
-        plataforma: 'discord',
-        payload: {
-          evento: 'ranking',
-          data: tabla,
-          text,
-          imageUrl: cloudinaryUrl || undefined,
-        },
-      });
-
-      await this.socialQueue.enqueue({
-        publicationId: pubX.id,
-        plataforma: 'x',
-        payload: {
-          evento: 'ranking',
-          data: tabla,
-          text: textX,
-          imageBuffer,
-        },
-      });
-
-      if (cloudinaryUrl) {
-        await this.socialQueue.enqueue({
-          publicationId: pubMeta.id,
-          plataforma: 'meta',
-          payload: {
-            evento: 'ranking',
-            data: tabla,
-            text: textMeta,
-            imageUrl: cloudinaryUrl,
-          },
-        });
-
-        const pubYoutube = await this.createSocialPublication({
-          evento: 'ranking.updated',
-          referenciaTipo: 'ranking',
-          referenciaId: tabla.id,
-          plataforma: 'youtube',
-          textoFinal: `Ranking Actualizado: ${tabla.nombre}`,
-          imageUrl: cloudinaryUrl,
-        });
-
-        await this.socialQueue.enqueue({
-          publicationId: pubYoutube.id,
-          plataforma: 'youtube',
-          payload: {
-            evento: 'ranking',
-            data: tabla,
-            imageUrl: cloudinaryUrl,
-            title: `Ranking Actualizado: ${tabla.nombre}`,
-            description: `Consulta el Top 5 de ${tabla.nombre} en nuestra web.`,
-            tags: ['Ranking', 'Top5', tabla.juego?.nombre || 'Gaming'],
-          },
-        });
+      if (finalImageUrl) {
+        try {
+          await this.metaService.publishRanking(tabla, textoDefault, finalImageUrl);
+          await this.youtubeService.publishVideoFromImage(
+            finalImageUrl,
+            `Ranking Actualizado: ${tabla.nombre}`,
+            `Top valoraciones y calificaciones en ${tabla.nombre}`,
+            ['Ranking', 'Calificaciones', 'AJDREW', tabla.juego?.nombre || 'Gaming'],
+            { tablaId: tabla.id },
+          );
+          await this.discordService.publishRanking(tabla, textoDefault, finalImageUrl);
+        } catch (e) {
+          this.logger.error(`Error publicando ranking en redes externas: ${e.message}`);
+        }
       }
 
-      this.logger.log(`Ranking encolado en redes sociales: ${tabla.nombre}`);
+      await this.createPublications(
+        'ranking.updated',
+        'ranking',
+        tabla.id,
+        dataWithTop,
+        finalImageUrl,
+        imageBuffer,
+      );
+
+      this.logger.log(`Contenido generado para ranking: ${tabla.nombre}`);
     } catch (error) {
-      this.logger.error('Error handling ranking updated event', error);
+      this.logger.error('Error generando contenido para ranking', error);
     }
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // TABLA DE CALIFICACIÓN - CREACIÓN
-  // ──────────────────────────────────────────────────────────────────────────
-
   @OnEvent('social.tabla.created')
   async handleTablaCreated(payload: { tablaId: string }) {
-    this.logger.log(`Handling tabla created event: ${payload.tablaId}`);
+    this.logger.log(`Generando contenido social para nueva tabla: ${payload.tablaId}`);
 
     try {
       const tabla = await this.prisma.tablaCalificacion.findUnique({
         where: { id: payload.tablaId },
-        include: {
-          juego: true,
-          items: { include: { item: true }, take: 5 },
-        },
+        include: { juego: true, items: { include: { item: true }, take: 5 } },
       });
 
-      if (!tabla) {
-        this.logger.warn(`TablaCalificacion not found: ${payload.tablaId}`);
-        return;
-      }
+      if (!tabla) return;
 
-      // Buscar ratings reales y conteo de votos de la BD para cada ítem
       const topItems = await Promise.all(
         tabla.items.map(async (ti) => {
           const aggResult = await this.prisma.calificacion.aggregate({
@@ -577,97 +382,50 @@ export class SocialPublicationListener {
         }),
       );
 
-      // Generar imagen con las cartas (sin puntuaciones)
       const imageBuffer = await this.rankingImageGenerator.generateRankingImage(
         tabla.nombre,
         topItems,
       );
 
-      // Texto para redes sociales (lee template de DB, fallback a default)
-      const text = await this.textBuilder.build('tabla_created', 'discord', tabla);
-      const textX = await this.textBuilder.build('tabla_created', 'x', tabla);
-      const textMeta = await this.textBuilder.build('tabla_created', 'meta', tabla);
+      const cloudinaryUrl = await this.uploadToCloudinary(imageBuffer, `rankings/${tabla.id}/created`);
+      const finalImageUrl = cloudinaryUrl || tabla.image;
 
-      // Subir imagen de creación a Cloudinary
-      const pseudoFile = { buffer: imageBuffer };
-      const folder = `rankings/${tabla.id}/created`;
-      const cloudinaryUrl = await this.cloudinary.uploadImage(pseudoFile, folder);
+      const textoDefault = `⭐ ¡NUEVA TABLA DE CALIFICACIÓN! ${tabla.nombre}\n\nComienza a calificar y puntuar tus elementos favoritos en: ${process.env.FRONTEND_URL || 'https://ajdrew.site'}/calificaciones/${tabla.id}\n\n#AJDREW #Calificaciones`;
 
-      const pubDiscord = await this.createSocialPublication({
-        evento: 'tabla.created',
-        referenciaTipo: 'tabla',
-        referenciaId: tabla.id,
-        plataforma: 'discord',
-        textoFinal: text,
-        imageUrl: cloudinaryUrl || undefined,
-      });
-
-      const pubX = await this.createSocialPublication({
-        evento: 'tabla.created',
-        referenciaTipo: 'tabla',
-        referenciaId: tabla.id,
-        plataforma: 'x',
-        textoFinal: textX,
-        imageUrl: cloudinaryUrl || undefined,
-      });
-
-      const pubMeta = await this.createSocialPublication({
-        evento: 'tabla.created',
-        referenciaTipo: 'tabla',
-        referenciaId: tabla.id,
-        plataforma: 'meta',
-        textoFinal: textMeta,
-        imageUrl: cloudinaryUrl || undefined,
-      });
-
-      await this.socialQueue.enqueue({
-        publicationId: pubDiscord.id,
-        plataforma: 'discord',
-        payload: {
-          evento: 'tabla',
-          data: tabla,
-          text,
-          imageUrl: cloudinaryUrl || undefined,
-        },
-      });
-
-      await this.socialQueue.enqueue({
-        publicationId: pubX.id,
-        plataforma: 'x',
-        payload: {
-          evento: 'tabla',
-          data: tabla,
-          text: textX,
-          imageBuffer,
-        },
-      });
-
-      if (cloudinaryUrl) {
-        await this.socialQueue.enqueue({
-          publicationId: pubMeta.id,
-          plataforma: 'meta',
-          payload: {
-            evento: 'tabla',
-            data: tabla,
-            text: textMeta,
-            imageUrl: cloudinaryUrl,
-          },
-        });
+      if (finalImageUrl) {
+        try {
+          await this.metaService.publishRanking(tabla, textoDefault, finalImageUrl);
+          await this.youtubeService.publishVideoFromImage(
+            finalImageUrl,
+            `Nueva Tabla de Calificación: ${tabla.nombre}`,
+            `Nueva tabla de calificaciones creada en AJDREW`,
+            ['Calificaciones', 'AJDREW', tabla.juego?.nombre || 'Gaming'],
+            { tablaId: tabla.id },
+          );
+          await this.discordService.publishRanking(tabla, textoDefault, finalImageUrl);
+        } catch (e) {
+          this.logger.error(`Error publicando nueva tabla en redes externas: ${e.message}`);
+        }
       }
 
-      this.logger.log(`Tabla created encolada en redes sociales: ${tabla.nombre}`);
+      await this.createPublications(
+        'tabla.created',
+        'ranking',
+        tabla.id,
+        tabla,
+        finalImageUrl,
+        imageBuffer,
+      );
+
+      this.logger.log(`Contenido generado para tabla: ${tabla.nombre}`);
     } catch (error) {
-      this.logger.error('Error handling tabla created event', error);
+      this.logger.error('Error generando contenido para tabla', error);
     }
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // BRACKET / VOTACIÓN - CREACIÓN
-  // ──────────────────────────────────────────────────────────────────────────
-
   @OnEvent('social.bracket.created')
   async handleBracketCreated(payload: { bracketId: string }) {
-    this.logger.log(`Handling bracket created event: ${payload.bracketId}`);
+    this.logger.log(`Generando contenido social para bracket: ${payload.bracketId}`);
 
     try {
       const bracket = await this.prisma.votacionBracket.findUnique({
@@ -681,21 +439,10 @@ export class SocialPublicationListener {
         },
       });
 
-      if (!bracket) {
-        this.logger.warn(`Bracket not found: ${payload.bracketId}`);
-        return;
-      }
+      if (!bracket) return;
 
-      const text = await this.textBuilder.build('bracket_created', 'discord', bracket);
-      const textX = await this.textBuilder.build('bracket_created', 'x', bracket);
-      const textMeta = await this.textBuilder.build('bracket_created', 'meta', bracket);
-
-      const matchedGames = bracket.matches.filter(m => m.itemA && m.itemB);
-
-      if (matchedGames.length === 0) {
-        this.logger.warn(`No matches found for bracket: ${payload.bracketId}`);
-        return;
-      }
+      const matchedGames = bracket.matches.filter((m) => m.itemA && m.itemB);
+      if (matchedGames.length === 0) return;
 
       let finalBuffer: Buffer;
 
@@ -708,7 +455,7 @@ export class SocialPublicationListener {
           { name: match.itemB!.nombre, image: match.itemB!.image || undefined },
         );
       } else {
-        const mappedMatches = matchedGames.map(m => ({
+        const mappedMatches = matchedGames.map((m) => ({
           itemA: m.itemA ? { name: m.itemA.nombre, image: m.itemA.image || undefined } : null,
           itemB: m.itemB ? { name: m.itemB.nombre, image: m.itemB.image || undefined } : null,
         }));
@@ -719,98 +466,52 @@ export class SocialPublicationListener {
         );
       }
 
-      const pseudoFile = { buffer: finalBuffer };
-      const folder = `brackets/${bracket.id}/created`;
-      const cloudinaryUrl = await this.cloudinary.uploadImage(pseudoFile, folder);
+      const cloudinaryUrl = await this.uploadToCloudinary(finalBuffer, `brackets/${bracket.id}/created`);
+      const finalImageUrl = cloudinaryUrl || bracket.imageUrl;
 
-      if (cloudinaryUrl) {
+      if (finalImageUrl) {
         await this.prisma.votacionBracket.update({
           where: { id: bracket.id },
-          data: { imageUrl: JSON.stringify([cloudinaryUrl]) },
+          data: { imageUrl: finalImageUrl },
         });
       }
 
-      const pubDiscord = await this.createSocialPublication({
-        evento: 'bracket.created',
-        referenciaTipo: 'bracket',
-        referenciaId: bracket.id,
-        plataforma: 'discord',
-        textoFinal: text,
-        imageUrl: cloudinaryUrl || undefined,
-      });
+      const textoDefault = `🗳️ ¡NUEVO TORNEO / VOTACIÓN! ${bracket.tematica}\n\nEntra a votar por tus favoritos en: ${process.env.FRONTEND_URL || 'https://ajdrew.site'}/votaciones/${bracket.slug}\n\n#AJDREW #Votaciones #${bracket.juego?.nombre?.replace(/\s+/g, '') || 'Gaming'}`;
 
-      const pubX = await this.createSocialPublication({
-        evento: 'bracket.created',
-        referenciaTipo: 'bracket',
-        referenciaId: bracket.id,
-        plataforma: 'x',
-        textoFinal: textX,
-        imageUrl: cloudinaryUrl || undefined,
-      });
-
-      const pubMeta = await this.createSocialPublication({
-        evento: 'bracket.created',
-        referenciaTipo: 'bracket',
-        referenciaId: bracket.id,
-        plataforma: 'meta',
-        textoFinal: textMeta,
-        imageUrl: cloudinaryUrl || undefined,
-      });
-
-      await this.socialQueue.enqueue({
-        publicationId: pubDiscord.id,
-        plataforma: 'discord',
-        payload: {
-          evento: 'bracket_created',
-          data: bracket,
-          text,
-          imageUrl: cloudinaryUrl || undefined,
-        },
-      });
-
-      await this.socialQueue.enqueue({
-        publicationId: pubX.id,
-        plataforma: 'x',
-        payload: {
-          evento: 'bracket_created',
-          data: bracket,
-          text: textX,
-          imageBuffer: finalBuffer,
-        },
-      });
-
-      if (cloudinaryUrl) {
-        await this.socialQueue.enqueue({
-          publicationId: pubMeta.id,
-          plataforma: 'meta',
-          payload: {
-            evento: 'bracket_created',
-            data: bracket,
-            text: textMeta,
-            imageUrl: cloudinaryUrl,
-          },
-        });
+      if (finalImageUrl) {
+        try {
+          await this.metaService.publishBracketCreated(bracket, textoDefault, finalImageUrl);
+          await this.youtubeService.publishVideoFromImage(
+            finalImageUrl,
+            `Torneo: ${bracket.tematica}`,
+            `Nuevo torneo de votación creado en AJDREW`,
+            ['Torneo', 'Votaciones', 'AJDREW', bracket.juego?.nombre || 'Gaming'],
+            { bracketId: bracket.id, round: 1 },
+          );
+          await this.discordService.publishPhaseAnnouncement(bracket.id, 1, finalImageUrl);
+        } catch (e) {
+          this.logger.error(`Error publicando bracket en redes externas: ${e.message}`);
+        }
       }
 
-      this.logger.log(`Bracket created encolado en redes: ${bracket.tematica}`);
+      await this.createPublications(
+        'bracket.created',
+        'bracket',
+        bracket.id,
+        bracket,
+        finalImageUrl,
+        finalBuffer,
+      );
+
+      this.logger.log(`Contenido generado para bracket: ${bracket.tematica}`);
     } catch (error) {
-      this.logger.error('Error handling bracket created event', error);
+      this.logger.error('Error generando contenido para bracket', error);
     }
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // BRACKET / VOTACIÓN - AVANCE DE FASE
-  // ──────────────────────────────────────────────────────────────────────────
-
   @OnEvent('bracket.phase.started')
-  async handleBracketPhaseStarted(payload: {
-    bracketId: string;
-    round: number;
-    matches?: any[];
-  }) {
-    this.logger.log(
-      `Handling bracket phase started event: ${payload.bracketId} (Round ${payload.round})`,
-    );
+  async handleBracketPhaseStarted(payload: { bracketId: string; round: number }) {
+    this.logger.log(`Generando contenido social para fase: ${payload.bracketId} (Ronda ${payload.round})`);
 
     try {
       const bracket = await this.prisma.votacionBracket.findUnique({
@@ -826,136 +527,55 @@ export class SocialPublicationListener {
 
       if (!bracket) return;
 
-      const text = await this.textBuilder.build('bracket_phase', 'discord', { ...bracket, ronda: payload.round });
-      const textX = await this.textBuilder.build('bracket_phase', 'x', { ...bracket, ronda: payload.round });
-      const textMeta = await this.textBuilder.build('bracket_phase', 'meta', { ...bracket, ronda: payload.round });
+      const matchesToUse = bracket.matches.filter((m) => m.itemA && m.itemB);
+      if (matchesToUse.length === 0) return;
 
-      const matchesToUse = payload.matches || bracket.matches;
-      const mappedMatches = matchesToUse
-        .filter((m: any) => m.itemA && m.itemB)
-        .map((m: any) => ({
-          itemA: { name: m.itemA.nombre, image: m.itemA.image || undefined },
-          itemB: { name: m.itemB.nombre, image: m.itemB.image || undefined },
-        }));
+      const mappedMatches = matchesToUse.map((m) => ({
+        itemA: { name: m.itemA!.nombre, image: m.itemA!.image || undefined },
+        itemB: { name: m.itemB!.nombre, image: m.itemB!.image || undefined },
+      }));
 
-      let finalBuffer: Buffer | null = null;
-      if (mappedMatches.length > 0) {
-        finalBuffer = await this.vsImageGenerator.generateRoundListImage(
-          bracket.tematica,
-          payload.round,
-          mappedMatches,
-        );
+      const finalBuffer = await this.vsImageGenerator.generateRoundListImage(
+        bracket.tematica,
+        payload.round,
+        mappedMatches,
+      );
+
+      const cloudinaryUrl = await this.uploadToCloudinary(finalBuffer, `brackets/${bracket.id}/round-${payload.round}`);
+      const finalImageUrl = cloudinaryUrl || bracket.imageUrl;
+
+      if (finalImageUrl) {
+        try {
+          await this.youtubeService.publishVideoFromImage(
+            finalImageUrl,
+            `${bracket.tematica} - Ronda ${payload.round}`,
+            `La Ronda ${payload.round} ha comenzado en ${bracket.tematica}. ¡Entra a votar!`,
+            ['Votaciones', 'AJDREW', bracket.juego?.nombre || 'Gaming'],
+            { bracketId: bracket.id, round: payload.round },
+          );
+        } catch (e) {
+          this.logger.error(`Error publicando fase en YouTube: ${e.message}`);
+        }
       }
 
-      let cloudinaryUrl: string | null = null;
-      if (finalBuffer) {
-        const pseudoFile = { buffer: finalBuffer };
-        const folder = `brackets/${bracket.id}/round-${payload.round}`;
-        cloudinaryUrl = await this.cloudinary.uploadImage(pseudoFile, folder);
-      }
+      await this.createPublications(
+        'bracket.phase',
+        'bracket',
+        bracket.id,
+        { ...bracket, ronda: payload.round },
+        finalImageUrl,
+        finalBuffer,
+      );
 
-      const pubDiscord = await this.createSocialPublication({
-        evento: 'bracket.phase',
-        referenciaTipo: 'bracket',
-        referenciaId: bracket.id,
-        plataforma: 'discord',
-        textoFinal: text,
-        imageUrl: cloudinaryUrl || undefined,
-      });
-
-      const pubX = await this.createSocialPublication({
-        evento: 'bracket.phase',
-        referenciaTipo: 'bracket',
-        referenciaId: bracket.id,
-        plataforma: 'x',
-        textoFinal: textX,
-        imageUrl: cloudinaryUrl || undefined,
-      });
-
-      const pubMeta = await this.createSocialPublication({
-        evento: 'bracket.phase',
-        referenciaTipo: 'bracket',
-        referenciaId: bracket.id,
-        plataforma: 'meta',
-        textoFinal: textMeta,
-        imageUrl: cloudinaryUrl || undefined,
-      });
-
-      await this.socialQueue.enqueue({
-        publicationId: pubDiscord.id,
-        plataforma: 'discord',
-        payload: {
-          evento: 'bracket_phase',
-          data: { bracketId: bracket.id, round: payload.round, tematica: bracket.tematica },
-          text,
-          imageUrl: cloudinaryUrl || undefined,
-        },
-      });
-
-      if (finalBuffer) {
-        await this.socialQueue.enqueue({
-          publicationId: pubX.id,
-          plataforma: 'x',
-          payload: {
-            evento: 'bracket_phase',
-            data: { bracketId: bracket.id, round: payload.round, tematica: bracket.tematica },
-            text: textX,
-            imageBuffer: finalBuffer,
-          },
-        });
-      }
-
-      if (cloudinaryUrl) {
-        await this.socialQueue.enqueue({
-          publicationId: pubMeta.id,
-          plataforma: 'meta',
-          payload: {
-            evento: 'bracket_phase',
-            data: { bracketId: bracket.id, round: payload.round, tematica: bracket.tematica },
-            text: textMeta,
-            imageUrl: cloudinaryUrl,
-          },
-        });
-
-        const pubYoutube = await this.createSocialPublication({
-          evento: 'bracket.phase',
-          referenciaTipo: 'bracket',
-          referenciaId: bracket.id,
-          plataforma: 'youtube',
-          textoFinal: `Fase Iniciada: ${bracket.tematica} - Ronda ${payload.round}`,
-          imageUrl: cloudinaryUrl,
-        });
-
-        await this.socialQueue.enqueue({
-          publicationId: pubYoutube.id,
-          plataforma: 'youtube',
-          payload: {
-            evento: 'bracket_phase',
-            data: { bracketId: bracket.id, round: payload.round },
-            imageUrl: cloudinaryUrl,
-            title: `Ronda ${payload.round} - ${bracket.tematica}`,
-            description: `Vota por tus favoritos en AJDREW.`,
-            tags: ['Torneo', 'Votaciones', bracket.juego?.nombre || 'Gaming'],
-          },
-        });
-      }
-
-      this.logger.log(`Phase announcement encolado: ${bracket.tematica} — Round ${payload.round}`);
+      this.logger.log(`Contenido generado para fase: ${bracket.tematica} - Ronda ${payload.round}`);
     } catch (error) {
-      this.logger.error('Error handling phase started event', error);
+      this.logger.error('Error generando contenido para fase', error);
     }
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // BRACKET / VOTACIÓN - CAMPEÓN
-  // ──────────────────────────────────────────────────────────────────────────
-
   @OnEvent('bracket.champion.declared')
-  async handleBracketChampionDeclared(payload: {
-    bracketId: string;
-    winnerId: string;
-  }) {
-    this.logger.log(`Handling champion declared event: ${payload.bracketId}`);
+  async handleBracketChampionDeclared(payload: { bracketId: string; winnerId: string }) {
+    this.logger.log(`Generando contenido social para campeón: ${payload.bracketId}`);
 
     try {
       const bracket = await this.prisma.votacionBracket.findUnique({
@@ -969,93 +589,40 @@ export class SocialPublicationListener {
 
       if (!bracket || !winner) return;
 
+      const imageUrl = winner.image || undefined;
+
       const dataForTemplate = {
         ...bracket,
         premioItem: winner.nombre,
         ganadorImage: winner.image,
       };
-      const text = await this.textBuilder.build('bracket_champion', 'discord', dataForTemplate);
-      const textX = await this.textBuilder.build('bracket_champion', 'x', dataForTemplate);
-      const textMeta = await this.textBuilder.build('bracket_champion', 'meta', dataForTemplate);
 
-      const imageUrl = winner.image || undefined;
-
-      const pubDiscord = await this.createSocialPublication({
-        evento: 'bracket.champion',
-        referenciaTipo: 'bracket',
-        referenciaId: bracket.id,
-        plataforma: 'discord',
-        textoFinal: text,
-        imageUrl,
-      });
-
-      const pubMeta = await this.createSocialPublication({
-        evento: 'bracket.champion',
-        referenciaTipo: 'bracket',
-        referenciaId: bracket.id,
-        plataforma: 'meta',
-        textoFinal: textMeta,
-        imageUrl,
-      });
-
-      await this.socialQueue.enqueue({
-        publicationId: pubDiscord.id,
-        plataforma: 'discord',
-        payload: {
-          evento: 'bracket_champion',
-          data: { bracketId: bracket.id, ganadorNombre: winner.nombre },
-          text,
-          imageUrl,
-        },
-      });
-
-      if (imageUrl) {
-        await this.socialQueue.enqueue({
-          publicationId: pubMeta.id,
-          plataforma: 'meta',
-          payload: {
-            evento: 'bracket_champion',
-            data: { bracketId: bracket.id, ganadorNombre: winner.nombre },
-            text: textMeta,
+      try {
+        if (imageUrl) {
+          await this.youtubeService.publishVideoFromImage(
             imageUrl,
-          },
-        });
+            `¡CAMPEÓN! ${winner.nombre} en ${bracket.tematica}`,
+            `El gran ganador de ${bracket.tematica} es ${winner.nombre}.`,
+            ['Campeón', 'Votaciones', 'AJDREW'],
+            { bracketId: bracket.id },
+          );
+        }
+      } catch (e) {
+        this.logger.error(`Error publicando campeón en YouTube: ${e.message}`);
       }
 
-      this.logger.log(`Champion announcement encolado: ${winner.nombre}`);
+      await this.createPublications(
+        'bracket.champion',
+        'bracket',
+        bracket.id,
+        dataForTemplate,
+        imageUrl,
+        undefined,
+      );
+
+      this.logger.log(`Contenido generado para campeón: ${winner.nombre}`);
     } catch (error) {
-      this.logger.error('Error handling champion event', error);
+      this.logger.error('Error generando contenido para campeón', error);
     }
-  }
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // HELPERS
-  // ──────────────────────────────────────────────────────────────────────────
-
-  /**
-   * Crea un registro SocialPublication para trazabilidad y lo retorna con su ID.
-   */
-  private async createSocialPublication(params: {
-    evento: string;
-    referenciaTipo: string;
-    referenciaId: string;
-    plataforma: 'discord' | 'x' | 'meta' | 'youtube';
-    textoFinal: string;
-    imageUrl?: string;
-    imageBuffer?: Buffer;
-    metadata?: any;
-  }) {
-    return this.prisma.socialPublication.create({
-      data: {
-        evento: params.evento,
-        referenciaTipo: params.referenciaTipo,
-        referenciaId: params.referenciaId,
-        plataforma: params.plataforma,
-        textoFinal: params.textoFinal,
-        imageUrl: params.imageUrl,
-        estado: 'PENDIENTE',
-        metadata: params.metadata,
-      },
-    });
   }
 }

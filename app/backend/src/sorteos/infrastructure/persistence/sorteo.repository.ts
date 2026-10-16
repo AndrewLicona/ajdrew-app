@@ -52,6 +52,7 @@ export class SorteoRepository {
           include: {
             usuario: { select: { nombre: true, email: true } },
             tareas: { include: { task: true } },
+            entries: true,
           },
         },
         ganadores: {
@@ -96,7 +97,6 @@ export class SorteoRepository {
       trafficSource?: string;
     },
   ) {
-    // Filter out null/undefined/placeholder usuarioId to prevent FK violation
     const cleanData = { ...data };
     const invalidIds = [
       null,
@@ -127,13 +127,14 @@ export class SorteoRepository {
   async completeTask(
     participanteId: string,
     taskId: string,
-    evidencia?: { url?: string; texto?: string },
+    evidencia?: { url?: string; texto?: string; verificada?: boolean },
   ) {
     return this.prisma.participanteTask.create({
       data: {
         participanteId,
         taskId,
         completada: true,
+        verificada: evidencia?.verificada ?? false,
         evidenciaUrl: evidencia?.url,
         evidenciaTexto: evidencia?.texto,
       },
@@ -156,11 +157,96 @@ export class SorteoRepository {
     });
   }
 
+  async findEntryByAction(participanteId: string, accion: string) {
+    return this.prisma.sorteoEntry.findFirst({
+      where: { participanteId, accion },
+    });
+  }
+
+  async getVerifiedEntryCount(participanteId: string): Promise<number> {
+    const participante = await this.prisma.sorteoParticipante.findUnique({
+      where: { id: participanteId },
+      include: {
+        tareas: {
+          where: { verificada: true },
+          include: { task: true },
+        },
+        entries: true,
+      },
+    });
+
+    if (!participante) return 0;
+
+    let count = 0;
+    const hasParticiparEntry = participante.entries.some((e) => e.accion === 'PARTICIPAR');
+    if (hasParticiparEntry) count += 1;
+
+    count += participante.tareas.length;
+
+    const hasRefEntry = participante.entries.some((e) => e.accion === 'REF_SOCIAL');
+    if (hasRefEntry) count += 1;
+
+    return count;
+  }
+
+  async findExpired(fecha: Date) {
+    return this.prisma.sorteo.findMany({
+      where: {
+        estado: 'ACTIVO',
+        fechaFin: { lt: fecha },
+      },
+      include: {
+        participantes: true,
+      },
+    });
+  }
+
+  async verificarTarea(participanteId: string, taskId: string, verificada: boolean) {
+    return this.prisma.participanteTask.update({
+      where: {
+        participanteId_taskId: {
+          participanteId,
+          taskId,
+        },
+      },
+      data: { verificada },
+    });
+  }
+
+  async getEntradasParticipante(participanteId: string) {
+    const participante = await this.prisma.sorteoParticipante.findUnique({
+      where: { id: participanteId },
+      include: {
+        tareas: { include: { task: true } },
+        entries: true,
+      },
+    });
+
+    if (!participante) return null;
+
+    return {
+      participanteId: participante.id,
+      tareas: participante.tareas.map((t) => ({
+        taskId: t.taskId,
+        nombre: t.task?.tipo,
+        completada: t.completada,
+        verificada: t.verificada,
+        evidenciaUrl: t.evidenciaUrl,
+        evidenciaTexto: t.evidenciaTexto,
+      })),
+      entradas: participante.entries.map((e) => ({
+        accion: e.accion,
+        origen: e.origen,
+        createdAt: e.createdAt,
+      })),
+      totalEntradas: participante.entries.length + participante.tareas.filter((t) => t.verificada).length,
+    };
+  }
+
   async finalizeAndWinners(sorteoId: string, winners: any[]) {
     return this.prisma.$transaction([
-      // Create winners
       ...winners.map((w) =>
-        (this.prisma as any).sorteoWinner.create({
+        this.prisma.sorteoWinner.create({
           data: {
             sorteoId,
             usuarioId: w.usuarioId || null,
@@ -169,7 +255,6 @@ export class SorteoRepository {
           },
         }),
       ),
-      // Update sorteo status
       this.prisma.sorteo.update({
         where: { id: sorteoId },
         data: { estado: 'CERRADO' },
@@ -179,5 +264,24 @@ export class SorteoRepository {
 
   async remove(id: string) {
     return this.prisma.sorteo.delete({ where: { id } });
+  }
+
+  async getParticipantes(sorteoId: string) {
+    const sorteo = await this.prisma.sorteo.findUnique({
+      where: { id: sorteoId },
+      include: {
+        participantes: {
+          include: {
+            usuario: { select: { nombre: true, email: true } },
+            entries: true,
+            tareas: {
+              where: { verificada: true },
+              include: { task: true },
+            },
+          },
+        },
+      },
+    });
+    return sorteo?.participantes || [];
   }
 }

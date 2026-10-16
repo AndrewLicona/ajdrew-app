@@ -2,9 +2,22 @@ import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger } from '@nestjs/common';
+import cookieParser from 'cookie-parser';
+import { DeviceIdMiddleware } from './common/middleware/device-id.middleware';
+import * as express from 'express';
+import * as path from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Cookie parser for deviceId cookie
+  app.use(cookieParser());
+
+  // Serve static files from public directory (disco)
+  app.use('/public', express.static(path.join(process.cwd(), 'public')));
+
+  // DeviceId middleware (applies to all routes)
+  app.use((req: any, res: any, next: any) => new DeviceIdMiddleware().use(req, res, next));
 
   // Configuración mejorada de CORS
   app.enableCors({

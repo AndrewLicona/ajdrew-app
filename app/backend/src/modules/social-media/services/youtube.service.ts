@@ -45,7 +45,7 @@ export class YoutubeService {
     title: string,
     description: string,
     tags: string[] = [],
-    metadata?: { bracketId?: string; round?: number; sorteoId?: string }
+    metadata?: { bracketId?: string; round?: number; sorteoId?: string; tutorialId?: string; tablaId?: string }
   ) {
     const id = metadata?.bracketId || metadata?.sorteoId || 'GENERIC';
     const round = metadata?.round || 0;
@@ -98,13 +98,8 @@ export class YoutubeService {
     const outputPath = path.join(tempDir, `yt_${bracketId}_r${round}.mp4`);
 
     return new Promise((resolve, reject) => {
-      const isLocalBracket = imageUrl.includes('/brackets/');
-      const inputPath = isLocalBracket
-        ? imageUrl.replace(
-            /.*\/brackets\//,
-            path.join(process.cwd(), 'public', 'brackets', ''),
-          )
-        : imageUrl;
+      // Si la URL es de Cloudinary u otra externa, `ffmpeg` puede leerla directamente por HTTPS.
+      const inputPath = imageUrl;
 
       this.logger.log(
         `Creating video from image. Input: ${inputPath}, Output: ${outputPath}`,
@@ -147,6 +142,25 @@ export class YoutubeService {
         access_token: account.accessToken,
         refresh_token: account.refreshToken,
       });
+
+      // Refrescar token automáticamente si es necesario
+      try {
+        const expiry = account.expiryDate ? Number(account.expiryDate) : 0;
+        if (!expiry || Date.now() >= expiry - 60000) {
+          const { credentials } = await this.oauth2Client.refreshAccessToken();
+          this.oauth2Client.setCredentials(credentials);
+
+          await this.prisma.youtubeAccount.update({
+            where: { id: account.id },
+            data: {
+              accessToken: credentials.access_token || account.accessToken,
+              expiryDate: credentials.expiry_date ? BigInt(credentials.expiry_date) : account.expiryDate,
+            },
+          });
+        }
+      } catch (refreshErr) {
+        this.logger.warn(`No se pudo refrescar el token de YouTube automáticamente: ${refreshErr.message}`);
+      }
 
       const youtube = google.youtube({
         version: 'v3',

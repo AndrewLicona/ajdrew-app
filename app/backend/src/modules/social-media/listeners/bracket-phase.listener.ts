@@ -36,6 +36,7 @@ export class BracketPhaseListener {
       const bracket = await this.prisma.votacionBracket.findUnique({
         where: { id: payload.bracketId },
         include: {
+          juego: true,
           matches: {
             where: { ronda: payload.round },
             include: { itemA: true, itemB: true },
@@ -88,13 +89,29 @@ export class BracketPhaseListener {
           throw new Error('Failed to upload bracket phase image to Cloudinary');
       }
 
-      // Guardar URL pública como array JSON (para carrusel de admin)
+      // Guardar URL pública directamente (no como JSON array)
       await this.prisma.votacionBracket.update({
         where: { id: payload.bracketId },
-        data: { imageUrl: JSON.stringify([cloudinaryUrl]) },
+        data: { imageUrl: cloudinaryUrl },
       });
 
-      // Publicar en Discord usando la URL directa (optimizada sin pasar Buffer si el servicio lo soporta, o pasar URL y ajustar el servicio)
+      // Publicar en Meta (Facebook e Instagram) y YouTube
+      try {
+        await this.metaService.publishPhaseAnnouncement(
+          payload.bracketId,
+          payload.round,
+          cloudinaryUrl,
+        );
+        await this.youtubeService.publishVideoFromImage(
+          cloudinaryUrl,
+          `${bracket.tematica} - Ronda ${payload.round}`,
+          `La Ronda ${payload.round} ha comenzado en ${bracket.tematica}. ¡Entra a votar!`,
+          ['Votaciones', 'AJDREW', bracket.juego?.nombre || 'Gaming'],
+          { bracketId: payload.bracketId, round: payload.round },
+        );
+      } catch (e) {
+        this.logger.error(`Error publicando fase en Meta/YouTube: ${e.message}`);
+      }
       await this.discordService.publishPhaseAnnouncement(
         payload.bracketId,
         payload.round,
@@ -170,10 +187,10 @@ export class BracketPhaseListener {
           throw new Error('Failed to upload champion image to Cloudinary');
       }
 
-      // Guardar imagen del campeón como JSON array (compatible con el carrusel del admin)
+      // Guardar imagen del campeón directamente
       await this.prisma.votacionBracket.update({
         where: { id: payload.bracketId },
-        data: { imageUrl: JSON.stringify([cloudinaryUrl]) },
+        data: { imageUrl: cloudinaryUrl },
       });
 
       // Publicar en Discord (usando URL directo)

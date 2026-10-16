@@ -7,7 +7,7 @@ import {
   Param,
   Query,
   UseGuards,
-  Headers,
+  Req,
 } from '@nestjs/common';
 import { VotacionesService } from '../votaciones.service';
 import {
@@ -51,14 +51,14 @@ export class VotacionesController {
   @Get(':idOrSlug')
   findOne(
     @Param('idOrSlug') idOrSlug: string,
-    @Headers('x-device-id') deviceId?: string,
+    @Req() req: any,
   ) {
-    return this.votacionesService.findOne(idOrSlug, deviceId);
+    return this.votacionesService.findOne(idOrSlug, req.deviceId);
   }
 
   @Post('vote')
-  vote(@Body() dto: VoteBracketDto, @Headers('x-device-id') deviceId: string) {
-    return this.votacionesService.vote(dto.matchId, dto.itemId, deviceId);
+  vote(@Body() dto: VoteBracketDto, @Req() req: any) {
+    return this.votacionesService.vote(dto.matchId, dto.itemId, req.deviceId);
   }
 
   @Post(':id/delete') // Using POST for deletion to avoid preflight/CORS issues if needed, or stick to DELETE

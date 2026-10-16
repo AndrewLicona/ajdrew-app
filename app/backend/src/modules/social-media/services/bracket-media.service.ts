@@ -106,14 +106,15 @@ export class BracketMediaService {
 
       if (result.cloudinaryUrl) {
         // Tarea 6: Publicar a Meta
+        const roundNumber = this.rondaNombreToNumber(event.ronda);
         await this.meta.publishPhaseAnnouncement(
           event.matchId,
-          1, // Placeholder round, o mapear
+          roundNumber,
           result.cloudinaryUrl,
         );
 
         // Publicar a X
-        await this.x.publishPhaseAnnouncement(event.matchId, 1, result.buffer);
+        await this.x.publishPhaseAnnouncement(event.matchId, roundNumber, result.buffer);
 
         // Update bracket imageUrl
         const match = await this.prisma.bracketMatch.findUnique({
@@ -209,6 +210,17 @@ export class BracketMediaService {
         err.stack,
       );
     }
+  }
+
+  private rondaNombreToNumber(ronda: RondaNombre): number {
+    const map: Record<RondaNombre, number> = {
+      Dieciseisavos: 1,
+      Octavos: 2,
+      Cuartos: 3,
+      Semifinal: 4,
+      Final: 5,
+    };
+    return map[ronda] || 1;
   }
 
   async generarYSubir(

@@ -5,7 +5,8 @@ import {
   Body,
   Delete,
   Param,
-  UseGuards,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { MetaService } from '../services/meta.service';
@@ -32,12 +33,18 @@ export class AdminMetaController {
   @Post('facebook/accounts')
   async createFacebookAccount(@Body() body: any) {
     try {
-      const { name, pageId, pageAccessToken } = body;
+      const { id, name, pageId, pageAccessToken } = body;
+      if (id) {
+        return await this.prisma.facebookAccount.update({
+          where: { id },
+          data: { name, pageId, pageAccessToken },
+        });
+      }
       return await this.prisma.facebookAccount.create({
         data: { name, pageId, pageAccessToken },
       });
     } catch (error: any) {
-      console.error('Error creating Facebook account:', error);
+      console.error('Error saving Facebook account:', error);
       return { success: false, message: error.message };
     }
   }
@@ -50,9 +57,13 @@ export class AdminMetaController {
   @Post('facebook/:id/test')
   async testFacebook(@Param('id') id: string) {
     try {
-      return await this.metaService.testFacebook(id);
+      const result = await this.metaService.testFacebook(id);
+      return result;
     } catch (error: any) {
-      return { success: false, message: error.message };
+      throw new HttpException(
+        { success: false, message: error.message },
+        HttpStatus.BAD_GATEWAY,
+      );
     }
   }
 
@@ -89,9 +100,13 @@ export class AdminMetaController {
   @Post('instagram/:id/test')
   async testInstagram(@Param('id') id: string) {
     try {
-      return await this.metaService.testInstagram(id);
+      const result = await this.metaService.testInstagram(id);
+      return result;
     } catch (error: any) {
-      return { success: false, message: error.message };
+      throw new HttpException(
+        { success: false, message: error.message },
+        HttpStatus.BAD_GATEWAY,
+      );
     }
   }
 }

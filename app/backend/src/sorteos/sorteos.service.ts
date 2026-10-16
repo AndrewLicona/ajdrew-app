@@ -1,4 +1,4 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SorteoRepository } from './infrastructure/persistence/sorteo.repository';
 import { CreateSorteoDto } from './application/dto/create-sorteo.dto';
@@ -6,6 +6,8 @@ import { ParticiparSorteoDto } from './application/dto/participar-sorteo.dto';
 
 @Injectable()
 export class SorteosService {
+  private readonly logger = new Logger(SorteosService.name);
+
   constructor(
     private readonly repository: SorteoRepository,
     private readonly eventEmitter: EventEmitter2,
@@ -14,7 +16,6 @@ export class SorteosService {
   async create(dto: CreateSorteoDto) {
     const sorteo = await this.repository.create(dto);
 
-    // Emitir evento para redes sociales
     this.eventEmitter.emit('social.sorteo.created', { sorteoId: sorteo.id });
 
     return sorteo;
@@ -37,7 +38,6 @@ export class SorteosService {
   }
 
   async participar(sorteoId: string, dto: ParticiparSorteoDto) {
-    // Validar que al menos una identidad esté presente
     if (!dto.usuarioId && !dto.email) {
       throw new HttpException(
         'Debe proporcionar usuarioId o email',
@@ -45,7 +45,6 @@ export class SorteosService {
       );
     }
 
-    // Obtener sorteo con sus tareas
     const sorteo = await this.repository.findOne(sorteoId);
     if (!sorteo || sorteo.estado !== 'ACTIVO') {
       throw new HttpException(
@@ -54,7 +53,14 @@ export class SorteosService {
       );
     }
 
-    // Validar que todas las tareas obligatorias estén completadas
+    // Check if sorteo has expired
+    if (new Date() > new Date(sorteo.fechaFin)) {
+      throw new HttpException(
+        'El sorteo ha finalizado',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     const tareasObligatorias =
       sorteo.tareas?.filter((t) => t.obligatorio) || [];
     const tareasCompletadasIds = dto.tareas.map((t) => t.taskId);
@@ -70,7 +76,11 @@ export class SorteosService {
       );
     }
 
-    // Crear participante (con manejo de duplicados)
+    // Verify non-obligatory tasks that require verification
+    const tareasConVerificacion = sorteo.tareas?.filter(
+      (t) => t.requiereVerificacion && tareasCompletadasIds.includes(t.id),
+    ) || [];
+
     try {
       const participante = await this.repository.addParticipante(sorteoId, {
         usuarioId: dto.usuarioId,
@@ -80,36 +90,44 @@ export class SorteosService {
         trafficSource: dto.trafficSource,
       });
 
-      // Registrar tareas completadas
+      // Register completed tasks
       for (const tarea of dto.tareas) {
+        const task = sorteo.tareas?.find((t) => t.id === tarea.taskId);
+        const requiereVerificacion = task?.requiereVerificacion ?? false;
+        
         await this.repository.completeTask(participante.id, tarea.taskId, {
           url: tarea.evidenciaUrl,
           texto: tarea.evidenciaTexto,
+          verificada: !requiereVerificacion, // Auto-verify if not required
         });
       }
 
-      // Crear entrada inicial por participar
+      // Create initial entry for participating
       await this.repository.addEntry(participante.id, 'PARTICIPAR');
 
-      // Entrada bonus si viene de red social
-      if (dto.trafficSource) {
-        await this.repository.addEntry(
+      // Bonus entry for social referral (only once per participant)
+      if (dto.trafficSource && !dto.trafficSource.includes('direct')) {
+        const existingRefEntry = await this.repository.findEntryByAction(
           participante.id,
           'REF_SOCIAL',
-          dto.trafficSource,
         );
+        if (!existingRefEntry) {
+          await this.repository.addEntry(
+            participante.id,
+            'REF_SOCIAL',
+            dto.trafficSource,
+          );
+        }
       }
 
       return participante;
     } catch (error: any) {
-      // Manejar error de duplicación
       if (error.code === 'P2002') {
         throw new HttpException(
           'Ya estás participando en este sorteo',
           HttpStatus.CONFLICT,
         );
       }
-      // Manejar error de sesión expirada o usuario inexistente (FK violation)
       if (
         error.code === 'P2003' &&
         error.meta?.constraint?.includes('usuarioId')
@@ -124,6 +142,14 @@ export class SorteosService {
   }
 
   async addEntry(participanteId: string, accion: string, origen?: string) {
+    // Prevent duplicate entries for same action (except PARTICIPAR which is once)
+    if (accion !== 'PARTICIPAR') {
+      const existing = await this.repository.findEntryByAction(participanteId, accion);
+      if (existing) {
+        this.logger.warn(`Duplicate entry attempt: ${accion} for participant ${participanteId}`);
+        return existing;
+      }
+    }
     return this.repository.addEntry(participanteId, accion, origen);
   }
 
@@ -138,30 +164,71 @@ export class SorteosService {
       throw new Error('No hay participantes en este sorteo');
     }
 
-    // 1. Crear el pool ponderado según entradas
-    const weightedPool: any[] = [];
+    // Build weighted pool with verified entries only
+    const weightedPool: { participante: any; entries: number }[] = [];
+    
     for (const p of participantes) {
-      const entryCount = await this.repository.getParticipantEntryCount(p.id);
-      const entries = entryCount || 1;
-      for (let i = 0; i < entries; i++) {
-        weightedPool.push(p);
+      // Count only verified entries (entries from verified tasks + PARTICIPAR + REF_SOCIAL)
+      const entryCount = await this.repository.getVerifiedEntryCount(p.id);
+      const entries = Math.max(1, entryCount); // Minimum 1 entry for participating
+      
+      if (entries > 0) {
+        weightedPool.push({ participante: p, entries });
       }
     }
 
-    // 2. Barajar y elegir ganadores únicos
+    if (weightedPool.length === 0) {
+      throw new Error('No hay entradas válidas para el sorteo');
+    }
+
+    // Use crypto-secure random for winner selection
     const winners: any[] = [];
     const chosenIds = new Set<string>();
-    const pool = [...weightedPool].sort(() => 0.5 - Math.random());
-
-    for (const p of pool) {
-      if (winners.length >= sorteo.numGanadores) break;
-      if (!chosenIds.has(p.id)) {
-        winners.push(p);
-        chosenIds.add(p.id);
-      }
+    
+    // Build cumulative weights for efficient selection
+    const cumulativeWeights: number[] = [];
+    let totalWeight = 0;
+    for (const wp of weightedPool) {
+      totalWeight += wp.entries;
+      cumulativeWeights.push(totalWeight);
     }
 
-    // 3. Formatear datos de ganadores para el repositorio
+    // Select unique winners
+    for (let i = 0; i < sorteo.numGanadores && winners.length < weightedPool.length; i++) {
+      let randomValue: number;
+      let winnerIndex: number;
+      let attempts = 0;
+      const maxAttempts = weightedPool.length * 2;
+
+      do {
+        // Generate cryptographically secure random number
+        const randomBytes = new Uint32Array(1);
+        crypto.getRandomValues(randomBytes);
+        randomValue = (randomBytes[0] / 0x100000000) * totalWeight;
+        
+        winnerIndex = cumulativeWeights.findIndex((w) => randomValue < w);
+        attempts++;
+      } while (
+        chosenIds.has(weightedPool[winnerIndex].participante.id) &&
+        attempts < maxAttempts
+      );
+
+      if (attempts >= maxAttempts) {
+        // Fallback: pick first non-chosen
+        const fallback = weightedPool.find((wp) => !chosenIds.has(wp.participante.id));
+        if (!fallback) break;
+        winnerIndex = weightedPool.indexOf(fallback);
+      }
+
+      const winner = weightedPool[winnerIndex].participante;
+      winners.push(winner);
+      chosenIds.add(winner.id);
+      totalWeight -= weightedPool[winnerIndex].entries;
+      // Remove winner from pool for next iteration
+      weightedPool.splice(winnerIndex, 1);
+      cumulativeWeights.splice(winnerIndex, 1);
+    }
+
     const winnerData = winners.map((p) => ({
       usuarioId: p.usuarioId,
       nombreManual: !p.usuarioId
@@ -172,13 +239,14 @@ export class SorteosService {
 
     const result = await this.repository.finalizeAndWinners(id, winnerData);
 
-    // Extraer ids de ganadores (es una transacción donde los primeros result.length - 1 son los winners)
     const createdWinners = result.slice(0, result.length - 1);
     const winnerIds = createdWinners.map((g: any) => g.id);
     this.eventEmitter.emit('social.sorteo.winners', {
       sorteoId: id,
       winnerIds,
     });
+
+    this.logger.log(`Sorteo ${id} finalizado con ${winners.length} ganadores`);
 
     return result;
   }
@@ -195,7 +263,6 @@ export class SorteosService {
 
     const result = await this.repository.finalizeAndWinners(id, sortedWinners);
 
-    // Extraer ids de ganadores
     const createdWinners = result.slice(0, result.length - 1);
     const winnerIds = createdWinners.map((g: any) => g.id);
     this.eventEmitter.emit('social.sorteo.winners', {
@@ -204,6 +271,51 @@ export class SorteosService {
     });
 
     return result;
+  }
+
+  async cerrarSorteosExpirados() {
+    const ahora = new Date();
+    const sorteosExpirados = await this.repository.findExpired(ahora);
+
+    for (const sorteo of sorteosExpirados) {
+      try {
+        if ((sorteo.participantes?.length ?? 0) > 0) {
+          await this.elegirGanadores(sorteo.id);
+        } else {
+          await this.repository.update(sorteo.id, { estado: 'CERRADO' });
+        }
+        this.logger.log(`Sorteo expirado cerrado automáticamente: ${sorteo.id}`);
+      } catch (error) {
+        this.logger.error(`Error cerrando sorteo expirado ${sorteo.id}:`, error);
+      }
+    }
+
+    return { procesados: sorteosExpirados.length };
+  }
+
+  async verificarTarea(
+    sorteoId: string,
+    taskId: string,
+    participanteId: string,
+    verificada: boolean,
+  ) {
+    // Verify the sorteo exists and user has permission (checked by guard)
+    const sorteo = await this.repository.findOne(sorteoId);
+    if (!sorteo) {
+      throw new HttpException('Sorteo no encontrado', HttpStatus.NOT_FOUND);
+    }
+
+    return this.repository.verificarTarea(participanteId, taskId, verificada);
+  }
+
+  async getEntradasParticipante(participanteId: string) {
+    return this.repository.getEntradasParticipante(participanteId);
+  }
+
+  async getParticipantes(sorteoId: string) {
+    const sorteo = await this.repository.findOne(sorteoId);
+    if (!sorteo) return [];
+    return sorteo.participantes || [];
   }
 
   remove(id: string) {

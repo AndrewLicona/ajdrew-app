@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
-import { BullModule } from '@nestjs/bullmq';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CategoriasModule } from './categorias/categorias.module';
@@ -20,19 +21,16 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { SocialMediaModule } from './modules/social-media/social-media.module';
 import { TablasCalificacionModule } from './tablas-calificacion/tablas-calificacion.module';
 import { ContentStudioModule } from './content-studio/content-studio.module';
-import { SocialQueueModule } from './social-queue/social-queue.module';
 import { AuthGoogleModule } from './auth-google/auth-google.module';
 import { YtModule } from './yt/yt.module';
 
 @Module({
   imports: [
-    // BullMQ + Redis para retry queue de publicaciones sociales
-    BullModule.forRoot({
-      connection: {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT || '6379', 10),
-      },
-    }),
+    // Rate limiting - límite alto para desarrollo, excluye GET de lectura frecuente
+    ThrottlerModule.forRoot([{
+      ttl: 60000, // 1 minute
+      limit: 1000, // 1000 requests per minute per IP (desarrollo)
+    }]),
     PrismaModule,
     CategoriasModule,
     ItemsCalificablesModule,
@@ -50,11 +48,17 @@ import { YtModule } from './yt/yt.module';
     SocialMediaModule,
     TablasCalificacionModule,
     ContentStudioModule,
-    SocialQueueModule,
     AuthGoogleModule,
     YtModule,
   ],
   controllers: [AppController],
-  providers: [AppService, PrismaService],
+  providers: [
+    AppService,
+    PrismaService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

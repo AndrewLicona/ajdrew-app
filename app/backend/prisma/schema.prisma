@@ -269,6 +269,7 @@ model SorteoTask {
   tipo            String
   plataforma      String
   obligatorio     Boolean            @default(false)
+  requiereVerificacion Boolean        @default(false)
   url             String?
   descripcion     String?
   createdAt       DateTime           @default(now())

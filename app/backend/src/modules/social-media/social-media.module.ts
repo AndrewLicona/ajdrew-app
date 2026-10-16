@@ -18,17 +18,12 @@ import { RankingImageGenerator } from '../../calificaciones/application/ranking-
 import { VsImageGenerator } from './generators/vs-image.generator';
 import { ContentStudioModule } from '../../content-studio/content-studio.module';
 import { SocialTextBuilder } from '../../content-studio/text-builder.service';
-import { SocialQueueModule } from '../../social-queue/social-queue.module';
 import { AnalyticsCronService } from './cron/analytics-cron.service';
 
 @Module({
   imports: [
     MediaModule,
     ContentStudioModule,
-    // Forward ref para evitar ciclo: SocialQueueModule importa a este modulo
-    // (necesita los services) y este modulo importa a SocialQueueModule
-    // (necesita el producer para los listeners).
-    forwardRef(() => SocialQueueModule),
   ],
   controllers: [
     AdminDiscordController,
