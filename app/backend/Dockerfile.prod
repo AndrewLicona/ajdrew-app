@@ -28,22 +28,24 @@ RUN pnpm --filter backend build
 # Etapa de producción
 FROM node:20-alpine
 RUN apk add --no-cache wget libc6-compat
-WORKDIR /app
+WORKDIR /app/app/backend
 
 # Variables de entorno
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Copiar solo lo necesario
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/app/backend/package.json /app/app/backend/tsconfig.json /app/app/backend/create-admin.ts /app/app/backend/create-admin.js ./app/backend/
-COPY --from=builder /app/app/backend/node_modules ./app/backend/node_modules
-COPY --from=builder /app/app/backend/dist ./app/backend/dist
-COPY --from=builder /app/app/backend/prisma ./app/backend/prisma
+# Copiar artefactos construidos y package.json
+COPY --from=builder /app/app/backend/package.json ./
+COPY --from=builder /app/app/backend/tsconfig.json ./
+COPY --from=builder /app/app/backend/create-admin.ts /app/app/backend/create-admin.js ./
+COPY --from=builder /app/app/backend/dist ./dist
+COPY --from=builder /app/app/backend/prisma ./prisma
+
+# Instalar dependencias de producción limpias
+RUN npm install -g pnpm@10.18.0 && pnpm install --prod --ignore-workspace
 
 # Puerto expuesto
 EXPOSE 3000
 
 # Comando para iniciar
-WORKDIR /app/app/backend
 CMD ["node", "dist/main.js"]
