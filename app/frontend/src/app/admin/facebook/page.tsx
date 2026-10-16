@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Facebook, Plus, Trash2, CheckCircle, XCircle, Info, ExternalLink, Send } from 'lucide-react';
+import { Facebook, Plus, Trash2, CheckCircle, Info, ExternalLink, Send, Edit3 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 export default function FacebookAdminPage() {
     const [accounts, setAccounts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null);
     const [formData, setFormData] = useState({
         name: 'Mi Página de Facebook',
         pageId: '',
@@ -19,26 +20,10 @@ export default function FacebookAdminPage() {
     }, []);
 
     const fetchAccounts = async () => {
-        const primaryUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-        const fallbackUrl = 'http://localhost:3000/api';
-
-        const tryFetch = async (url: string) => {
-            const res = await fetch(`${url}/admin/social/meta/facebook/accounts`);
-            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-            return await res.json();
-        };
-
         try {
-            let data;
-            try {
-                data = await tryFetch(primaryUrl);
-            } catch (e) {
-                if (primaryUrl !== fallbackUrl) {
-                    data = await tryFetch(fallbackUrl);
-                } else {
-                    throw e;
-                }
-            }
+            const res = await fetch(`/api/admin/social/meta/facebook/accounts`);
+            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+            const data = await res.json();
             setAccounts(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Error fetching Facebook accounts', error);
@@ -48,23 +33,36 @@ export default function FacebookAdminPage() {
         }
     };
 
+    const handleEdit = (acc: any) => {
+        setEditingId(acc.id);
+        setFormData({
+            name: acc.name,
+            pageId: acc.pageId,
+            pageAccessToken: '',
+        });
+        setShowForm(true);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-            const res = await fetch(`${apiUrl}/admin/social/meta/facebook/accounts`, {
+            const payload = editingId ? { id: editingId, ...formData } : formData;
+            const res = await fetch(`/api/admin/social/meta/facebook/accounts`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(payload),
             });
 
             if (res.ok) {
-                Swal.fire('¡Éxito!', 'Página de Facebook conectada correctamente.', 'success');
+                Swal.fire('¡Éxito!', editingId ? 'Token actualizado correctamente.' : 'Página de Facebook conectada correctamente.', 'success');
                 setFormData({ name: 'Mi Página de Facebook', pageId: '', pageAccessToken: '' });
+                setEditingId(null);
                 setShowForm(false);
                 fetchAccounts();
             } else {
-                Swal.fire('Error', 'No se pudo conectar la página.', 'error');
+                const errorData = await res.json().catch(() => null);
+                const msg = errorData?.message || 'No se pudo guardar la configuración.';
+                Swal.fire('Error', msg, 'error');
             }
         } catch (error) {
             Swal.fire('Error', 'Error de conexión con el servidor.', 'error');
@@ -85,8 +83,7 @@ export default function FacebookAdminPage() {
 
         if (result.isConfirmed) {
             try {
-                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-                await fetch(`${apiUrl}/admin/social/meta/facebook/accounts/${id}`, { method: 'DELETE' });
+                await fetch(`/api/admin/social/meta/facebook/accounts/${id}`, { method: 'DELETE' });
                 Swal.fire('Eliminado', 'La página ha sido desconectada.', 'success');
                 fetchAccounts();
             } catch (error) {
@@ -105,14 +102,14 @@ export default function FacebookAdminPage() {
                     Swal.showLoading();
                 }
             });
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-            const res = await fetch(`${apiUrl}/admin/social/meta/facebook/${id}/test`, { method: 'POST' });
+
+            const res = await fetch(`/api/admin/social/meta/facebook/${id}/test`, { method: 'POST' });
 
             if (res.ok) {
                 Swal.fire('¡Enviado!', 'Revisa tu página de Facebook para ver la publicación.', 'success');
             } else {
-                const data = await res.json();
-                Swal.fire('Error', data.message || 'No se pudo enviar la prueba.', 'error');
+                const data = await res.json().catch(() => null);
+                Swal.fire('Error', data?.message || 'No se pudo enviar la prueba.', 'error');
             }
         } catch (error) {
             Swal.fire('Error', 'Error de conexión con el servidor.', 'error');
@@ -133,7 +130,13 @@ export default function FacebookAdminPage() {
                     </div>
                 </div>
                 <button
-                    onClick={() => setShowForm(!showForm)}
+                    onClick={() => {
+                        if (showForm) {
+                            setEditingId(null);
+                            setFormData({ name: 'Mi Página de Facebook', pageId: '', pageAccessToken: '' });
+                        }
+                        setShowForm(!showForm);
+                    }}
                     className="flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-primary)] text-white font-black uppercase text-xs tracking-widest rounded-2xl hover:scale-105 transition-all shadow-lg shadow-[var(--color-primary)]/20 active:scale-95"
                 >
                     {showForm ? <Trash2 size={18} /> : <Plus size={18} />}
@@ -168,9 +171,16 @@ export default function FacebookAdminPage() {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <div className="flex items-center gap-2 px-3 py-1 bg-green-500/10 text-green-500 rounded-full text-[10px] font-black uppercase tracking-widest mr-4">
-                                            <CheckCircle size={12} /> Activo
+                                        <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mr-4 ${account.isActive ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                                            <CheckCircle size={12} /> {account.isActive ? 'Activo' : 'Inactivo'}
                                         </div>
+                                        <button
+                                            onClick={() => handleEdit(account)}
+                                            className="p-3 bg-amber-500/10 text-amber-500 rounded-xl hover:bg-amber-500 hover:text-white transition-all shadow-lg"
+                                            title="Actualizar Token"
+                                        >
+                                            <Edit3 size={18} />
+                                        </button>
                                         <button
                                             onClick={() => handleTest(account.id)}
                                             className="p-3 bg-blue-500/10 text-blue-500 rounded-xl hover:bg-blue-500 hover:text-white transition-all shadow-lg"
@@ -197,8 +207,8 @@ export default function FacebookAdminPage() {
                     {showForm ? (
                         <div className="bg-[var(--color-card)] p-8 rounded-3xl border border-[var(--color-primary)]/20 shadow-2xl animate-in slide-in-from-right duration-300">
                             <h2 className="text-xl font-black italic uppercase tracking-tighter mb-6 flex items-center gap-2">
-                                <Plus size={20} className="text-[var(--color-primary)]" />
-                                Nueva Página
+                                {editingId ? <Edit3 size={20} className="text-amber-500" /> : <Plus size={20} className="text-[var(--color-primary)]" />}
+                                {editingId ? 'Actualizar Token de Página' : 'Nueva Página'}
                             </h2>
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div>
@@ -223,7 +233,9 @@ export default function FacebookAdminPage() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--color-text-secondary)] mb-2 ml-1">Page Access Token</label>
+                                    <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--color-text-secondary)] mb-2 ml-1">
+                                        {editingId ? 'Nuevo Page Access Token' : 'Page Access Token'}
+                                    </label>
                                     <textarea
                                         placeholder="EAA..."
                                         value={formData.pageAccessToken}
@@ -234,9 +246,9 @@ export default function FacebookAdminPage() {
                                 </div>
                                 <button
                                     type="submit"
-                                    className="w-full py-4 bg-[var(--color-primary)] text-white font-black uppercase text-xs tracking-widest rounded-2xl hover:scale-[1.02] transition-all shadow-xl shadow-[var(--color-primary)]/20 mt-4 active:scale-95"
+                                    className={`w-full py-4 text-white font-black uppercase text-xs tracking-widest rounded-2xl hover:scale-[1.02] transition-all shadow-xl mt-4 active:scale-95 ${editingId ? 'bg-amber-600 shadow-amber-600/20' : 'bg-[var(--color-primary)] shadow-[var(--color-primary)]/20'}`}
                                 >
-                                    Guardar Configuración
+                                    {editingId ? 'Actualizar Token' : 'Guardar Configuración'}
                                 </button>
                             </form>
                         </div>
@@ -247,12 +259,12 @@ export default function FacebookAdminPage() {
                             </div>
                             <h2 className="text-xl font-black italic uppercase tracking-tighter text-blue-400">Guía de Configuración</h2>
                             <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                                Para automatizar Facebook, necesitas crear una App en el <span className="text-blue-400 font-bold">Meta for Developers</span> portal.
+                                Para actualizar el token de Facebook cuando expire, haz clic en el botón de edición <span className="text-amber-400 font-bold">amarillo</span> junto a tu página.
                             </p>
                             <ul className="space-y-4 mt-6">
                                 <li className="flex gap-3 text-sm text-[var(--color-text-secondary)]">
                                     <div className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 font-black text-[10px]">1</div>
-                                    <span>Crea una App de tipo <b>"Negocios"</b>.</span>
+                                    <span>Crea una App de tipo <b>"Negocios"</b> en Meta for Developers.</span>
                                 </li>
                                 <li className="flex gap-3 text-sm text-[var(--color-text-secondary)]">
                                     <div className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 font-black text-[10px]">2</div>
@@ -260,7 +272,7 @@ export default function FacebookAdminPage() {
                                 </li>
                                 <li className="flex gap-3 text-sm text-[var(--color-text-secondary)]">
                                     <div className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 font-black text-[10px]">3</div>
-                                    <span>Genera un <b>User Token</b> con <code>pages_manage_posts</code>, <code>pages_show_list</code> y luego cámbialo por un <b>Page Token</b> de larga duración.</span>
+                                    <span>Genera un <b>Page Access Token</b> con permisos <code>pages_manage_posts</code> y <code>pages_show_list</code> desde el Graph API Explorer.</span>
                                 </li>
                             </ul>
                             <a

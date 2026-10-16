@@ -52,9 +52,6 @@ export const ParticipationModal: React.FC<ParticipationModalProps> = ({ sorteo, 
     React.useEffect(() => {
         const userData = localStorage.getItem('user');
         if (userData) setUser(JSON.parse(userData));
-
-        // Ensure deviceId is generated on mount
-        getOrCreateDeviceId();
     }, []);
 
     const tareasObligatorias = sorteo.tareas?.filter(t => t.obligatorio) || [];
@@ -111,7 +108,7 @@ export const ParticipationModal: React.FC<ParticipationModalProps> = ({ sorteo, 
             const payload: any = {
                 email: user ? null : `${username.replace('@', '')}@social.temp`,
                 nombre: user ? null : username.trim(),
-                deviceId: user ? null : getOrCreateDeviceId(), // Only for anonymous users
+                deviceId: getOrCreateDeviceId(),
                 trafficSource,
                 tareas: Object.entries(completedTasks).map(([taskId, evidencia]) => ({
                     taskId,
@@ -131,8 +128,10 @@ export const ParticipationModal: React.FC<ParticipationModalProps> = ({ sorteo, 
 
             const response = await fetch(`${apiUrl}/sorteos/${sorteo.id}/participar`, {
                 method: 'POST',
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
+                    'x-device-id': getOrCreateDeviceId(),
                     ...(user && { 'Authorization': `Bearer ${localStorage.getItem('token')}` })
                 },
                 body: JSON.stringify(payload)

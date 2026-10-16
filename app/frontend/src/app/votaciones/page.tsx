@@ -34,7 +34,7 @@ export default function VotacionesPage() {
     const fetchData = async () => {
         try {
             const [bracketsRes, juegosData] = await Promise.all([
-                fetch(`${process.env.NEXT_PUBLIC_API_URL}/votaciones`),
+                fetch(`/api/votaciones`),
                 fetchJuegos()
             ]);
             const bracketsData = await bracketsRes.json();

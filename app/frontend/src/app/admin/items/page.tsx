@@ -174,7 +174,9 @@ export default function ItemsAdminPage() {
                 setPage(1);
                 fetchItems();
             } else {
-                Swal.fire('Error', 'No se pudo guardar el lote. Verifica que el backend esté actualizado.', 'error');
+                const errData = await response.json().catch(() => null);
+                const errMsg = errData?.message || 'No se pudo guardar el lote. Verifica que el backend esté actualizado.';
+                Swal.fire('Error', Array.isArray(errMsg) ? errMsg.join(', ') : errMsg, 'error');
             }
         } catch (error) {
             Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');

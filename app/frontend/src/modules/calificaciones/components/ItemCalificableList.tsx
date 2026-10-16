@@ -19,8 +19,7 @@ export default function ItemCalificableList({ tablaId, initialItems }: ItemCalif
 
   const fetchUserRatings = useCallback(async () => {
     try {
-      const deviceId = getOrCreateDeviceId();
-      const fetchedItems = await fetchItemsForCategory(tablaId, deviceId);
+      const fetchedItems = await fetchItemsForCategory(tablaId);
       setItems(fetchedItems);
       setError(null);
     } catch (error: unknown) {

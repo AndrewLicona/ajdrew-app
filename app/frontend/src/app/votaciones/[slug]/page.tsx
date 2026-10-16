@@ -6,7 +6,6 @@ import { Vote, Trophy, ArrowLeft, Zap, Star, LayoutGrid, GitMerge, Activity, Tar
 import Image from 'next/image';
 import Link from 'next/link';
 import Swal from 'sweetalert2';
-import { getOrCreateDeviceId } from '@/modules/calificaciones/services/calificacionesService';
 import { BracketTree } from '@/modules/votaciones/components/BracketTree';
 import { ShareButton } from '@/shared/components/molecules/ShareButton';
 
@@ -50,11 +49,8 @@ export default function BracketViewPage() {
 
     const fetchData = async () => {
         try {
-            const deviceId = getOrCreateDeviceId();
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/votaciones/${slug}`, {
-                headers: {
-                    'x-device-id': deviceId
-                }
+            const res = await fetch(`/api/votaciones/${slug}`, {
+                credentials: 'include',
             });
             if (!res.ok) throw new Error('Bracket no encontrado');
             const data = await res.json();
@@ -75,12 +71,11 @@ export default function BracketViewPage() {
 
     const handleVote = async (matchId: string, itemId: string) => {
         try {
-            const deviceId = getOrCreateDeviceId();
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/votaciones/vote`, {
+            const response = await fetch(`/api/votaciones/vote`, {
                 method: 'POST',
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-device-id': deviceId
                 },
                 body: JSON.stringify({ matchId, itemId }),
             });

@@ -37,23 +37,6 @@ services:
     networks:
       - ajdrew-net
 
-  # Redis - Cola para BullMQ (Fase 2: retry queue para publicaciones sociales)
-  redis:
-    image: redis:7-alpine
-    container_name: ajdrew-redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - ajdrew-net
-
   # Backend (NestJS)
   backend:
     build:
@@ -68,12 +51,8 @@ services:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://${DB_USER:-user}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-ajdrew_db}
       - FRONTEND_URL=http://localhost:3001
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
     depends_on:
       db:
-        condition: service_healthy
-      redis:
         condition: service_healthy
     ports:
       - "3000:3000"
@@ -134,8 +113,6 @@ services:
 # Volumenes y redes
 volumes:
   postgres_data:
-    driver: local
-  redis_data:
     driver: local
 
 networks:

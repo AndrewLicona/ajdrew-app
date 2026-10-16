@@ -24,28 +24,10 @@ export default function YoutubeAdminPage() {
     }, [searchParams]);
 
     const fetchAccounts = async () => {
-        const primaryUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-        const fallbackUrl = 'http://localhost:3000/api';
-
-        const tryFetch = async (url: string) => {
-            console.log(`[YouTube] Intentando conectar a: ${url}/admin/social/youtube/accounts`);
-            const res = await fetch(`${url}/admin/social/youtube/accounts`);
-            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-            return await res.json();
-        };
-
         try {
-            let data;
-            try {
-                data = await tryFetch(primaryUrl);
-            } catch (e) {
-                if (primaryUrl !== fallbackUrl) {
-                    console.warn(`[YouTube] Falló conexión a ${primaryUrl}, intentando fallback...`);
-                    data = await tryFetch(fallbackUrl);
-                } else {
-                    throw e;
-                }
-            }
+            const res = await fetch(`/api/admin/social/youtube/accounts`);
+            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+            const data = await res.json();
             setAccounts(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Error fetching YouTube accounts', error);
@@ -56,8 +38,7 @@ export default function YoutubeAdminPage() {
 
     const handleConnect = async () => {
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-            const res = await fetch(`${apiUrl}/admin/social/youtube/auth-url`);
+            const res = await fetch(`/api/admin/social/youtube/auth-url`);
             const data = await res.json();
             if (data.url) {
                 window.location.href = data.url;
@@ -80,8 +61,7 @@ export default function YoutubeAdminPage() {
 
         if (result.isConfirmed) {
             try {
-                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-                await fetch(`${apiUrl}/admin/social/youtube/accounts/${id}`, { method: 'DELETE' });
+                await fetch(`/api/admin/social/youtube/accounts/${id}`, { method: 'DELETE' });
                 Swal.fire('Desconectado', 'Canal desvinculado con éxito.', 'success');
                 fetchAccounts();
             } catch (error) {
@@ -101,8 +81,7 @@ export default function YoutubeAdminPage() {
                 }
             });
 
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-            const res = await fetch(`${apiUrl}/admin/social/youtube/accounts/${id}/test`, { method: 'POST' });
+            const res = await fetch(`/api/admin/social/youtube/accounts/${id}/test`, { method: 'POST' });
             const data = await res.json();
 
             if (res.ok && data.success) {

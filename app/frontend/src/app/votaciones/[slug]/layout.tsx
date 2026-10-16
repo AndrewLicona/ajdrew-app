@@ -7,7 +7,8 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     try {
         const { slug } = await params;
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/votaciones/${slug}`);
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.INTERNAL_API_URL || 'http://localhost:3000/api';
+        const res = await fetch(`${apiUrl}/votaciones/${slug}`);
         if (res.ok) {
             const data = await res.json();
             

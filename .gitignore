@@ -15,10 +15,16 @@ node_modules/
 # Logs
 logs
 *.log
+*.err
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+backend.log
+backend.err
+temp/
+app/backend/temp/
+
 
 # Directorios de compilación
 .next/
@@ -26,6 +32,7 @@ pnpm-debug.log*
 dist/
 build/
 out/
+generated-client/
 
 # Cache
 .cache/

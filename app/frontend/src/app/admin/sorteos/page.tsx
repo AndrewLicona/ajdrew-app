@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SorteoForm } from '@/modules/sorteos/components/SorteoForm';
+import { WinnerRoulette } from '@/modules/sorteos/components/WinnerRoulette';
 import { Bt } from '@/shared/components/atoms/Button';
 import { Input } from '@/shared/components/atoms/Input';
 import { Label } from '@/shared/components/atoms/Label';
@@ -58,6 +59,7 @@ export default function SorteosAdminPage() {
     // UI State
     const [showForm, setShowForm] = useState(false);
     const [showManualModal, setShowManualModal] = useState(false);
+    const [showRouletteModal, setShowRouletteModal] = useState(false);
     const [selectedForManual, setSelectedForManual] = useState<Sorteo | null>(null);
     const [manualWinners, setManualWinners] = useState<{ nombreManual: string, emailManual: string }[]>([]);
 
@@ -113,30 +115,29 @@ export default function SorteosAdminPage() {
     };
 
     const handleFinalize = async (id: string, titulo: string) => {
+        const sorteo = sorteos.find(s => s.id === id);
+        if (!sorteo) return;
+
+        const participantCount = sorteo._count?.participantes || 0;
+        if (participantCount === 0) {
+            Swal.fire('Sin participantes', 'Este sorteo no tiene participantes.', 'warning');
+            return;
+        }
+
         const result = await Swal.fire({
             title: '¿Realizar sorteo?',
-            text: `Se elegirán los ganadores para "${titulo}" de forma aleatoria basándose en los participantes de la web.`,
+            text: `${participantCount} participante${participantCount !== 1 ? 's' : ''} • ${sorteo.numGanadores} ganador${sorteo.numGanadores !== 1 ? 'es' : ''}`,
             icon: 'info',
             showCancelButton: true,
-            confirmButtonText: 'Sí, sortear ahora',
+            confirmButtonText: 'Iniciar Ruleta',
             confirmButtonColor: 'var(--color-primary)',
             background: '#0a0f0a',
             color: '#fff',
         });
 
         if (result.isConfirmed) {
-            try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sorteos/${id}/elegir-ganadores`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-                });
-                if (response.ok) {
-                    Swal.fire('¡Éxito!', 'Los ganadores han sido seleccionados.', 'success');
-                    fetchData();
-                }
-            } catch (error) {
-                Swal.fire('Error', 'No se pudo realizar el sorteo.', 'error');
-            }
+            setSelectedForManual(sorteo);
+            setShowRouletteModal(true);
         }
     };
 
@@ -499,6 +500,42 @@ export default function SorteosAdminPage() {
                                     Guardar y Cerrar
                                 </Bt>
                             </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Roulette Modal */}
+            <AnimatePresence>
+                {showRouletteModal && selectedForManual && (
+                    <div className="fixed inset-0 z-[3000] flex items-center justify-center p-4">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowRouletteModal(false)} className="absolute inset-0 bg-black/90 backdrop-blur-xl" />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="relative w-full max-w-3xl bg-[var(--color-card)] rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl max-h-[90vh]"
+                        >
+                            <WinnerRoulette
+                                totalParticipants={selectedForManual._count?.participantes || 0}
+                                numWinners={selectedForManual.numGanadores || 1}
+                                onComplete={async (winners) => {
+                                    try {
+                                        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sorteos/${selectedForManual.id}/elegir-ganadores`, {
+                                            method: 'POST',
+                                            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                                        });
+                                        if (response.ok) {
+                                            Swal.fire('¡Éxito!', 'Los ganadores han sido seleccionados.', 'success');
+                                            fetchData();
+                                        }
+                                    } catch (error) {
+                                        Swal.fire('Error', 'No se pudo realizar el sorteo.', 'error');
+                                    }
+                                    setShowRouletteModal(false);
+                                    setSelectedForManual(null);
+                                }}
+                            />
                         </motion.div>
                     </div>
                 )}

@@ -19,26 +19,10 @@ export default function InstagramAdminPage() {
     }, []);
 
     const fetchAccounts = async () => {
-        const primaryUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-        const fallbackUrl = 'http://localhost:3000/api';
-
-        const tryFetch = async (url: string) => {
-            const res = await fetch(`${url}/admin/social/meta/instagram/accounts`);
-            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-            return await res.json();
-        };
-
         try {
-            let data;
-            try {
-                data = await tryFetch(primaryUrl);
-            } catch (e) {
-                if (primaryUrl !== fallbackUrl) {
-                    data = await tryFetch(fallbackUrl);
-                } else {
-                    throw e;
-                }
-            }
+            const res = await fetch(`/api/admin/social/meta/instagram/accounts`);
+            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+            const data = await res.json();
             setAccounts(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Error fetching Instagram accounts', error);
@@ -51,8 +35,7 @@ export default function InstagramAdminPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-            const res = await fetch(`${apiUrl}/admin/social/meta/instagram/accounts`, {
+            const res = await fetch(`/api/admin/social/meta/instagram/accounts`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
@@ -64,7 +47,9 @@ export default function InstagramAdminPage() {
                 setShowForm(false);
                 fetchAccounts();
             } else {
-                Swal.fire('Error', 'No se pudo conectar la cuenta.', 'error');
+                const errorData = await res.json().catch(() => null);
+                const msg = errorData?.message || 'No se pudo conectar la cuenta.';
+                Swal.fire('Error', msg, 'error');
             }
         } catch (error) {
             Swal.fire('Error', 'Error de conexión con el servidor.', 'error');
@@ -85,8 +70,7 @@ export default function InstagramAdminPage() {
 
         if (result.isConfirmed) {
             try {
-                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-                await fetch(`${apiUrl}/admin/social/meta/instagram/accounts/${id}`, { method: 'DELETE' });
+                await fetch(`/api/admin/social/meta/instagram/accounts/${id}`, { method: 'DELETE' });
                 Swal.fire('Eliminado', 'La cuenta ha sido desconectada.', 'success');
                 fetchAccounts();
             } catch (error) {
@@ -106,14 +90,13 @@ export default function InstagramAdminPage() {
                 }
             });
 
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-            const res = await fetch(`${apiUrl}/admin/social/meta/instagram/${id}/test`, { method: 'POST' });
+            const res = await fetch(`/api/admin/social/meta/instagram/${id}/test`, { method: 'POST' });
 
             if (res.ok) {
                 Swal.fire('¡Enviado!', 'Revisa tu cuenta de Instagram para ver la publicación.', 'success');
             } else {
-                const data = await res.json();
-                Swal.fire('Error', data.message || 'No se pudo enviar la prueba.', 'error');
+                const data = await res.json().catch(() => null);
+                Swal.fire('Error', data?.message || 'No se pudo enviar la prueba.', 'error');
             }
         } catch (error) {
             Swal.fire('Error', 'Error de conexión con el servidor.', 'error');
@@ -246,22 +229,32 @@ export default function InstagramAdminPage() {
                             <div className="w-12 h-12 rounded-2xl bg-pink-500/10 flex items-center justify-center text-pink-500 mb-4">
                                 <Info size={24} />
                             </div>
-                            <h2 className="text-xl font-black italic uppercase tracking-tighter text-pink-400">Guía Instagram</h2>
+                            <h2 className="text-xl font-black italic uppercase tracking-tighter text-pink-400">Guía Configuración</h2>
                             <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                                Instagram requiere que tu cuenta sea <span className="text-pink-400 font-bold">Business</span> y esté vinculada a una Página de Facebook.
+                                Para automatizar Instagram, necesitas crear una App de tipo <b>"Negocios"</b> en Meta for Developers.
                             </p>
                             <ul className="space-y-4 mt-6">
                                 <li className="flex gap-3 text-sm text-[var(--color-text-secondary)]">
                                     <div className="w-6 h-6 rounded-full bg-pink-500/20 text-pink-400 flex items-center justify-center shrink-0 font-black text-[10px]">1</div>
-                                    <span>Vincula tu IG a una <b>Página de Facebook</b>.</span>
+                                    <span>Crea una App de tipo <b>"Negocios"</b> en Meta for Developers.</span>
                                 </li>
                                 <li className="flex gap-3 text-sm text-[var(--color-text-secondary)]">
                                     <div className="w-6 h-6 rounded-full bg-pink-500/20 text-pink-400 flex items-center justify-center shrink-0 font-black text-[10px]">2</div>
-                                    <span>Busca el campo <code>instagram_business_account</code> en la respuesta <code>GET /me/accounts?fields=instagram_business_account,name</code>.</span>
+                                    <span>Añade el producto <b>"Instagram Graph API"</b> y marca los permisos:
+                                        <code className="ml-2 bg-pink-500/20 px-2 py-0.5 rounded text-pink-300">instagram_basic</code>,
+                                        <code className="ml-2 bg-pink-500/20 px-2 py-0.5 rounded text-pink-300">instagram_content_publish</code>
+                                        y <code className="ml-2 bg-pink-500/20 px-2 py-0.5 rounded text-pink-300">pages_show_list</code>.
+                                    </span>
                                 </li>
                                 <li className="flex gap-3 text-sm text-[var(--color-text-secondary)]">
                                     <div className="w-6 h-6 rounded-full bg-pink-500/20 text-pink-400 flex items-center justify-center shrink-0 font-black text-[10px]">3</div>
-                                    <span>Usa un <b>Token de Página</b> con permisos <code>instagram_basic</code> y <code>instagram_content_publish</code>.</span>
+                                    <span>En el Graph API Explorer, genera un token con esos permisos y ejecuta:
+                                        <code className="ml-2 bg-pink-500/20 px-2 py-0.5 rounded text-pink-300">{'GET me/accounts?fields=instagram_business_account{id,username,access_token}'}</code>
+                                    </span>
+                                </li>
+                                <li className="flex gap-3 text-sm text-[var(--color-text-secondary)]">
+                                    <div className="w-6 h-6 rounded-full bg-pink-500/20 text-pink-400 flex items-center justify-center shrink-0 font-black text-[10px]">4</div>
+                                    <span>Copia el <b>access_token</b> y el <b>ID</b> de instagram_business_account.</span>
                                 </li>
                             </ul>
                             <a

@@ -18,7 +18,8 @@ export default async function Image({ params }: { params: { slug: string } }) {
     let matches: any[] = [];
 
     try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/votaciones/${params.slug}`);
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.INTERNAL_API_URL || 'http://localhost:3000/api';
+        const res = await fetch(`${apiUrl}/votaciones/${params.slug}`);
         if (res.ok) {
             const data = await res.json();
             tematica = data.tematica;

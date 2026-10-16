@@ -15,8 +15,9 @@ export default async function Image({ params }: { params: { id: string } }) {
     let rankingItems: any[] = [];
 
     try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.INTERNAL_API_URL || 'http://localhost:3000/api';
         // Fetch Category Info
-        const resCat = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/calificaciones/public`);
+        const resCat = await fetch(`${apiUrl}/calificaciones/public`);
         if (resCat.ok) {
             const dataCat = await resCat.json();
             const category = dataCat.find((c: any) => c.id === params.id);
@@ -26,7 +27,7 @@ export default async function Image({ params }: { params: { id: string } }) {
         }
 
         // Fetch Top 5 Ranking
-        const resRanking = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/calificaciones/ranking-list?categoryId=${params.id}&limit=5`);
+        const resRanking = await fetch(`${apiUrl}/calificaciones/ranking-list?categoryId=${params.id}&limit=5`);
         if (resRanking.ok) {
             rankingItems = await resRanking.json();
         }

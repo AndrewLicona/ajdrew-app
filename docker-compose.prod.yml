@@ -39,21 +39,6 @@ services:
     networks:
       - ajdrew-net
 
-  # 🔴 Redis — cola de publicaciones sociales (BullMQ)
-  redis:
-    image: redis:7-alpine
-    container_name: ajdrew-redis
-    restart: unless-stopped
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - ajdrew-net
-
   # ⚙️ Backend NestJS
   backend:
     build:
@@ -70,15 +55,11 @@ services:
       - FRONTEND_URL=${FRONTEND_URL:-https://ajdrew.site}
       - PORT=3000
       - BACKEND_INTERNAL_PORT=3000
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
       - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
       - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
       - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
     depends_on:
       db:
-        condition: service_healthy
-      redis:
         condition: service_healthy
     networks:
       - ajdrew-net
@@ -121,8 +102,6 @@ services:
   # 🗂️ Volúmenes y redes
 volumes:
   postgres_data:
-    driver: local
-  redis_data:
     driver: local
 
 networks:

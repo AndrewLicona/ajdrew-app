@@ -34,7 +34,12 @@ const config: Record<
 };
 
 export function PublicationStatusBadge({ estado }: { estado: EstadoPublicacion }) {
-  const c = config[estado];
+  const c = config[estado] || {
+    icon: Loader2,
+    color: 'text-gray-400',
+    bg: 'bg-gray-500/10 border-gray-500/20',
+    label: estado || 'Desconocido',
+  };
   const Icon = c.icon;
   return (
     <div
