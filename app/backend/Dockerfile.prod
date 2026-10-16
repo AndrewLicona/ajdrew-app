@@ -2,17 +2,15 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Instalar pnpm y herramientas de construcción para bcrypt (módulos nativos)
+# Instalar pnpm y herramientas de construcción
 RUN apk add --no-cache python3 make g++ && \
     npm install -g pnpm@10.18.0
 
-# Copiar archivos necesarios
+# Copiar archivos necesarios para dependencias
 COPY pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY package.json ./
 COPY app/backend/package.json ./app/backend/
 COPY packages/shared/package.json ./packages/shared/
-
-# IMPORTANTE: Copiar schema de Prisma ANTES del install
 COPY app/backend/prisma ./app/backend/prisma
 
 # Instalar dependencias
@@ -21,28 +19,25 @@ RUN pnpm install
 # Copiar el resto del código
 COPY . .
 
-# Construir la aplicación
+# Construir la aplicación backend
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN pnpm --filter backend build
+
+# Desplegar bundle standalone de producción con pnpm deploy
+RUN pnpm --filter backend deploy --prod /app/out
 
 # Etapa de producción
 FROM node:20-alpine
 RUN apk add --no-cache wget libc6-compat
-WORKDIR /app/app/backend
+WORKDIR /app
 
 # Variables de entorno
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Copiar artefactos construidos y package.json
-COPY --from=builder /app/app/backend/package.json ./
-COPY --from=builder /app/app/backend/tsconfig.json ./
+# Copiar desde el bundle generado por pnpm deploy
+COPY --from=builder /app/out ./
 COPY --from=builder /app/app/backend/create-admin.ts /app/app/backend/create-admin.js ./
-COPY --from=builder /app/app/backend/dist ./dist
-COPY --from=builder /app/app/backend/prisma ./prisma
-
-# Instalar dependencias de producción limpias
-RUN npm install -g pnpm@10.18.0 && pnpm install --prod --ignore-workspace
 
 # Puerto expuesto
 EXPOSE 3000
