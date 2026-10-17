@@ -1,12 +1,49 @@
-FROM node:20-slim
+# Etapa de construcción
+FROM node:20-slim AS builder
 WORKDIR /app
 
+# Instalar pnpm y herramientas de construcción
+RUN apt-get update && apt-get install -y python3 make g++ wget && \
+    npm install -g pnpm@10.18.0
+
+# Copiar archivos necesarios para dependencias
+COPY pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json ./
+COPY app/backend/package.json ./app/backend/
+COPY packages/shared/package.json ./packages/shared/
+COPY app/backend/prisma ./app/backend/prisma
+
+# Instalar dependencias
+RUN pnpm install
+
+# Forzar versión 6.x de prisma y client para evitar conflictos v7
+RUN pnpm --filter backend add prisma@^6.17.1 @prisma/client@^6.17.1 -w
+
+# Copiar el resto del código
+COPY . .
+
+# Construir la aplicación backend
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+RUN pnpm --filter backend build
+
+# Desplegar bundle standalone de producción con pnpm deploy (--legacy para pnpm v10)
+RUN pnpm --filter backend deploy --prod --legacy /app/out
+
+# Etapa de producción
+FROM node:20-slim
+RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+
+# Variables de entorno
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Copiar el bundle de producción compilado en el host
-COPY docker-backend-output/ ./
-COPY app/backend/create-admin.ts ./create-admin.js
+# Copiar desde el bundle generado por pnpm deploy
+COPY --from=builder /app/out ./
+COPY --from=builder /app/app/backend/create-admin.ts /app/app/backend/create-admin.js ./
 
+# Puerto expuesto
 EXPOSE 3000
+
+# Comando para iniciar
 CMD ["node", "dist/main.js"]
