@@ -2,8 +2,10 @@
 FROM node:20-slim AS builder
 WORKDIR /app
 
-# Instalar pnpm
-RUN npm install -g pnpm@10.18.0
+# Instalar pnpm mediante binario standalone
+RUN apt-get update && apt-get install -y wget && \
+    wget -qO /usr/local/bin/pnpm https://github.com/pnpm/pnpm/releases/download/v10.18.0/pnpm-linux-x64 && \
+    chmod +x /usr/local/bin/pnpm
 
 # Copiar archivos necesarios
 COPY pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -54,4 +56,4 @@ COPY --from=builder /app/app/frontend/public ./app/frontend/public
 EXPOSE 80
 
 # Comando para iniciar
-CMD ["node", "app/frontend/server.js"]
+CMD ["node", "server.js"]
