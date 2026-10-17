@@ -1,32 +1,36 @@
 #!/bin/bash
-set -e
 
-echo "🚀 Iniciando despliegue con Docker (Ubuntu Server)..."
+# Script de Despliegue Automático para AJDREW App con Diagnóstico
+set -e # Detener el script si algún comando falla
 
-# 1. Ajustar permisos
-sudo chown -R $USER:$USER . || true
+echo "🚀 Iniciando despliegue..."
 
-# 2. Git fetch & reset
+# 1. Obtener los últimos cambios del repositorio
 echo "📥 Descargando últimos cambios de Git..."
 git fetch origin main
 git reset --hard origin/main
 
+# Mostrar el commit actual para verificar que estamos en la versión correcta
 CURRENT_COMMIT=$(git rev-parse --short HEAD)
 echo "📌 Versión actual (Git Commit): $CURRENT_COMMIT"
 
-# 3. Detener contenedores previos
+# 2. Detener y eliminar contenedores previos
 echo "🛑 Deteniendo contenedores actuales..."
 docker compose -f docker-compose.prod.yml down --remove-orphans
 
-# 4. Construir y levantar todo dentro de Docker
-echo "🐳 Reconstruyendo imágenes dentro de Docker..."
+# 3. Forzar Reconstrucción Limpia
+# Usamos --no-cache y pull para asegurar que nada sea viejo
+echo "🐳 Reconstruyendo imágenes desde cero (esto puede tardar unos minutos)..."
 docker compose -f docker-compose.prod.yml build --no-cache --pull
 
 echo "🚢 Iniciando nuevos contenedores..."
 docker compose -f docker-compose.prod.yml up -d
 
-# 5. Limpieza
+# 4. Limpieza de seguridad
+echo "🧹 Limpiando imágenes temporales huérfanas..."
 docker image prune -f --filter "label=stage!=build"
 
-echo "✅ ¡Despliegue completado con éxito en Docker!"
+echo "✅ ¡Despliegue completado con éxito!"
 echo "📍 Commit desplegado: $CURRENT_COMMIT"
+echo "🌐 Frontend activo en el puerto 3300"
+echo "⚙️ Backend activo en el puerto 3400"

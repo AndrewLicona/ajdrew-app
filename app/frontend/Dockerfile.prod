@@ -1,5 +1,5 @@
 # Etapa de construcción
-FROM node:20-slim AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Instalar pnpm
@@ -37,7 +37,7 @@ ENV NEXT_PUBLIC_ADSENSE_PUB_ID=$NEXT_PUBLIC_ADSENSE_PUB_ID
 RUN pnpm --filter frontend build
 
 # Etapa de producción
-FROM node:20-slim
+FROM node:20-alpine
 WORKDIR /app
 
 # Variables de entorno
@@ -54,4 +54,4 @@ COPY --from=builder /app/app/frontend/public ./app/frontend/public
 EXPOSE 80
 
 # Comando para iniciar
-CMD ["node", "server.js"]
+CMD ["node", "app/frontend/server.js"]
