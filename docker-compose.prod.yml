@@ -3,7 +3,6 @@ services:
   nginx:
     build:
       context: ./app/nginx
-      network: host
     dns:
       - 8.8.8.8
       - 1.1.1.1
@@ -47,7 +46,6 @@ services:
     build:
       context: .
       dockerfile: app/backend/Dockerfile.prod
-      network: host
     dns:
       - 8.8.8.8
       - 1.1.1.1
@@ -81,7 +79,6 @@ services:
     build:
       context: .
       dockerfile: app/frontend/Dockerfile.prod
-      network: host
       args:
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
         - NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=${NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}

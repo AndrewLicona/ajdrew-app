@@ -19,9 +19,9 @@ echo "🛑 Deteniendo contenedores actuales..."
 docker compose -f docker-compose.prod.yml down --remove-orphans
 
 # 3. Forzar Reconstrucción Limpia
-# Usamos --no-cache y pull para asegurar que nada sea viejo
+# Usamos DOCKER_BUILDKIT=0 para respetar el DNS del demonio de Docker (/etc/docker/daemon.json)
 echo "🐳 Reconstruyendo imágenes desde cero (esto puede tardar unos minutos)..."
-docker compose -f docker-compose.prod.yml build --no-cache --pull
+DOCKER_BUILDKIT=0 docker compose -f docker-compose.prod.yml build --no-cache --pull
 
 echo "🚢 Iniciando nuevos contenedores..."
 docker compose -f docker-compose.prod.yml up -d
