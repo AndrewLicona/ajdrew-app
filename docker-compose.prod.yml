@@ -3,7 +3,6 @@ services:
   nginx:
     build:
       context: ./app/nginx
-      network: host
     container_name: ajdrew-nginx
     ports:
       # Puerto alternativo (8080 está ocupado por otro proyecto)
@@ -44,7 +43,6 @@ services:
     build:
       context: .
       dockerfile: app/backend/Dockerfile.prod
-      network: host
     container_name: ajdrew-backend
     command: sh -c "npx prisma db push --accept-data-loss && node dist/main.js"
     restart: unless-stopped
@@ -75,7 +73,6 @@ services:
     build:
       context: .
       dockerfile: app/frontend/Dockerfile.prod
-      network: host
       args:
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
         - NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=${NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}
