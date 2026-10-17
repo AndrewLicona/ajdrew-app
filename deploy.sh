@@ -1,12 +1,34 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Iniciando despliegue con compilación en el host..."
+echo "🚀 Iniciando despliegue en Ubuntu Server..."
 
-# 1. Ajustar permisos
+# 1. Cargar NVM y Node.js si está instalado en el usuario andrew
+export NVM_DIR="$HOME/.nvm"
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+    . "$NVM_DIR/nvm.sh"
+elif [ -s "/usr/local/nvm/nvm.sh" ]; then
+    . "/usr/local/nvm/nvm.sh"
+fi
+
+# Verificar Node y pnpm
+if ! command -v node &> /dev/null; then
+    echo "❌ Error: Node.js no está disponible en el PATH." >&2
+    exit 1
+fi
+
+if ! command -v pnpm &> /dev/null; then
+    echo "📦 pnpm no encontrado. Instalándolo globalmente..."
+    npm install -g pnpm@10.18.0
+fi
+
+echo "📌 Versión de Node: $(node -v)"
+echo "📌 Versión de pnpm: $(pnpm -v)"
+
+# 2. Ajustar permisos
 sudo chown -R $USER:$USER . || true
 
-# 2. Git fetch & reset
+# 3. Git fetch & reset
 echo "📥 Descargando últimos cambios de Git..."
 git fetch origin main
 git reset --hard origin/main
@@ -14,23 +36,17 @@ git reset --hard origin/main
 CURRENT_COMMIT=$(git rev-parse --short HEAD)
 echo "📌 Versión actual (Git Commit): $CURRENT_COMMIT"
 
-# 3. Asegurar que pnpm está instalado en el host
-if ! command -v pnpm &> /dev/null; then
-    echo "📦 Instalando pnpm en el host..."
-    npm install -g pnpm@10.18.0
-fi
+# 4. Instalar dependencias y compilar en el host
+echo "📦 Instalando dependencias..."
+pnpm install --no-frozen-lockfile
 
-# 4. Instalar dependencias y compilar en el host (que sí tiene internet y DNS 100% funcionales)
-echo "📦 Instalando dependencias en el host..."
-pnpm install --no-frozen-lockfile || pnpm install
-
-echo "🔨 Compilando backend en el host..."
+echo "🔨 Compilando backend..."
 pnpm --filter backend build
 rm -rf ./docker-backend-output
 pnpm --filter backend deploy --prod --legacy ./docker-backend-output
 cp app/backend/create-admin.ts ./docker-backend-output/create-admin.ts || true
 
-echo "🔨 Compilando frontend (Next.js) en el host..."
+echo "🔨 Compilando frontend..."
 pnpm --filter frontend build
 rm -rf ./docker-frontend-output
 mkdir -p ./docker-frontend-output
@@ -43,12 +59,12 @@ cp -r app/frontend/public ./docker-frontend-output/public || true
 echo "🛑 Deteniendo contenedores actuales..."
 docker compose -f docker-compose.prod.yml down --remove-orphans
 
-# 6. Levantar contenedores (Docker solo copia los archivos ya compilados)
+# 6. Levantar contenedores
 echo "🐳 Levantando contenedores con Docker..."
 docker compose -f docker-compose.prod.yml up -d --build
 
 # 7. Limpieza
 docker image prune -f
 
-echo "✅ ¡Despliegue completado con éxito!"
+echo "✅ ¡Despliegue completado con éxito en tu Ubuntu Server!"
 echo "📍 Commit desplegado: $CURRENT_COMMIT"
