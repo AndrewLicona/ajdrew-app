@@ -16,6 +16,9 @@ COPY app/backend/prisma ./app/backend/prisma
 # Instalar dependencias
 RUN pnpm install
 
+# Forzar versión 6.x de prisma y client para evitar conflictos v7
+RUN pnpm --filter backend add prisma@^6.17.1 @prisma/client@^6.17.1 -w
+
 # Copiar el resto del código
 COPY . .
 
