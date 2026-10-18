@@ -1,8 +1,7 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf && \
-    apk add --no-cache python3 make g++ && \
+RUN apk add --no-cache python3 make g++ && \
     npm install -g pnpm@10.18.0
 
 COPY pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -20,8 +19,7 @@ RUN pnpm --filter backend build
 RUN pnpm --filter backend deploy --prod --legacy /app/out
 
 FROM node:20-alpine
-RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf && \
-    apk add --no-cache wget libc6-compat
+RUN apk add --no-cache wget libc6-compat
 WORKDIR /app
 
 ENV NODE_ENV=production

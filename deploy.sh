@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Iniciando despliegue con compilación 100% dentro de Docker (Aislado)..."
+echo "🚀 Iniciando despliegue con compilación en el host (Sin errores de red en Docker)..."
 
 # 1. Ajustar permisos
 sudo chown -R $USER:$USER . || true
@@ -14,16 +14,29 @@ git reset --hard origin/main
 CURRENT_COMMIT=$(git rev-parse --short HEAD)
 echo "📌 Versión actual (Git Commit): $CURRENT_COMMIT"
 
-# 3. Detener contenedores previos
+# 3. Compilar en el host (que tiene red y DNS 100% estables)
+echo "📦 Instalando dependencias en el host..."
+pnpm install --no-frozen-lockfile || pnpm install
+
+echo "🔨 Compilando backend en el host..."
+pnpm --filter backend build
+rm -rf ./app/backend/out
+pnpm --filter backend deploy --prod --legacy ./app/backend/out
+cp app/backend/create-admin.ts ./app/backend/out/create-admin.js || true
+
+echo "🔨 Compilando frontend en el host..."
+pnpm --filter frontend build
+
+# 4. Detener contenedores previos
 echo "🛑 Deteniendo contenedores actuales..."
 docker compose -f docker-compose.prod.yml down --remove-orphans
 
-# 4. Construir y levantar todo dentro de Docker (con DNS dedicado y red aislada)
-echo "🐳 Reconstruyendo y levantando contenedores con Docker..."
-docker compose -f docker-compose.prod.yml up -d --build --force-recreate
+# 5. Levantar Docker (Copiar los binarios ya listos, cero tráfico de red necesario)
+echo "🐳 Levantando contenedores en Docker..."
+docker compose -f docker-compose.prod.yml up -d --build
 
-# 5. Limpieza
+# 6. Limpieza
 docker image prune -f
 
-echo "✅ ¡Despliegue completado con éxito en tu Ubuntu Server (100% Docker)!"
+echo "✅ ¡Despliegue completado con éxito en tu Ubuntu Server!"
 echo "📍 Commit desplegado: $CURRENT_COMMIT"
