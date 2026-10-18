@@ -1,12 +1,32 @@
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+RUN apk add --no-cache python3 make g++ && \
+    npm install -g pnpm@10.18.0
+
+COPY pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json ./
+COPY app/backend/package.json ./app/backend/
+COPY packages/shared/package.json ./packages/shared/
+COPY app/backend/prisma ./app/backend/prisma
+
+RUN pnpm install
+
+COPY . .
+
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+RUN pnpm --filter backend build
+RUN pnpm --filter backend deploy --prod --legacy /app/out
+
 FROM node:20-alpine
+RUN apk add --no-cache wget libc6-compat
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Copiar el bundle de producción ya compilado en el host
-COPY app/backend/out/ ./
-COPY app/backend/create-admin.ts ./create-admin.js
+COPY --from=builder /app/out ./
+COPY --from=builder /app/app/backend/create-admin.ts ./create-admin.js
 
 EXPOSE 3000
 CMD ["node", "dist/main.js"]

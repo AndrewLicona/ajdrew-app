@@ -1,13 +1,44 @@
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+RUN npm install -g pnpm@10.18.0
+
+COPY pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json ./
+COPY app/frontend/package.json ./app/frontend/
+COPY packages/shared/package.json ./packages/shared/
+
+RUN pnpm install
+
+COPY . .
+
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
+ARG NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+ENV NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=$NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+
+ARG NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+ENV NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=$NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+
+ARG NEXT_PUBLIC_ENABLE_ADS=false
+ENV NEXT_PUBLIC_ENABLE_ADS=$NEXT_PUBLIC_ENABLE_ADS
+
+ARG NEXT_PUBLIC_ADSENSE_PUB_ID
+ENV NEXT_PUBLIC_ADSENSE_PUB_ID=$NEXT_PUBLIC_ADSENSE_PUB_ID
+
+RUN pnpm --filter frontend build
+
 FROM node:20-alpine
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=80
 
-# Copiar el build standalone ya compilado en el host
-COPY app/frontend/.next/standalone/ ./
-COPY app/frontend/.next/static/ ./app/frontend/.next/static/
-COPY app/frontend/public/ ./app/frontend/public/
+COPY --from=builder /app/app/frontend/.next/standalone ./
+COPY --from=builder /app/app/frontend/.next/static ./app/frontend/.next/static
+COPY --from=builder /app/app/frontend/.next/static ./.next/static
+COPY --from=builder /app/app/frontend/public ./app/frontend/public
 
 EXPOSE 80
 CMD ["node", "server.js"]
