@@ -10,6 +10,9 @@ services:
       - backend
       - frontend
     restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     networks:
       - ajdrew-net
 
@@ -33,6 +36,9 @@ services:
     ports:
       - "5433:5432"
     restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     networks:
       - ajdrew-net
 
