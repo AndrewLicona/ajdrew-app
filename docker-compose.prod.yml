@@ -5,7 +5,6 @@ services:
       context: ./app/nginx
     container_name: ajdrew-nginx
     ports:
-      # Puerto alternativo (8080 está ocupado por otro proyecto)
       - "8081:80"
     depends_on:
       - backend
@@ -32,7 +31,6 @@ services:
       timeout: 5s
       retries: 5
     ports:
-      # Puerto único para acceso externo (Estandarizado)
       - "5433:5432"
     restart: unless-stopped
     networks:
@@ -43,6 +41,9 @@ services:
     build:
       context: .
       dockerfile: app/backend/Dockerfile.prod
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     container_name: ajdrew-backend
     command: sh -c "npx prisma db push --accept-data-loss && node dist/main.js"
     restart: unless-stopped
@@ -79,6 +80,9 @@ services:
         - NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=${NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET:-ajdrew_unsigned}
         - NEXT_PUBLIC_ENABLE_ADS=${NEXT_PUBLIC_ENABLE_ADS:-false}
         - NEXT_PUBLIC_ADSENSE_PUB_ID=${NEXT_PUBLIC_ADSENSE_PUB_ID:-}
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     container_name: ajdrew-frontend
     restart: unless-stopped
     env_file:
@@ -89,14 +93,12 @@ services:
       - HOSTNAME=0.0.0.0
       - PORT=80
     ports:
-      # Puerto estandarizado para este proyecto
       - "3300:80"
     networks:
       - ajdrew-net
     depends_on:
       - backend
 
-  # 🗂️ Volúmenes y redes
 volumes:
   postgres_data:
     driver: local
@@ -104,3 +106,6 @@ volumes:
 networks:
   ajdrew-net:
     driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_icc: "true"
+      com.docker.network.bridge.enable_ip_masquerade: "true"
