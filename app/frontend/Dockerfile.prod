@@ -29,11 +29,12 @@ ENV NEXT_PUBLIC_ADSENSE_PUB_ID=$NEXT_PUBLIC_ADSENSE_PUB_ID
 
 RUN pnpm --filter frontend build
 
-FROM node:20-alpine
+FROM node:20-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=80
+ENV HOSTNAME=0.0.0.0
 
 COPY --from=builder /app/app/frontend/.next/standalone ./
 COPY --from=builder /app/app/frontend/.next/static ./app/frontend/.next/static
@@ -41,4 +42,8 @@ COPY --from=builder /app/app/frontend/.next/static ./.next/static
 COPY --from=builder /app/app/frontend/public ./app/frontend/public
 
 EXPOSE 80
+
+WORKDIR /app/app/frontend
 CMD ["node", "server.js"]
+
+

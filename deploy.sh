@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Iniciando despliegue con compilación en el host (Sin errores de red en Docker)..."
+echo "🚀 Iniciando despliegue 100% aislado en Docker..."
 
 # 1. Ajustar permisos
 sudo chown -R $USER:$USER . || true
@@ -14,29 +14,14 @@ git reset --hard origin/main
 CURRENT_COMMIT=$(git rev-parse --short HEAD)
 echo "📌 Versión actual (Git Commit): $CURRENT_COMMIT"
 
-# 3. Compilar en el host (que tiene red y DNS 100% estables)
-echo "📦 Instalando dependencias en el host..."
-pnpm install --no-frozen-lockfile || pnpm install
+# 3. Compilar y levantar contenedores en Docker (Build multi-etapa aislado)
+echo "🐳 Compilando y levantando contenedores con Docker Compose..."
+docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
 
-echo "🔨 Compilando backend en el host..."
-pnpm --filter backend build
-rm -rf ./app/backend/out
-pnpm --filter backend deploy --prod --legacy ./app/backend/out
-cp app/backend/create-admin.ts ./app/backend/out/create-admin.js || true
-
-echo "🔨 Compilando frontend en el host..."
-pnpm --filter frontend build
-
-# 4. Detener contenedores previos
-echo "🛑 Deteniendo contenedores actuales..."
-docker compose -f docker-compose.prod.yml down --remove-orphans
-
-# 5. Levantar Docker (Copiar los binarios ya listos, cero tráfico de red necesario)
-echo "🐳 Levantando contenedores en Docker..."
-docker compose -f docker-compose.prod.yml up -d --build
-
-# 6. Limpieza
+# 4. Limpieza de imágenes antiguas
 docker image prune -f
 
-echo "✅ ¡Despliegue completado con éxito en tu Ubuntu Server!"
+echo "✅ ¡Despliegue completado con éxito 100% en Docker!"
 echo "📍 Commit desplegado: $CURRENT_COMMIT"
+
+
