@@ -1,36 +1,42 @@
 #!/bin/bash
+set -e
 
-# Script de Despliegue Automático para AJDREW App con Diagnóstico
-set -e # Detener el script si algún comando falla
+echo "🚀 Iniciando despliegue con compilación en el host..."
 
-echo "🚀 Iniciando despliegue..."
+# 1. Ajustar permisos
+sudo chown -R $USER:$USER . || true
 
-# 1. Obtener los últimos cambios del repositorio
+# 2. Git fetch & reset
 echo "📥 Descargando últimos cambios de Git..."
 git fetch origin main
 git reset --hard origin/main
 
-# Mostrar el commit actual para verificar que estamos en la versión correcta
 CURRENT_COMMIT=$(git rev-parse --short HEAD)
 echo "📌 Versión actual (Git Commit): $CURRENT_COMMIT"
 
-# 2. Detener y eliminar contenedores previos
+# 3. Compilar en el host (que sí tiene red y DNS 100% estables)
+echo "📦 Instalando dependencias..."
+pnpm install --no-frozen-lockfile || pnpm install
+
+echo "🔨 Compilando backend..."
+pnpm --filter backend build
+rm -rf ./app/backend/out
+pnpm --filter backend deploy --prod --legacy ./app/backend/out
+cp app/backend/create-admin.ts ./app/backend/out/create-admin.js || true
+
+echo "🔨 Compilando frontend..."
+pnpm --filter frontend build
+
+# 4. Detener contenedores previos
 echo "🛑 Deteniendo contenedores actuales..."
 docker compose -f docker-compose.prod.yml down --remove-orphans
 
-# 3. Forzar Reconstrucción Limpia
-# Usamos --no-cache y pull para asegurar que nada sea viejo
-echo "🐳 Reconstruyendo imágenes desde cero (esto puede tardar unos minutos)..."
-docker compose -f docker-compose.prod.yml build --no-cache --pull
+# 5. Levantar Docker (Docker solo copia los archivos compilados, cero red necesaria)
+echo "🐳 Levantando contenedores con Docker..."
+docker compose -f docker-compose.prod.yml up -d --build
 
-echo "🚢 Iniciando nuevos contenedores..."
-docker compose -f docker-compose.prod.yml up -d
+# 6. Limpieza
+docker image prune -f
 
-# 4. Limpieza de seguridad
-echo "🧹 Limpiando imágenes temporales huérfanas..."
-docker image prune -f --filter "label=stage!=build"
-
-echo "✅ ¡Despliegue completado con éxito!"
+echo "✅ ¡Despliegue completado con éxito en tu Ubuntu Server!"
 echo "📍 Commit desplegado: $CURRENT_COMMIT"
-echo "🌐 Frontend activo en el puerto 3300"
-echo "⚙️ Backend activo en el puerto 3400"
