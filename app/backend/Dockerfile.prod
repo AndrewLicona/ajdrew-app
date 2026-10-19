@@ -1,7 +1,7 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-RUN apk add --no-cache python3 make g++ && \
+RUN apk add --no-cache libc6-compat openssl && \
     npm install -g pnpm@10.18.0
 
 COPY pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -10,16 +10,22 @@ COPY app/backend/package.json ./app/backend/
 COPY packages/shared/package.json ./packages/shared/
 COPY app/backend/prisma ./app/backend/prisma
 
-RUN pnpm install
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install
 
-COPY . .
+COPY app/backend ./app/backend
+COPY packages/shared ./packages/shared
 
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN pnpm --filter backend prisma:generate
 RUN pnpm --filter backend build
-RUN pnpm --filter backend deploy --prod --legacy /app/out
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm --filter backend --prod deploy /app/out
+RUN mkdir -p /app/out/dist && cp -r app/backend/dist/. /app/out/dist/
+RUN mkdir -p /app/out/public && cp -r app/backend/public/. /app/out/public/ || true
 RUN cp app/backend/create-admin.js /app/out/create-admin.js || true
-RUN cp -r app/backend/prisma /app/out/prisma || true
+RUN cp app/backend/create-admin.ts /app/out/create-admin.ts || true
+RUN mkdir -p /app/out/prisma && cp -r app/backend/prisma/. /app/out/prisma/ || true
 
 FROM node:20-alpine AS runner
 WORKDIR /app

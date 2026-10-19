@@ -8,9 +8,11 @@ COPY package.json ./
 COPY app/frontend/package.json ./app/frontend/
 COPY packages/shared/package.json ./packages/shared/
 
-RUN pnpm install
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install
 
-COPY . .
+COPY app/frontend ./app/frontend
+COPY packages/shared ./packages/shared
 
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
@@ -27,7 +29,8 @@ ENV NEXT_PUBLIC_ENABLE_ADS=$NEXT_PUBLIC_ENABLE_ADS
 ARG NEXT_PUBLIC_ADSENSE_PUB_ID
 ENV NEXT_PUBLIC_ADSENSE_PUB_ID=$NEXT_PUBLIC_ADSENSE_PUB_ID
 
-RUN pnpm --filter frontend build
+RUN --mount=type=cache,target=/app/app/frontend/.next/cache \
+    pnpm --filter frontend build
 
 FROM node:20-alpine AS runner
 WORKDIR /app

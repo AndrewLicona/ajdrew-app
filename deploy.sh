@@ -2,6 +2,10 @@
 set -e
 
 echo "🚀 Iniciando despliegue 100% aislado en Docker..."
+ 
+# Habilitar Docker BuildKit para caché avanzada y compilación paralela
+export DOCKER_BUILDKIT=1
+export COMPOSE_DOCKER_CLI_BUILD=1
 
 # 1. Ajustar permisos
 sudo chown -R $USER:$USER . || true
