@@ -19,13 +19,6 @@ COPY packages/shared ./packages/shared
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN pnpm --filter backend prisma:generate
 RUN pnpm --filter backend build
-RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    pnpm --filter backend --prod deploy /app/out
-RUN mkdir -p /app/out/dist && cp -r app/backend/dist/. /app/out/dist/
-RUN mkdir -p /app/out/public && cp -r app/backend/public/. /app/out/public/ || true
-RUN cp app/backend/create-admin.js /app/out/create-admin.js || true
-RUN cp app/backend/create-admin.ts /app/out/create-admin.ts || true
-RUN mkdir -p /app/out/prisma && cp -r app/backend/prisma/. /app/out/prisma/ || true
 
 FROM node:20-alpine AS runner
 WORKDIR /app
@@ -35,7 +28,24 @@ RUN apk add --no-cache openssl libc6-compat wget
 ENV NODE_ENV=production
 ENV PORT=3000
 
-COPY --from=builder /app/out ./
+# Copiar dependencias y artefactos compilados del monorepo
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/app/backend/node_modules ./app/backend/node_modules
+COPY --from=builder /app/app/backend/dist ./app/backend/dist
+COPY --from=builder /app/app/backend/prisma ./app/backend/prisma
+COPY --from=builder /app/app/backend/public ./app/backend/public
+COPY --from=builder /app/app/backend/package.json ./app/backend/package.json
+COPY --from=builder /app/app/backend/create-admin.js ./app/backend/create-admin.js
+COPY --from=builder /app/app/backend/create-admin.ts ./app/backend/create-admin.ts
+COPY --from=builder /app/packages/shared ./packages/shared
+
+# Enlaces en la raíz /app para compatibilidad con docker-compose y comandos relativos
+RUN ln -s /app/app/backend/dist /app/dist && \
+    ln -s /app/app/backend/prisma /app/prisma && \
+    ln -s /app/app/backend/create-admin.js /app/create-admin.js && \
+    ln -s /app/app/backend/create-admin.ts /app/create-admin.ts
+
+WORKDIR /app/app/backend
 
 EXPOSE 3000
 CMD ["sh", "-c", "npx prisma db push --accept-data-loss && node dist/main.js"]
