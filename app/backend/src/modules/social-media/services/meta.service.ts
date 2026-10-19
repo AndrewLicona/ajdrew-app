@@ -98,7 +98,7 @@ export class MetaService {
 
   private buildPostText(bracket: any, round: number): string {
     const gameEmoji = bracket.juego?.nombre?.includes('FC') ? '⚽' : '🎮';
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://ajdrew.site';
 
     return (
       `${gameEmoji} ¡NUEVA RONDA! ${bracket.tematica}\n\n` +

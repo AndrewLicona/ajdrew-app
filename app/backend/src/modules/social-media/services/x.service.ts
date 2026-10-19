@@ -83,7 +83,7 @@ export class XService {
 
   private buildTweetText(bracket: any, round: number): string {
     const gameEmoji = bracket.juego?.nombre?.includes('FC') ? '⚽' : '🎮';
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://ajdrew.site';
 
     if (round === 999) {
       return (

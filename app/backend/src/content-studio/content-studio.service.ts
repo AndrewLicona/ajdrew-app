@@ -429,7 +429,7 @@ export class ContentStudioService implements OnModuleInit {
     data: any,
   ): string {
     const frontendUrl =
-      process.env.FRONTEND_URL || 'http://localhost:3001';
+      process.env.FRONTEND_URL || 'https://ajdrew.site';
     switch (tipo) {
       case 'sorteo':
         return `${frontendUrl}/sorteos`;

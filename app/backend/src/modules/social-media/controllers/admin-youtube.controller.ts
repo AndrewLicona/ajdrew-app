@@ -48,12 +48,12 @@ export class AdminYoutubeController {
     try {
       await this.youtubeService.handleCallback(code);
       // Redirect back to frontend admin page
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+      const frontendUrl = process.env.FRONTEND_URL || 'https://ajdrew.site';
       return res.redirect(`${frontendUrl}/admin/youtube?success=true`);
     } catch (error: any) {
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+      const frontendUrl = process.env.FRONTEND_URL || 'https://ajdrew.site';
       return res.redirect(
-        `${frontendUrl}/admin/youtube?error=${error.message}`,
+        `${frontendUrl}/admin/youtube?error=${encodeURIComponent(error.message)}`,
       );
     }
   }

@@ -22,7 +22,7 @@ interface IntegrationStatus {
     loading: boolean;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 async function fetchCount(url: string): Promise<number> {
     try {

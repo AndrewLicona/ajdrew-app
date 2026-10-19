@@ -42,7 +42,7 @@ export class AuthGoogleController {
     try {
       const result = await this.authGoogleService.handleGoogleLogin(req.user);
 
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+      const frontendUrl = process.env.FRONTEND_URL || 'https://ajdrew.site';
       const params = new URLSearchParams({
         token: result.access_token,
         user: JSON.stringify(result.user),
@@ -50,7 +50,7 @@ export class AuthGoogleController {
 
       res.redirect(`${frontendUrl}/auth/callback?${params.toString()}`);
     } catch (error: any) {
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+      const frontendUrl = process.env.FRONTEND_URL || 'https://ajdrew.site';
       res.redirect(
         `${frontendUrl}/login?error=${encodeURIComponent(error.message)}`,
       );

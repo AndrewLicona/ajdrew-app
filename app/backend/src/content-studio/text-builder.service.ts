@@ -157,7 +157,7 @@ export class SocialTextBuilder {
     // URL pública si no está
     if (!enriched.url) {
       const frontendUrl =
-        process.env.FRONTEND_URL || 'http://localhost:3001';
+        process.env.FRONTEND_URL || 'https://ajdrew.site';
       if (data.slug) {
         enriched.url = `${frontendUrl}/${this.inferSection(data)}/${data.slug}`;
       } else if (data.id) {

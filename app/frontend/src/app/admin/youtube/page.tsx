@@ -192,7 +192,7 @@ export default function YoutubeAdminPage() {
                             </li>
                             <li className="flex gap-3 text-sm text-[var(--color-text-secondary)]">
                                 <div className="w-6 h-6 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center shrink-0 font-black text-[10px]">2</div>
-                                <span>Añade <code>http://localhost:3000/api/admin/social/youtube/callback</code> como URI de redirección.</span>
+                                <span>Añade <code>https://ajdrew.site/api/admin/social/youtube/callback</code> como URI de redirección.</span>
                             </li>
                             <li className="flex gap-3 text-sm text-[var(--color-text-secondary)]">
                                 <div className="w-6 h-6 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center shrink-0 font-black text-[10px]">3</div>

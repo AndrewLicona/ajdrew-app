@@ -32,7 +32,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'PLACEHOLDER_SECRET',
       callbackURL:
         process.env.GOOGLE_CALLBACK_URL ||
-        'http://localhost:3000/api/auth/google/callback',
+        `${process.env.FRONTEND_URL || 'https://ajdrew.site'}/api/auth/google/callback`,
       scope: [
         'email',
         'profile',

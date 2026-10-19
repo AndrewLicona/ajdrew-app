@@ -38,8 +38,8 @@ export default function XAdminPage() {
     const [formLoading, setFormLoading] = useState(false);
 
     const fetchAccounts = async () => {
-        const primaryUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-        const fallbackUrl = 'http://localhost:3000/api';
+        const primaryUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
+        const fallbackUrl = '/api';
 
         const tryFetch = async (url: string) => {
             const res = await fetch(`${url}/admin/x/accounts`);
@@ -80,7 +80,7 @@ export default function XAdminPage() {
         setFormLoading(true);
 
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
             const res = await fetch(`${apiUrl}/admin/x/accounts`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -140,7 +140,7 @@ export default function XAdminPage() {
 
         if (result.isConfirmed) {
             try {
-                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
                 await fetch(`${apiUrl}/admin/x/accounts/${id}`, {
                     method: 'DELETE'
                 });
@@ -163,7 +163,7 @@ export default function XAdminPage() {
 
     const handleTest = async (id: string) => {
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
             const res = await fetch(`${apiUrl}/admin/x/accounts/${id}/test`, {
                 method: 'POST'
             });

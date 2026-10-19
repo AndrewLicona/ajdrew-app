@@ -58,6 +58,9 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - FRONTEND_URL=${FRONTEND_URL:-https://ajdrew.site}
+      - BACKEND_URL=${BACKEND_URL:-https://ajdrew.site}
+      - GOOGLE_CALLBACK_URL=${GOOGLE_CALLBACK_URL:-https://ajdrew.site/api/auth/google/callback}
+      - YOUTUBE_REDIRECT_URI=${YOUTUBE_REDIRECT_URI:-https://ajdrew.site/api/admin/social/youtube/callback}
       - PORT=3000
       - BACKEND_INTERNAL_PORT=3000
       - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
@@ -81,7 +84,7 @@ services:
       context: .
       dockerfile: app/frontend/Dockerfile.prod
       args:
-        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://ajdrew.site/api}
         - NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=${NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}
         - NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=${NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET:-ajdrew_unsigned}
         - NEXT_PUBLIC_ENABLE_ADS=${NEXT_PUBLIC_ENABLE_ADS:-false}
@@ -95,7 +98,7 @@ services:
       - .env
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://ajdrew.site/api}
       - HOSTNAME=0.0.0.0
       - PORT=80
     ports:

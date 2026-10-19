@@ -152,7 +152,7 @@ export class DiscordService {
   }
 
   private buildTutorialEmbed(tutorial: any, imageUrl: string): DiscordEmbed {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://ajdrew.site';
 
     return {
       title: `📚 ${tutorial.titulo}`,
@@ -185,7 +185,7 @@ export class DiscordService {
     type: 'created' | 'winners',
     winnerNames?: string[],
   ): DiscordEmbed {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://ajdrew.site';
     const diasRestantes = Math.ceil(
       (sorteo.fechaFin.getTime() - Date.now()) / (1000 * 60 * 60 * 24),
     );
@@ -232,7 +232,7 @@ export class DiscordService {
   }
 
   private buildRankingEmbed(categoria: any, imageUrl: string): DiscordEmbed {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://ajdrew.site';
 
     return {
       title: `📊 Ranking: ${categoria.nombre}`,
@@ -305,7 +305,7 @@ export class DiscordService {
   ): DiscordEmbed {
     const matchCount = bracket.matches?.length || 0;
     const gameInfo = bracket.juego?.nombre || 'General';
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://ajdrew.site';
 
     if (round === 999) {
       return {
