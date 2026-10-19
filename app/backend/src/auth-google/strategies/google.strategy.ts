@@ -28,8 +28,14 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
 
   constructor() {
     super({
-      clientID: process.env.GOOGLE_CLIENT_ID || 'PLACEHOLDER_CLIENT_ID',
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'PLACEHOLDER_SECRET',
+      clientID:
+        process.env.GOOGLE_CLIENT_ID ||
+        process.env.YOUTUBE_CLIENT_ID ||
+        'PLACEHOLDER_CLIENT_ID',
+      clientSecret:
+        process.env.GOOGLE_CLIENT_SECRET ||
+        process.env.YOUTUBE_CLIENT_SECRET ||
+        'PLACEHOLDER_SECRET',
       callbackURL:
         process.env.GOOGLE_CALLBACK_URL ||
         `${process.env.FRONTEND_URL || 'https://ajdrew.site'}/api/auth/google/callback`,
