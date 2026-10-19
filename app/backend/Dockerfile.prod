@@ -4,8 +4,7 @@ WORKDIR /app
 RUN apk add --no-cache libc6-compat openssl && \
     npm install -g pnpm@10.18.0
 
-COPY pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY package.json ./
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json .npmrc* ./
 COPY app/backend/package.json ./app/backend/
 COPY packages/shared/package.json ./packages/shared/
 COPY app/backend/prisma ./app/backend/prisma
@@ -27,6 +26,7 @@ RUN apk add --no-cache openssl libc6-compat wget
 
 ENV NODE_ENV=production
 ENV PORT=3000
+ENV NODE_PATH=/app/app/backend/node_modules:/app/node_modules
 
 # Copiar dependencias y artefactos compilados del monorepo
 COPY --from=builder /app/node_modules ./node_modules
