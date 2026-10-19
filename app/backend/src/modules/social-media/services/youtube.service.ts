@@ -96,14 +96,40 @@ export class YoutubeService {
     round: number,
   ): Promise<string> {
     const tempDir = path.join(process.cwd(), 'temp');
-    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
+    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
 
-    const outputPath = path.join(tempDir, `yt_${bracketId}_r${round}.mp4`);
+    const outputPath = path.join(tempDir, `yt_${bracketId}_r${round}_${Date.now()}.mp4`);
+    let inputPath = imageUrl;
+    let downloadedTempFile: string | null = null;
+
+    // Si es una URL externa (http/https), descargarla primero a disco con stream
+    // para evitar que CDN externas (Unsplash, Cloudinary, etc.) bloqueen a ffmpeg por User-Agent o cabeceras
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      const ext = path.extname(new URL(imageUrl).pathname) || '.jpg';
+      downloadedTempFile = path.join(tempDir, `img_${Date.now()}${ext}`);
+      try {
+        const response = await fetch(imageUrl, {
+          headers: {
+            'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          },
+        });
+        if (!response.ok) {
+          throw new Error(`Failed to download image from ${imageUrl}: ${response.statusText}`);
+        }
+        const arrayBuffer = await response.arrayBuffer();
+        fs.writeFileSync(downloadedTempFile, Buffer.from(arrayBuffer));
+        inputPath = downloadedTempFile;
+      } catch (dlErr: any) {
+        this.logger.error(`Error downloading image for ffmpeg: ${dlErr.message}`);
+        if (downloadedTempFile && fs.existsSync(downloadedTempFile)) {
+          fs.unlinkSync(downloadedTempFile);
+        }
+        throw dlErr;
+      }
+    }
 
     return new Promise((resolve, reject) => {
-      // Si la URL es de Cloudinary u otra externa, `ffmpeg` puede leerla directamente por HTTPS.
-      const inputPath = imageUrl;
-
       this.logger.log(
         `Creating video from image. Input: ${inputPath}, Output: ${outputPath}`,
       );
@@ -121,10 +147,16 @@ export class YoutubeService {
         })
         .on('end', () => {
           this.logger.log(`Video created successfully: ${outputPath}`);
+          if (downloadedTempFile && fs.existsSync(downloadedTempFile)) {
+            try { fs.unlinkSync(downloadedTempFile); } catch {}
+          }
           resolve(outputPath);
         })
         .on('error', (err) => {
           this.logger.error(`FFMPEG Error: ${err.message}`);
+          if (downloadedTempFile && fs.existsSync(downloadedTempFile)) {
+            try { fs.unlinkSync(downloadedTempFile); } catch {}
+          }
           reject(err);
         })
         .save(outputPath);
