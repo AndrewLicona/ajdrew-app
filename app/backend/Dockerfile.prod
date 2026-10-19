@@ -33,15 +33,16 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/app/backend/node_modules ./app/backend/node_modules
 COPY --from=builder /app/app/backend/dist ./app/backend/dist
 COPY --from=builder /app/app/backend/prisma ./app/backend/prisma
-COPY --from=builder /app/app/backend/public ./app/backend/public
 COPY --from=builder /app/app/backend/package.json ./app/backend/package.json
 COPY --from=builder /app/app/backend/create-admin.js ./app/backend/create-admin.js
 COPY --from=builder /app/app/backend/create-admin.ts ./app/backend/create-admin.ts
 COPY --from=builder /app/packages/shared ./packages/shared
 
-# Enlaces en la raíz /app para compatibilidad con docker-compose y comandos relativos
-RUN ln -s /app/app/backend/dist /app/dist && \
+# Crear carpeta public y enlaces en la raíz /app para compatibilidad
+RUN mkdir -p /app/app/backend/public && \
+    ln -s /app/app/backend/dist /app/dist && \
     ln -s /app/app/backend/prisma /app/prisma && \
+    ln -s /app/app/backend/public /app/public && \
     ln -s /app/app/backend/create-admin.js /app/create-admin.js && \
     ln -s /app/app/backend/create-admin.ts /app/create-admin.ts
 
