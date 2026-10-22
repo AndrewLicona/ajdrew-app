@@ -390,6 +390,13 @@ export class SocialPublicationListener {
       const cloudinaryUrl = await this.uploadToCloudinary(imageBuffer, `rankings/${tabla.id}/created`);
       const finalImageUrl = cloudinaryUrl || tabla.image;
 
+      if (finalImageUrl) {
+        await this.prisma.tablaCalificacion.update({
+          where: { id: tabla.id },
+          data: { image: finalImageUrl },
+        });
+      }
+
       const textoDefault = `⭐ ¡NUEVA TABLA DE CALIFICACIÓN! ${tabla.nombre}\n\nComienza a calificar y puntuar tus elementos favoritos en: ${process.env.FRONTEND_URL || 'https://ajdrew.site'}/calificaciones/${tabla.id}\n\n#AJDREW #Calificaciones`;
 
       if (finalImageUrl) {
