@@ -205,9 +205,9 @@ export class VotacionesService {
         ganadorId = match.itemAId;
       } else if (match.votosB > match.votosA) {
         ganadorId = match.itemBId;
-      } else if (match.votosA > 0) {
-        // Resolve ties consistently, without advancing an unvoted match by default.
-        ganadorId = match.itemAId;
+      } else {
+        // Tie or 0 votes: default to itemA (or itemB if itemA is missing)
+        ganadorId = match.itemAId || match.itemBId;
       }
       if (ganadorId && !winnersIds.includes(ganadorId)) winnersIds.push(ganadorId);
 

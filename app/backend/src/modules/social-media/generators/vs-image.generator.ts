@@ -89,11 +89,11 @@ export class VsImageGenerator {
   <!-- HEADER -->
   <rect x="0" y="0" width="${S}" height="${headerH}" fill="url(#hdr)"/>
   <rect x="0" y="0" width="${S}" height="4" fill="url(#ftr)"/>
-  <text x="${S/2}" y="50" font-family="Arial Black,sans-serif" font-size="17" font-weight="900"
+  <text x="${S/2}" y="50" font-family="sans-serif" font-size="17" font-weight="900"
         fill="${G}" text-anchor="middle" letter-spacing="4">${title}</text>
   <rect x="${S/2-76}" y="62" width="152" height="30" rx="15"
         fill="${G}" fill-opacity="0.14" stroke="${G}" stroke-opacity="0.5" stroke-width="1.5"/>
-  <text x="${S/2}" y="82" font-family="Arial Black,sans-serif" font-size="12" font-weight="900"
+  <text x="${S/2}" y="82" font-family="sans-serif" font-size="12" font-weight="900"
         fill="#86efac" text-anchor="middle" letter-spacing="3">${roundLabel}</text>
   <line x1="40" y1="${headerH-1}" x2="${S-40}" y2="${headerH-1}" stroke="${G}" stroke-opacity="0.12" stroke-width="1"/>
 
@@ -102,23 +102,23 @@ export class VsImageGenerator {
   <line x1="${sideW+centerW}" y1="${headerH}" x2="${sideW+centerW}" y2="${nameBg + nameBarH}" stroke="${G}" stroke-opacity="0.6" stroke-width="2"/>
 
   <!-- VS text centered on photo zone -->
-  <text x="${sideW+centerW/2}" y="${photoY+photoH/2+30}" font-family="Arial Black,sans-serif" font-size="84" font-weight="900"
+  <text x="${sideW+centerW/2}" y="${photoY+photoH/2+30}" font-family="sans-serif" font-size="84" font-weight="900"
         fill="${G}" text-anchor="middle" opacity="0.18" filter="url(#glow)">VS</text>
-  <text x="${sideW+centerW/2}" y="${photoY+photoH/2+30}" font-family="Arial Black,sans-serif" font-size="84" font-weight="900"
+  <text x="${sideW+centerW/2}" y="${photoY+photoH/2+30}" font-family="sans-serif" font-size="84" font-weight="900"
         fill="#ffffff" text-anchor="middle">VS</text>
   <circle cx="${sideW+centerW/2}" cy="${photoY+photoH/2-56}" r="5" fill="${G}" opacity="0.85"/>
 
   <!-- NAME BARS (solid bg) -->
   <rect x="0" y="${nameBg}" width="${sideW}" height="${nameBarH}" fill="${BG}" fill-opacity="0.94"/>
   <rect x="${sideW+centerW}" y="${nameBg}" width="${sideW}" height="${nameBarH}" fill="${BG}" fill-opacity="0.94"/>
-  <text x="${sideW/2}" y="${nameBg+nameBarH/2+7}" font-family="Arial Black,sans-serif" font-size="20" font-weight="900"
+  <text x="${sideW/2}" y="${nameBg+nameBarH/2+7}" font-family="sans-serif" font-size="20" font-weight="900"
         fill="#ffffff" text-anchor="middle">${nameA}</text>
-  <text x="${sideW+centerW+sideW/2}" y="${nameBg+nameBarH/2+7}" font-family="Arial Black,sans-serif" font-size="20" font-weight="900"
+  <text x="${sideW+centerW+sideW/2}" y="${nameBg+nameBarH/2+7}" font-family="sans-serif" font-size="20" font-weight="900"
         fill="#ffffff" text-anchor="middle">${nameB}</text>
 
   <!-- FOOTER -->
   <rect x="0" y="${S-footerH}" width="${S}" height="${footerH}" fill="url(#ftr)"/>
-  <text x="${S/2}" y="${S-footerH/2+8}" font-family="Arial Black,sans-serif" font-size="16" font-weight="900"
+  <text x="${S/2}" y="${S-footerH/2+8}" font-family="sans-serif" font-size="16" font-weight="900"
         fill="#000000" fill-opacity="0.75" text-anchor="middle" letter-spacing="6">AJDREW.SITE</text>
 </svg>`;
 
@@ -207,16 +207,16 @@ export class VsImageGenerator {
         <!-- Right Photo Fade -->
         <rect x="${photoRightX}" y="${y+8}" width="${photoSize}" height="${photoSize}" fill="url(#photoFadeR)"/>
         
-        <text x="${photoLeftX + photoSize + 20}" y="${y + cardH / 2 + nameFontSize / 3}" font-family="Arial Black,sans-serif" font-size="${nameFontSize}" fill="#ffffff" font-weight="900" text-anchor="start">${nameA}</text>
-        
-        <text x="${S/2}" y="${y + cardH / 2 + vsFontSize / 3}" font-family="Arial Black,sans-serif" font-size="${vsFontSize}" fill="${G}" font-weight="900" text-anchor="middle">VS</text>
-        
-        <text x="${photoRightX - 20}" y="${y + cardH / 2 + nameFontSize / 3}" font-family="Arial Black,sans-serif" font-size="${nameFontSize}" fill="#ffffff" font-weight="900" text-anchor="end">${nameB}</text>
+        <text x="${photoLeftX + photoSize + 20}" y="${y + cardH / 2 + nameFontSize / 3}" font-family="sans-serif" font-size="${nameFontSize}" fill="#ffffff" font-weight="900" text-anchor="start">${nameA}</text>
+
+        <text x="${S/2}" y="${y + cardH / 2 + vsFontSize / 3}" font-family="sans-serif" font-size="${vsFontSize}" fill="${G}" font-weight="900" text-anchor="middle">VS</text>
+
+        <text x="${photoRightX - 20}" y="${y + cardH / 2 + nameFontSize / 3}" font-family="sans-serif" font-size="${nameFontSize}" fill="#ffffff" font-weight="900" text-anchor="end">${nameB}</text>
         `;
     }
 
     const title = this.truncate(this.esc(tournamentName), 25);
-    
+
     const bgSvg = `<svg width="${S}" height="${S}" xmlns="http://www.w3.org/2000/svg">
   ${cardsBgSvg}
 </svg>`;
@@ -237,16 +237,16 @@ export class VsImageGenerator {
   </defs>
 
   <!-- HEADER -->
-  <text x="${S/2}" y="50" font-family="Arial Black,sans-serif" font-size="16" fill="${G}" font-weight="900" text-anchor="middle" letter-spacing="4">NUEVA RONDA DE VOTACIÓN</text>
-  <text x="${S/2}" y="100" font-family="Arial Black,sans-serif" font-size="42" fill="#ffffff" font-weight="900" text-anchor="middle">${title}</text>
-  <text x="${S/2}" y="140" font-family="Arial Black,sans-serif" font-size="20" fill="#aaaaaa" font-weight="900" text-anchor="middle" letter-spacing="2">RONDA ${roundNumber} - EN VIVO</text>
+  <text x="${S/2}" y="50" font-family="sans-serif" font-size="16" fill="${G}" font-weight="900" text-anchor="middle" letter-spacing="4">NUEVA RONDA DE VOTACIÓN</text>
+  <text x="${S/2}" y="100" font-family="sans-serif" font-size="42" fill="#ffffff" font-weight="900" text-anchor="middle">${title}</text>
+  <text x="${S/2}" y="140" font-family="sans-serif" font-size="20" fill="#aaaaaa" font-weight="900" text-anchor="middle" letter-spacing="2">RONDA ${roundNumber} - EN VIVO</text>
 
   <!-- MATCHES OVERLAY -->
   ${cardsFgSvg}
 
   <!-- FOOTER -->
   <rect x="0" y="${S-footerH}" width="${S}" height="${footerH}" fill="${G}"/>
-  <text x="${S/2}" y="${S - footerH/2 + 8}" font-family="Arial Black,sans-serif" font-size="20" fill="#000000" font-weight="900" text-anchor="middle" letter-spacing="3">¡ENTRA Y VOTA AHORA!</text>
+  <text x="${S/2}" y="${S - footerH/2 + 8}" font-family="sans-serif" font-size="20" fill="#000000" font-weight="900" text-anchor="middle" letter-spacing="3">¡ENTRA Y VOTA AHORA!</text>
 </svg>`;
 
     composite.push({ input: Buffer.from(fgSvg), top: 0, left: 0 });
@@ -353,11 +353,11 @@ export class VsImageGenerator {
   <!-- HEADER -->
   <rect x="0" y="0" width="${S}" height="${headerH}" fill="url(#hdr)"/>
   <rect x="0" y="0" width="${S}" height="4" fill="url(#ftr)"/>
-  <text x="${S/2}" y="50" font-family="Arial Black,sans-serif" font-size="17" font-weight="900"
+  <text x="${S/2}" y="50" font-family="sans-serif" font-size="17" font-weight="900"
         fill="${G}" text-anchor="middle" letter-spacing="4">${title}</text>
   <rect x="${S/2-92}" y="62" width="184" height="30" rx="15"
         fill="${G}" fill-opacity="0.14" stroke="${G}" stroke-opacity="0.5" stroke-width="1.5"/>
-  <text x="${S/2}" y="82" font-family="Arial Black,sans-serif" font-size="12" font-weight="900"
+  <text x="${S/2}" y="82" font-family="sans-serif" font-size="12" font-weight="900"
         fill="#86efac" text-anchor="middle" letter-spacing="3">🏆 GRAN FINAL 🏆</text>
   <line x1="40" y1="${headerH-1}" x2="${S-40}" y2="${headerH-1}" stroke="${G}" stroke-opacity="0.12" stroke-width="1"/>
 
@@ -366,30 +366,30 @@ export class VsImageGenerator {
   <line x1="${sideW+centerW}" y1="${headerH}" x2="${sideW+centerW}" y2="${nameBg + nameBarH}" stroke="${G}" stroke-opacity="0.6" stroke-width="2"/>
 
   <!-- CAMPEÓN crown badge on champion side -->
-  <text x="${sideW/2}" y="${photoY + 46}" font-family="Arial,sans-serif" font-size="36" text-anchor="middle">👑</text>
+  <text x="${sideW/2}" y="${photoY + 46}" font-family="sans-serif" font-size="36" text-anchor="middle">👑</text>
   <rect x="${sideW/2 - 58}" y="${photoY + 52}" width="116" height="24" rx="12"
         fill="${G}" fill-opacity="0.9"/>
-  <text x="${sideW/2}" y="${photoY + 69}" font-family="Arial Black,sans-serif" font-size="11" font-weight="900"
+  <text x="${sideW/2}" y="${photoY + 69}" font-family="sans-serif" font-size="11" font-weight="900"
         fill="#000000" text-anchor="middle" letter-spacing="2">CAMPEÓN</text>
 
   <!-- VS text centered -->
-  <text x="${sideW+centerW/2}" y="${photoY+photoH/2+30}" font-family="Arial Black,sans-serif" font-size="84" font-weight="900"
+  <text x="${sideW+centerW/2}" y="${photoY+photoH/2+30}" font-family="sans-serif" font-size="84" font-weight="900"
         fill="${G}" text-anchor="middle" opacity="0.18" filter="url(#glow)">VS</text>
-  <text x="${sideW+centerW/2}" y="${photoY+photoH/2+30}" font-family="Arial Black,sans-serif" font-size="84" font-weight="900"
+  <text x="${sideW+centerW/2}" y="${photoY+photoH/2+30}" font-family="sans-serif" font-size="84" font-weight="900"
         fill="#ffffff" text-anchor="middle">VS</text>
 
   <!-- NAME BARS -->
   <rect x="0" y="${nameBg}" width="${sideW}" height="${nameBarH}" fill="${G}" fill-opacity="0.92"/>
   <rect x="${sideW+centerW}" y="${nameBg}" width="${sideW}" height="${nameBarH}" fill="${BG}" fill-opacity="0.94"/>
 
-  <text x="${sideW/2}" y="${nameBg+nameBarH/2+7}" font-family="Arial Black,sans-serif" font-size="20" font-weight="900"
+  <text x="${sideW/2}" y="${nameBg+nameBarH/2+7}" font-family="sans-serif" font-size="20" font-weight="900"
         fill="#000000" text-anchor="middle">${champName}</text>
-  <text x="${sideW+centerW+sideW/2}" y="${nameBg+nameBarH/2+7}" font-family="Arial Black,sans-serif" font-size="16" font-weight="900"
+  <text x="${sideW+centerW+sideW/2}" y="${nameBg+nameBarH/2+7}" font-family="sans-serif" font-size="16" font-weight="900"
         fill="#ffffff" text-anchor="middle">${finalistName}</text>
 
   <!-- FOOTER -->
   <rect x="0" y="${S-footerH}" width="${S}" height="${footerH}" fill="url(#ftr)"/>
-  <text x="${S/2}" y="${S-footerH/2+8}" font-family="Arial Black,sans-serif" font-size="16" font-weight="900"
+  <text x="${S/2}" y="${S-footerH/2+8}" font-family="sans-serif" font-size="16" font-weight="900"
         fill="#000000" fill-opacity="0.75" text-anchor="middle" letter-spacing="6">AJDREW.SITE</text>
 </svg>`;
 
@@ -439,14 +439,14 @@ export class VsImageGenerator {
   </defs>
   <rect x="0" y="0" width="${S}" height="${headerH}" fill="${BG}" fill-opacity="0.97"/>
   <rect x="0" y="0" width="${S}" height="4" fill="url(#ftr)"/>
-  <text x="${S/2}" y="50" font-family="Arial Black,sans-serif" font-size="15" fill="${G}" text-anchor="middle" letter-spacing="5">${title}</text>
+  <text x="${S/2}" y="50" font-family="sans-serif" font-size="15" font-weight="900" fill="${G}" text-anchor="middle" letter-spacing="5">${title}</text>
   <rect x="${S/2-90}" y="62" width="180" height="30" rx="15" fill="${G}" fill-opacity="0.15" stroke="${G}" stroke-opacity="0.5" stroke-width="1.5"/>
-  <text x="${S/2}" y="82" font-family="Arial Black,sans-serif" font-size="12" font-weight="900" fill="#86efac" text-anchor="middle" letter-spacing="3">🏆 CAMPEÓN 🏆</text>
+  <text x="${S/2}" y="82" font-family="sans-serif" font-size="12" font-weight="900" fill="#86efac" text-anchor="middle" letter-spacing="3">🏆 CAMPEÓN 🏆</text>
   <rect x="0" y="${headerH + photoH}" width="${S}" height="${nameBarH}" fill="${BG}"/>
-  <text x="${S/2}" y="${headerH + photoH + 30}" font-family="Arial,sans-serif" font-size="28" text-anchor="middle">👑</text>
-  <text x="${S/2}" y="${headerH + photoH + 72}" font-family="Arial Black,sans-serif" font-size="36" font-weight="900" fill="${G}" text-anchor="middle" filter="url(#glow)">${champName}</text>
+  <text x="${S/2}" y="${headerH + photoH + 30}" font-family="sans-serif" font-size="28" text-anchor="middle">👑</text>
+  <text x="${S/2}" y="${headerH + photoH + 72}" font-family="sans-serif" font-size="36" font-weight="900" fill="${G}" text-anchor="middle" filter="url(#glow)">${champName}</text>
   <rect x="0" y="${S-footerH}" width="${S}" height="${footerH}" fill="url(#ftr)"/>
-  <text x="${S/2}" y="${S-footerH/2+8}" font-family="Arial Black,sans-serif" font-size="16" fill="#000000" fill-opacity="0.75" text-anchor="middle" letter-spacing="6">AJDREW.SITE</text>
+  <text x="${S/2}" y="${S-footerH/2+8}" font-family="sans-serif" font-size="16" font-weight="900" fill="#000000" fill-opacity="0.75" text-anchor="middle" letter-spacing="6">AJDREW.SITE</text>
 </svg>`;
 
     composite.push({ input: Buffer.from(svg), top: 0, left: 0 });

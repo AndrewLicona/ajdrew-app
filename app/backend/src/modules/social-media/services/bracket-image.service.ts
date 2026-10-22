@@ -81,9 +81,9 @@ export class BracketImageService {
         if (alignRight) {
           // Name on left, image on right edge
           const nameX = slotX - colW + thumbSize + 16;
-          slotsSvg += `<text x="${nameX}" y="${slotY + thumbSize / 2 + 5}" font-family="Arial Black, sans-serif" font-size="14" fill="#ffffff" dominant-baseline="middle">${itemName}</text>`;
+          slotsSvg += `<text x="${nameX}" y="${slotY + thumbSize / 2 + 5}" font-family="sans-serif" font-size="14" font-weight="900" fill="#ffffff" dominant-baseline="middle">${itemName}</text>`;
         } else {
-          slotsSvg += `<text x="${textX}" y="${slotY + thumbSize / 2 + 5}" font-family="Arial Black, sans-serif" font-size="14" fill="#ffffff" dominant-baseline="middle">${itemName}</text>`;
+          slotsSvg += `<text x="${textX}" y="${slotY + thumbSize / 2 + 5}" font-family="sans-serif" font-size="14" font-weight="900" fill="#ffffff" dominant-baseline="middle">${itemName}</text>`;
         }
       };
 
@@ -127,7 +127,7 @@ export class BracketImageService {
 
       // Center trophy placeholder
       linesSvg += `<rect x="${centerX - 64}" y="${padY + (matches.length * slotH) / 2 - 80}" width="128" height="128" rx="16" fill="#0a1a35" stroke="#60a5fa" stroke-width="2.5" stroke-opacity="0.7"/>`;
-      linesSvg += `<text x="${centerX}" y="${padY + (matches.length * slotH) / 2 - 6}" font-family="Arial Black, sans-serif" font-size="40" text-anchor="middle">🏆</text>`;
+      linesSvg += `<text x="${centerX}" y="${padY + (matches.length * slotH) / 2 - 6}" font-family="sans-serif" font-size="40" text-anchor="middle">🏆</text>`;
 
       // Build item slots
       for (let i = 0; i < leftItems.length; i++) {
@@ -171,8 +171,8 @@ export class BracketImageService {
 
   <!-- Header -->
   <rect x="0" y="0" width="${S}" height="125" fill="#3b82f6" opacity="0.08"/>
-  <text x="${S / 2}" y="58" font-family="Arial Black, sans-serif" font-size="40" font-weight="900" fill="#ffffff" text-anchor="middle">${tematica}</text>
-  <text x="${S / 2}" y="92" font-family="Arial, sans-serif" font-size="16" fill="#60a5fa" text-anchor="middle" letter-spacing="7">RONDA ${round} · BRACKET</text>
+  <text x="${S / 2}" y="58" font-family="sans-serif" font-size="40" font-weight="900" fill="#ffffff" text-anchor="middle">${tematica}</text>
+  <text x="${S / 2}" y="92" font-family="sans-serif" font-size="16" font-weight="900" fill="#60a5fa" text-anchor="middle" letter-spacing="7">RONDA ${round} · BRACKET</text>
   <line x1="60" y1="115" x2="${S - 60}" y2="115" stroke="#3b82f6" stroke-opacity="0.2" stroke-width="1"/>
 
   <!-- Bracket lines -->
@@ -183,7 +183,7 @@ export class BracketImageService {
 
   <!-- Bottom bar -->
   <rect x="0" y="${S - 52}" width="${S}" height="52" fill="url(#accent)"/>
-  <text x="${S / 2}" y="${S - 17}" font-family="Arial Black, sans-serif" font-size="18" fill="#000000" text-anchor="middle" letter-spacing="4">¡ENTRA Y VOTA EN AJDREW.SITE!</text>
+  <text x="${S / 2}" y="${S - 17}" font-family="sans-serif" font-size="18" font-weight="900" fill="#000000" text-anchor="middle" letter-spacing="4">¡ENTRA Y VOTA EN AJDREW.SITE!</text>
   <rect x="0" y="${S - 3}" width="${S}" height="3" fill="#60a5fa"/>
 </svg>`;
 
