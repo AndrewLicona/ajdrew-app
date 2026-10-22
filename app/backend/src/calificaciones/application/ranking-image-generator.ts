@@ -99,7 +99,7 @@ export class RankingImageGenerator {
 
       // Name text
       const name = this.truncateText(item.itemName.toUpperCase(), 15);
-      cardsSvg += `<text x="${cx + cardW / 2}" y="${metaY + nameBarH / 2 + 6}" font-family="Arial Black, sans-serif" font-size="15" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="0.3">${name}</text>`;
+      cardsSvg += `<text x="${cx + cardW / 2}" y="${metaY + nameBarH / 2 + 6}" font-family="sans-serif" font-size="15" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="0.3">${name}</text>`;
 
       // Rank badge
       const medalColor = medalColors[i] ?? 'rgba(255,255,255,0.2)';
@@ -107,7 +107,7 @@ export class RankingImageGenerator {
       const by = cy + 8;
       const br = 16;
       cardsSvg += `<circle cx="${bx + br}" cy="${by + br}" r="${br}" fill="rgba(0,0,0,0.7)" stroke="${medalColor}" stroke-width="2"/>`;
-      cardsSvg += `<text x="${bx + br}" y="${by + br + 5}" font-family="Arial Black, sans-serif" font-size="13" font-weight="900" fill="${medalColor}" text-anchor="middle">${i + 1}</text>`;
+      cardsSvg += `<text x="${bx + br}" y="${by + br + 5}" font-family="sans-serif" font-size="13" font-weight="900" fill="${medalColor}" text-anchor="middle">${i + 1}</text>`;
 
       // Thin green border around card
       cardsSvg += `<rect x="${cx}" y="${cy}" width="${cardW}" height="${cardH}" fill="none" stroke="${G}" stroke-opacity="0.2" stroke-width="1" rx="2"/>`;
@@ -134,13 +134,13 @@ export class RankingImageGenerator {
   <rect x="0" y="0" width="${S}" height="5" fill="url(#accent)"/>
 
   <!-- RANKING OFICIAL label (offset right to clear 60px logo) -->
-  <text x="${padX + 75}" y="75" font-family="Arial Black, sans-serif" font-size="12" fill="${G}" letter-spacing="5" dominant-baseline="middle">RANKING OFICIAL</text>
+  <text x="${padX + 75}" y="75" font-family="sans-serif" font-size="12" font-weight="900" fill="${G}" letter-spacing="5" dominant-baseline="middle">RANKING OFICIAL</text>
 
   <!-- Separator -->
   <line x1="${padX}" y1="92" x2="${S - padX}" y2="92" stroke="${G}" stroke-opacity="0.15" stroke-width="1"/>
 
   <!-- Title -->
-  <text x="${S / 2}" y="118" font-family="Arial Black, sans-serif" font-size="32" font-weight="900" fill="#ffffff" text-anchor="middle">Top ${sorted.length}: ${this.escapeXml(title)}</text>
+  <text x="${S / 2}" y="118" font-family="sans-serif" font-size="32" font-weight="900" fill="#ffffff" text-anchor="middle">Top ${sorted.length}: ${this.escapeXml(title)}</text>
 
   <!-- Bottom border of header -->
   <line x1="${padX}" y1="${headerH - 2}" x2="${S - padX}" y2="${headerH - 2}" stroke="${G}" stroke-opacity="0.10" stroke-width="1"/>
@@ -150,7 +150,7 @@ export class RankingImageGenerator {
 
   <!-- Footer -->
   <rect x="0" y="${S - footerH}" width="${S}" height="${footerH}" fill="url(#accent)"/>
-  <text x="${S / 2}" y="${S - footerH / 2 + 7}" font-family="Arial Black, sans-serif" font-size="17" fill="#000000" text-anchor="middle" letter-spacing="5">AJDREW.SITE</text>
+  <text x="${S / 2}" y="${S - footerH / 2 + 7}" font-family="sans-serif" font-size="17" font-weight="900" fill="#000000" text-anchor="middle" letter-spacing="5">AJDREW.SITE</text>
   <rect x="0" y="${S - 3}" width="${S}" height="3" fill="${G}"/>
 </svg>`;
 
