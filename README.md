@@ -37,6 +37,3 @@ AJDREW es una plataforma integral de gestión de contenidos de videojuegos, cali
 - **Frontend**: Next.js 14/15, Tailwind CSS, Framer Motion, Lucide React, SweetAlert2.
 - **Contenerización**: Docker & Docker Compose para despliegue en producción.
 
----
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-Co-Authored-By: Claude Code <noreply@anthropic.com>
