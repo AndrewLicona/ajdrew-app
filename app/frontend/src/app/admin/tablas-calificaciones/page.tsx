@@ -149,62 +149,72 @@ export default function TablasCalificacionesAdminPage() {
                     <p>No has creado ninguna Tabla de Calificaciones aún.</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {tablas.map((tabla) => {
                         const imgSrc = getImgSrc(tabla.image);
                         return (
-                            <div key={tabla.id} className="bg-[var(--color-card)] rounded-2xl border border-white/5 overflow-hidden shadow-lg hover:border-[var(--color-primary)]/30 transition-all group">
-
-                                {/* Imagen principal de la card, como en Votaciones */}
-                                <div className="relative h-44 w-full overflow-hidden bg-black/40 border-b border-white/10">
-                                    {imgSrc ? (
-                                        <button onClick={() => setExpandedImage(imgSrc)} className="w-full h-full block group" title="Ver imagen generada">
-                                            <img src={imgSrc} alt={tabla.nombre} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-                                        </button>
-                                    ) : (
-                                        <div className="flex items-center justify-center w-full h-full text-white/20"><ListOrdered size={40} /></div>
-                                    )}
-                                    <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between pointer-events-none">
-                                        <span className="px-2 py-1 bg-black/60 rounded-lg text-[9px] font-black uppercase tracking-widest text-[var(--color-primary)]">{tabla.juego.nombre}</span>
-                                        <span className="text-[9px] font-black uppercase text-white/50">{tabla._count?.items || 0} ítems</span>
-                                    </div>
-                                </div>
-
-                                <div className="p-5 flex items-start gap-4">
-
-                                {/* Info */}
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="text-sm font-black text-white uppercase italic tracking-tighter truncate">{tabla.nombre}</h3>
-                                    <p className="text-[10px] text-[var(--color-primary)] font-bold uppercase tracking-widest mt-1">{tabla.juego.nombre}</p>
-                                    <div className="flex flex-wrap gap-2 mt-3">
-                                        <span className="px-2 py-1 bg-white/5 rounded text-[9px] font-black uppercase text-white/40 border border-white/5">
-                                            {tabla._count?.items || 0} Ítems
-                                        </span>
-                                        {tabla.categoria && (
-                                            <span className="px-2 py-1 bg-[var(--color-primary)]/10 rounded text-[9px] font-black uppercase text-[var(--color-primary)] border border-[var(--color-primary)]/20">
-                                                {tabla.categoria.nombre}
-                                            </span>
+                            <div key={tabla.id} className="bg-[var(--color-card)] rounded-2xl border border-white/5 hover:border-[var(--color-primary)]/30 transition-all shadow-lg">
+                                <div className="p-3 flex items-center gap-3">
+                                    {/* Imagen principal miniatura / visor */}
+                                    <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-black/40 border border-white/10 shrink-0">
+                                        {imgSrc ? (
+                                            <button onClick={() => setExpandedImage(imgSrc)} className="w-full h-full block group" title="Ver imagen de calificación">
+                                                <img src={imgSrc} alt={tabla.nombre} className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-110" />
+                                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all flex items-center justify-center">
+                                                    <span className="opacity-0 group-hover:opacity-100 text-white text-[8px] font-black uppercase tracking-wider transition-opacity">VER</span>
+                                                </div>
+                                            </button>
+                                        ) : (
+                                            <div className="flex items-center justify-center w-full h-full text-white/20"><ListOrdered size={20} /></div>
                                         )}
                                     </div>
-                                    <div className="text-[10px] text-white/30 truncate mt-2">/{tabla.slug}</div>
-                                </div>
 
-                                {/* Actions */}
-                                <div className="flex flex-col gap-2 shrink-0">
-                                    <button
-                                        onClick={() => handleEditClick(tabla)}
-                                        className="p-3 bg-white/5 hover:bg-[var(--color-primary)]/20 hover:text-[var(--color-primary)] text-white/50 rounded-xl transition-colors"
-                                    >
-                                        <Edit2 size={16} />
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(tabla.id, tabla.nombre)}
-                                        className="p-3 bg-white/5 hover:bg-red-500/20 hover:text-red-500 text-white/50 rounded-xl transition-colors"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
-                                </div>
+                                    {/* Info */}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                                            <h3 className="text-sm font-black text-white uppercase italic tracking-tighter truncate leading-none">{tabla.nombre}</h3>
+                                            <span className="px-2 py-0.5 bg-green-500/10 text-green-500 border border-green-500/20 text-[7px] font-black rounded-md uppercase tracking-widest">
+                                                ACTIVA
+                                            </span>
+                                        </div>
+
+                                        <div className="flex items-center gap-2 flex-wrap mb-2">
+                                            <span className="text-[10px] font-black text-white/20 uppercase tracking-[2px] truncate">{tabla.juego.nombre}</span>
+                                            <div className="w-1 h-1 rounded-full bg-white/10" />
+                                            <span className="text-[8px] font-black text-[var(--color-primary)]/60 uppercase">{tabla._count?.items || 0} ÍTEMS</span>
+                                            {tabla.categoria && (
+                                                <>
+                                                    <div className="w-1 h-1 rounded-full bg-white/10" />
+                                                    <span className="text-[8px] font-black text-white/40 uppercase">{tabla.categoria.nombre}</span>
+                                                </>
+                                            )}
+                                        </div>
+
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex items-center gap-1.5">
+                                                <ListOrdered size={12} className="text-[var(--color-primary)] opacity-60" />
+                                                <span className="text-[10px] font-black text-white/40">{tabla._count?.items || 0} ítems registrados</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="flex items-center gap-1 shrink-0">
+                                        <button
+                                            onClick={() => handleEditClick(tabla)}
+                                            className="p-2.5 bg-white/5 hover:bg-[var(--color-primary)]/20 hover:text-[var(--color-primary)] text-white/50 rounded-xl transition-colors"
+                                            title="Editar"
+                                        >
+                                            <Edit2 size={16} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(tabla.id, tabla.nombre)}
+                                            className="p-2.5 bg-white/5 hover:bg-red-500/20 hover:text-red-500 text-white/50 rounded-xl transition-colors"
+                                            title="Eliminar"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         );
