@@ -53,6 +53,20 @@ export class YoutubeService {
     const id = metadata?.bracketId || metadata?.sorteoId || 'GENERIC';
     const round = metadata?.round || 0;
 
+    const frontendUrl = process.env.FRONTEND_URL || 'https://ajdrew.site';
+    let linkUrl = frontendUrl;
+    if (metadata?.bracketId && metadata.bracketId !== 'GENERIC' && metadata.bracketId !== 'TEST') {
+      linkUrl = `${frontendUrl}/votaciones/${metadata.bracketId}`;
+    } else if (metadata?.sorteoId) {
+      linkUrl = `${frontendUrl}/sorteos/${metadata.sorteoId}`;
+    } else if (metadata?.tutorialId) {
+      linkUrl = `${frontendUrl}/tutoriales/${metadata.tutorialId}`;
+    } else if (metadata?.tablaId) {
+      linkUrl = `${frontendUrl}/calificaciones/${metadata.tablaId}`;
+    }
+
+    const fullDescription = `${description}\n\n🔗 Ver más en: ${linkUrl}\n\n#AJDREW #Gaming`;
+
     const accounts = await this.prisma.youtubeAccount.findMany({
       where: { isActive: true },
     });
@@ -71,7 +85,7 @@ export class YoutubeService {
           account,
           videoPath,
           title,
-          description,
+          fullDescription,
           tags,
           id,
           round,

@@ -7,9 +7,10 @@ import { ItemsCalificablesModule } from '../items-calificables/items-calificable
 import { MediaModule } from '../media/media.module';
 import { RankingMediaService } from './application/ranking-media.service';
 import { RankingImageGenerator } from './application/ranking-image-generator';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
-  imports: [PrismaModule, ItemsCalificablesModule, MediaModule],
+  imports: [PrismaModule, ItemsCalificablesModule, MediaModule, EventEmitterModule],
   controllers: [CalificacionesController],
   providers: [
     CalificacionesService,

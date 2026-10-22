@@ -140,8 +140,8 @@ function buildSorteoSvg(data: SorteoImageData, theme: SorteoTheme): string {
               font-family="sans-serif" font-size="14" letter-spacing="3"
               fill="${theme.premioColor}">SORTEO</text>
         <text x="94" y="92" text-anchor="middle"
-              font-family="sans-serif" font-size="32" font-weight="bold"
-              fill="${theme.premioColor}">🎁</text>
+              font-family="sans-serif" font-size="18" font-weight="bold"
+              fill="${theme.premioColor}">VIP</text>
 
         <!-- Título del sorteo -->
         <text x="180" y="58"

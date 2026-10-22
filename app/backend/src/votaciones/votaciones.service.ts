@@ -191,19 +191,25 @@ export class VotacionesService {
       id,
       currentRound,
     );
+    if (matches.length === 0) {
+      throw new BadRequestException('No hay enfrentamientos para la ronda actual');
+    }
 
     // Determine winners and emit CLOSED events
     const winnersIds: string[] = [];
     for (const match of matches) {
       let ganadorId: string | null = null;
-      if (match.votosA >= match.votosB && match.itemAId) {
+      if (!match.itemBId) {
         ganadorId = match.itemAId;
-      } else if (match.itemBId) {
+      } else if (match.votosA > match.votosB) {
+        ganadorId = match.itemAId;
+      } else if (match.votosB > match.votosA) {
         ganadorId = match.itemBId;
-      } else if (match.itemAId) {
+      } else if (match.votosA > 0) {
+        // Resolve ties consistently, without advancing an unvoted match by default.
         ganadorId = match.itemAId;
       }
-      if (ganadorId) winnersIds.push(ganadorId);
+      if (ganadorId && !winnersIds.includes(ganadorId)) winnersIds.push(ganadorId);
 
       // Emit cerrado event
       const totalVotos = match.votosA + match.votosB;
@@ -229,14 +235,17 @@ export class VotacionesService {
       );
     }
 
-    if (winnersIds.length <= 1) {
-      // 🏆 Emitir evento de campeón antes de finalizar
-      if (winnersIds.length === 1) {
-        this.eventEmitter.emit('bracket.champion.declared', {
-          bracketId: id,
-          championId: winnersIds[0],
-        });
-      }
+    if (winnersIds.length === 0) {
+      throw new BadRequestException(
+        'No hay votos suficientes para avanzar la ronda; registra al menos un voto por enfrentamiento.',
+      );
+    }
+
+    if (winnersIds.length === 1) {
+      this.eventEmitter.emit('bracket.champion.declared', {
+        bracketId: id,
+        championId: winnersIds[0],
+      });
       return this.repository.update(id, {
         estado: 'FINALIZADA',
         proximoCierreAt: null,

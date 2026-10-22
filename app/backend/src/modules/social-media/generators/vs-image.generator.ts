@@ -150,12 +150,15 @@ export class VsImageGenerator {
     const footerH = 64;
     const paddingX = 40;
     const availableH = S - headerH - footerH;
-    
+
+    if (matches.length === 0) {
+      throw new Error('No hay enfrentamientos para generar la imagen de ronda');
+    }
+
     // Calculate card height
     const gap = 16;
     const N = matches.length;
     const totalGap = (N - 1) * gap;
-    // max height for 2 matches could be 140 to not look too big, if 8 matches it's ~80
     const calculatedH = Math.floor((availableH - totalGap - 40) / N);
     const cardH = Math.min(140, calculatedH);
     const totalCardsH = N * cardH + totalGap;

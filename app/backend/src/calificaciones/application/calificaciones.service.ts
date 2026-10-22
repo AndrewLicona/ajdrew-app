@@ -1,5 +1,6 @@
 // src/calificaciones/application/calificaciones.service.ts
 import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CreateCalificacionDto } from './dto/create-calificacion.dto';
 import { CalificacionRepository } from '../infrastructure/persistence/calificacion.repository';
 import { ItemsCalificablesService } from '../../items-calificables/application/items-calificables.service';
@@ -10,6 +11,7 @@ export class CalificacionesService {
     private readonly calificacionRepository: CalificacionRepository,
     @Inject(ItemsCalificablesService)
     private readonly itemsCalificablesService: ItemsCalificablesService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async create(
@@ -22,6 +24,11 @@ export class CalificacionesService {
       ip,
       deviceId,
     );
+    if (createCalificacionDto.tablaId) {
+      this.eventEmitter.emit('social.ranking.updated', {
+        tablaId: createCalificacionDto.tablaId,
+      });
+    }
     // Después de calificar, busca y devuelve el item actualizado, que ya incluye los promedios y myRating.
     return this.itemsCalificablesService.findOne(
       createCalificacionDto.itemId,
