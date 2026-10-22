@@ -243,17 +243,6 @@ export default function CalificacionesContent() {
                       className="relative group"
                     >
                       <div className="bg-gradient-to-b from-[#151515] to-[#0a0a0a] border border-white/5 rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-6 backdrop-blur-md shadow-3xl hover:border-[var(--color-primary)]/40 transition-all overflow-hidden group/card">
-                        {tabla.image && (
-                          <Link href={`/calificaciones/${tabla.slug}`} className="relative z-10 mb-5 block h-40 md:h-56 overflow-hidden rounded-2xl border border-white/10 bg-black/30">
-                            <Image
-                              src={tabla.image}
-                              alt={`Imagen de ${tabla.nombre}`}
-                              fill
-                              sizes="(max-width: 768px) 100vw, 720px"
-                              className="object-cover transition-transform duration-700 group-hover/card:scale-105"
-                            />
-                          </Link>
-                        )}
                         <div className="absolute top-0 right-0 p-6 text-[var(--color-primary)]/5 pointer-events-none group-hover/card:text-[var(--color-primary)]/10 transition-all duration-700">
                           <Trophy size={100} className="rotate-12 translate-x-1/4 -translate-y-1/4" />
                         </div>
