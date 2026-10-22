@@ -127,7 +127,7 @@ export class BracketImageService {
 
       // Center trophy placeholder
       linesSvg += `<rect x="${centerX - 64}" y="${padY + (matches.length * slotH) / 2 - 80}" width="128" height="128" rx="16" fill="#0a1a35" stroke="#60a5fa" stroke-width="2.5" stroke-opacity="0.7"/>`;
-      linesSvg += `<text x="${centerX}" y="${padY + (matches.length * slotH) / 2 - 6}" font-family="sans-serif" font-size="40" text-anchor="middle">🏆</text>`;
+      linesSvg += `<text x="${centerX}" y="${padY + (matches.length * slotH) / 2 - 6}" font-family="sans-serif" font-size="18" font-weight="900" text-anchor="middle">FINAL</text>`;
 
       // Build item slots
       for (let i = 0; i < leftItems.length; i++) {

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { XService } from '../services/x.service';
 
@@ -33,6 +33,30 @@ export class AdminXController {
         isActive: true,
       },
     });
+  }
+
+  @Patch('accounts/:id')
+  async updateAccount(
+    @Param('id') id: string,
+    @Body()
+    body: {
+      name?: string;
+      apiKey?: string;
+      apiSecret?: string;
+      accessToken?: string;
+      accessSecret?: string;
+      isActive?: boolean;
+    },
+  ) {
+    const data: Record<string, string | boolean> = {};
+    if (body.name !== undefined) data.name = body.name;
+    if (body.apiKey !== undefined) data.apiKey = body.apiKey;
+    if (body.apiSecret !== undefined) data.apiSecret = body.apiSecret;
+    if (body.accessToken !== undefined) data.accessToken = body.accessToken;
+    if (body.accessSecret !== undefined) data.accessSecret = body.accessSecret;
+    if (body.isActive !== undefined) data.isActive = body.isActive;
+
+    return this.prisma.xAccount.update({ where: { id }, data });
   }
 
   @Delete('accounts/:id')

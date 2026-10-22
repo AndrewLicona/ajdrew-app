@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Youtube, Plus, Trash2, CheckCircle, ExternalLink, Info, Play, AlertCircle } from 'lucide-react';
+import { Youtube, Plus, Trash2, CheckCircle, ExternalLink, Info, Play, AlertCircle, Power } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useSearchParams } from 'next/navigation';
 
@@ -46,6 +46,14 @@ export default function YoutubeAdminPage() {
         } catch (error) {
             Swal.fire('Error', 'No se pudo obtener la URL de autenticación.', 'error');
         }
+    };
+
+    const handleToggle = async (account: any) => {
+        await fetch(`/api/admin/social/youtube/accounts/${account.id}`, {
+            method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ isActive: !account.isActive }),
+        });
+        fetchAccounts();
     };
 
     const handleDelete = async (id: string) => {
@@ -149,6 +157,13 @@ export default function YoutubeAdminPage() {
                                         <div className="flex items-center gap-2 px-3 py-1 bg-green-500/10 text-green-500 rounded-full text-[10px] font-black uppercase tracking-widest mr-4">
                                             <CheckCircle size={12} /> Vinculado
                                         </div>
+                                        <button
+                                            onClick={() => handleToggle(account)}
+                                            className={`p-3 rounded-xl transition-all shadow-lg ${account.isActive ? 'bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white' : 'bg-white/5 text-white/30 hover:bg-white/10'}`}
+                                            title={account.isActive ? 'Desactivar' : 'Activar'}
+                                        >
+                                            <Power size={18} />
+                                        </button>
                                         <button
                                             onClick={() => handleTest(account.id)}
                                             className="p-3 bg-white/5 text-white/60 rounded-xl hover:bg-white/10 hover:text-white transition-all shadow-lg"

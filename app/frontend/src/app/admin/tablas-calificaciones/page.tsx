@@ -153,31 +153,25 @@ export default function TablasCalificacionesAdminPage() {
                     {tablas.map((tabla) => {
                         const imgSrc = getImgSrc(tabla.image);
                         return (
-                            <div key={tabla.id} className="bg-[var(--color-card)] rounded-3xl border border-white/5 p-6 flex items-start gap-4 shadow-xl hover:border-[var(--color-primary)]/20 transition-all">
+                            <div key={tabla.id} className="bg-[var(--color-card)] rounded-2xl border border-white/5 overflow-hidden shadow-lg hover:border-[var(--color-primary)]/30 transition-all group">
 
-                                {/* Thumbnail cuadrado clicable */}
-                                <div className="w-20 h-20 rounded-2xl overflow-hidden bg-black/40 border border-white/10 shrink-0 relative">
+                                {/* Imagen principal de la card, como en Votaciones */}
+                                <div className="relative h-44 w-full overflow-hidden bg-black/40 border-b border-white/10">
                                     {imgSrc ? (
-                                        <button
-                                            onClick={() => setExpandedImage(imgSrc)}
-                                            className="w-full h-full block group"
-                                            title="Ver imagen generada"
-                                        >
-                                            <img
-                                                src={imgSrc}
-                                                alt={tabla.nombre}
-                                                className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-110"
-                                            />
-                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all flex items-center justify-center">
-                                                <span className="opacity-0 group-hover:opacity-100 text-white text-[9px] font-black uppercase tracking-wider transition-opacity">VER</span>
-                                            </div>
+                                        <button onClick={() => setExpandedImage(imgSrc)} className="w-full h-full block group" title="Ver imagen generada">
+                                            <img src={imgSrc} alt={tabla.nombre} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
                                         </button>
                                     ) : (
-                                        <div className="flex items-center justify-center w-full h-full text-white/20">
-                                            <ListOrdered size={24} />
-                                        </div>
+                                        <div className="flex items-center justify-center w-full h-full text-white/20"><ListOrdered size={40} /></div>
                                     )}
+                                    <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between pointer-events-none">
+                                        <span className="px-2 py-1 bg-black/60 rounded-lg text-[9px] font-black uppercase tracking-widest text-[var(--color-primary)]">{tabla.juego.nombre}</span>
+                                        <span className="text-[9px] font-black uppercase text-white/50">{tabla._count?.items || 0} ítems</span>
+                                    </div>
                                 </div>
+
+                                <div className="p-5 flex items-start gap-4">
 
                                 {/* Info */}
                                 <div className="flex-1 min-w-0">
@@ -210,6 +204,7 @@ export default function TablasCalificacionesAdminPage() {
                                     >
                                         <Trash2 size={16} />
                                     </button>
+                                </div>
                                 </div>
                             </div>
                         );

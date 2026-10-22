@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import {
     Twitter,
     Plus,
+    Power,
     Trash2,
     CheckCircle,
     X,
@@ -122,6 +123,15 @@ export default function XAdminPage() {
         } finally {
             setFormLoading(false);
         }
+    };
+
+    const handleToggle = async (account: XAccount) => {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
+        await fetch(`${apiUrl}/admin/x/accounts/${account.id}`, {
+            method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ isActive: !account.isActive }),
+        });
+        fetchAccounts();
     };
 
     const handleDelete = async (id: string) => {
@@ -323,10 +333,17 @@ export default function XAdminPage() {
                                     </div>
                                     <div>
                                         <h4 className="font-bold text-white text-sm">{account.name}</h4>
-                                        <span className="text-[10px] uppercase font-bold text-green-400 bg-green-400/10 px-2 py-0.5 rounded-full inline-block mt-1">Ready</span>
+                                        <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full inline-block mt-1 ${account.isActive ? 'text-green-400 bg-green-400/10' : 'text-white/40 bg-white/5'}`}>{account.isActive ? 'Activo' : 'Inactivo'}</span>
                                     </div>
                                 </div>
                                 <div className="flex gap-1">
+                                    <button
+                                        onClick={() => handleToggle(account)}
+                                        className={`p-2 rounded-lg transition-colors ${account.isActive ? 'text-green-400 hover:bg-green-400/10' : 'text-white/30 hover:bg-white/10'}`}
+                                        title={account.isActive ? 'Desactivar' : 'Activar'}
+                                    >
+                                        <Power size={16} />
+                                    </button>
                                     <button
                                         onClick={() => handleTest(account.id)}
                                         className="p-2 text-white/40 hover:text-[#1DA1F2] hover:bg-[#1DA1F2]/10 rounded-lg transition-colors"

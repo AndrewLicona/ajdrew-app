@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Body,
   Delete,
   Param,
@@ -49,6 +50,17 @@ export class AdminMetaController {
     }
   }
 
+  @Patch('facebook/accounts/:id')
+  async updateFacebookAccount(
+    @Param('id') id: string,
+    @Body() body: { isActive?: boolean },
+  ) {
+    return this.prisma.facebookAccount.update({
+      where: { id },
+      data: { isActive: body.isActive },
+    });
+  }
+
   @Delete('facebook/accounts/:id')
   async deleteFacebookAccount(@Param('id') id: string) {
     return this.prisma.facebookAccount.delete({ where: { id } });
@@ -90,6 +102,17 @@ export class AdminMetaController {
       console.error('Error creating Instagram account:', error);
       return { success: false, message: error.message };
     }
+  }
+
+  @Patch('instagram/accounts/:id')
+  async updateInstagramAccount(
+    @Param('id') id: string,
+    @Body() body: { isActive?: boolean },
+  ) {
+    return this.prisma.instagramAccount.update({
+      where: { id },
+      data: { isActive: body.isActive },
+    });
   }
 
   @Delete('instagram/accounts/:id')

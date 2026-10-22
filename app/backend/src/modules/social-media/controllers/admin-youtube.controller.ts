@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Body,
   Delete,
   Param,
@@ -30,6 +31,17 @@ export class AdminYoutubeController {
       ...acc,
       expiryDate: acc.expiryDate ? Number(acc.expiryDate) : null,
     }));
+  }
+
+  @Patch('accounts/:id')
+  async updateAccount(
+    @Param('id') id: string,
+    @Body() body: { isActive?: boolean },
+  ) {
+    return this.prisma.youtubeAccount.update({
+      where: { id },
+      data: { isActive: body.isActive },
+    });
   }
 
   @Delete('accounts/:id')

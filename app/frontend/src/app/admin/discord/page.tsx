@@ -4,12 +4,14 @@ import React, { useState, useEffect } from 'react';
 import {
     Webhook,
     Plus,
+    Power,
     Trash2,
     CheckCircle,
     X,
     ExternalLink,
     Activity,
     Send,
+    Edit3,
     Loader2
 } from 'lucide-react';
 import Swal from 'sweetalert2';
@@ -92,6 +94,36 @@ export default function DiscordAdminPage() {
         } finally {
             setFormLoading(false);
         }
+    };
+
+    const handleEdit = async (webhook: DiscordWebhook) => {
+        const { value, isConfirmed } = await Swal.fire({
+            title: 'Editar conexión Discord',
+            html: '<input id="edit-name" class="swal2-input" placeholder="Nombre"><input id="edit-url" class="swal2-input" placeholder="Webhook URL">',
+            background: '#1a1a1a', color: '#fff', showCancelButton: true,
+            didOpen: () => {
+                (document.getElementById('edit-name') as HTMLInputElement).value = webhook.name;
+                (document.getElementById('edit-url') as HTMLInputElement).value = webhook.webhookUrl;
+            },
+            preConfirm: () => ({
+                name: (document.getElementById('edit-name') as HTMLInputElement).value,
+                webhookUrl: (document.getElementById('edit-url') as HTMLInputElement).value,
+            }),
+        });
+        if (!isConfirmed || !value) return;
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/discord/webhooks/${webhook.id}`, {
+            method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(value),
+        });
+        if (res.ok) fetchWebhooks();
+        else Swal.fire('Error', 'No se pudo actualizar el webhook.', 'error');
+    };
+
+    const handleToggle = async (webhook: DiscordWebhook) => {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/discord/webhooks/${webhook.id}`, {
+            method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ isActive: !webhook.isActive }),
+        });
+        fetchWebhooks();
     };
 
     const handleDelete = async (id: string) => {
@@ -249,10 +281,24 @@ export default function DiscordAdminPage() {
                                     </div>
                                     <div>
                                         <h4 className="font-bold text-white text-sm">{webhook.name}</h4>
-                                        <span className="text-[10px] uppercase font-bold text-green-400 bg-green-400/10 px-2 py-0.5 rounded-full inline-block mt-1">Activo</span>
+                                        <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full inline-block mt-1 ${webhook.isActive ? 'text-green-400 bg-green-400/10' : 'text-white/40 bg-white/5'}`}>{webhook.isActive ? 'Activo' : 'Inactivo'}</span>
                                     </div>
                                 </div>
                                 <div className="flex gap-1">
+                                    <button
+                                        onClick={() => handleEdit(webhook)}
+                                        className="p-2 text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                                        title="Editar"
+                                    >
+                                        <Edit3 size={16} />
+                                    </button>
+                                    <button
+                                        onClick={() => handleToggle(webhook)}
+                                        className={`p-2 rounded-lg transition-colors ${webhook.isActive ? 'text-green-400 hover:bg-green-400/10' : 'text-white/30 hover:bg-white/10'}`}
+                                        title={webhook.isActive ? 'Desactivar' : 'Activar'}
+                                    >
+                                        <Power size={16} />
+                                    </button>
                                     <button
                                         onClick={() => handleTest(webhook.id)}
                                         className="p-2 text-white/40 hover:text-[#5865F2] hover:bg-[#5865F2]/10 rounded-lg transition-colors"

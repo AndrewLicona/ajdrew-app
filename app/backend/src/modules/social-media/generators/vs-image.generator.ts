@@ -358,7 +358,7 @@ export class VsImageGenerator {
   <rect x="${S/2-92}" y="62" width="184" height="30" rx="15"
         fill="${G}" fill-opacity="0.14" stroke="${G}" stroke-opacity="0.5" stroke-width="1.5"/>
   <text x="${S/2}" y="82" font-family="sans-serif" font-size="12" font-weight="900"
-        fill="#86efac" text-anchor="middle" letter-spacing="3">🏆 GRAN FINAL 🏆</text>
+        fill="#86efac" text-anchor="middle" letter-spacing="3">GRAN FINAL</text>
   <line x1="40" y1="${headerH-1}" x2="${S-40}" y2="${headerH-1}" stroke="${G}" stroke-opacity="0.12" stroke-width="1"/>
 
   <!-- CENTER LINES -->
@@ -366,7 +366,7 @@ export class VsImageGenerator {
   <line x1="${sideW+centerW}" y1="${headerH}" x2="${sideW+centerW}" y2="${nameBg + nameBarH}" stroke="${G}" stroke-opacity="0.6" stroke-width="2"/>
 
   <!-- CAMPEÓN crown badge on champion side -->
-  <text x="${sideW/2}" y="${photoY + 46}" font-family="sans-serif" font-size="36" text-anchor="middle">👑</text>
+  <text x="${sideW/2}" y="${photoY + 46}" font-family="sans-serif" font-size="18" font-weight="900" text-anchor="middle">CAMPEÓN</text>
   <rect x="${sideW/2 - 58}" y="${photoY + 52}" width="116" height="24" rx="12"
         fill="${G}" fill-opacity="0.9"/>
   <text x="${sideW/2}" y="${photoY + 69}" font-family="sans-serif" font-size="11" font-weight="900"
@@ -441,9 +441,9 @@ export class VsImageGenerator {
   <rect x="0" y="0" width="${S}" height="4" fill="url(#ftr)"/>
   <text x="${S/2}" y="50" font-family="sans-serif" font-size="15" font-weight="900" fill="${G}" text-anchor="middle" letter-spacing="5">${title}</text>
   <rect x="${S/2-90}" y="62" width="180" height="30" rx="15" fill="${G}" fill-opacity="0.15" stroke="${G}" stroke-opacity="0.5" stroke-width="1.5"/>
-  <text x="${S/2}" y="82" font-family="sans-serif" font-size="12" font-weight="900" fill="#86efac" text-anchor="middle" letter-spacing="3">🏆 CAMPEÓN 🏆</text>
+  <text x="${S/2}" y="82" font-family="sans-serif" font-size="12" font-weight="900" fill="#86efac" text-anchor="middle" letter-spacing="3">CAMPEÓN</text>
   <rect x="0" y="${headerH + photoH}" width="${S}" height="${nameBarH}" fill="${BG}"/>
-  <text x="${S/2}" y="${headerH + photoH + 30}" font-family="sans-serif" font-size="28" text-anchor="middle">👑</text>
+  <text x="${S/2}" y="${headerH + photoH + 30}" font-family="sans-serif" font-size="18" font-weight="900" text-anchor="middle">CAMPEÓN</text>
   <text x="${S/2}" y="${headerH + photoH + 72}" font-family="sans-serif" font-size="36" font-weight="900" fill="${G}" text-anchor="middle" filter="url(#glow)">${champName}</text>
   <rect x="0" y="${S-footerH}" width="${S}" height="${footerH}" fill="url(#ftr)"/>
   <text x="${S/2}" y="${S-footerH/2+8}" font-family="sans-serif" font-size="16" font-weight="900" fill="#000000" fill-opacity="0.75" text-anchor="middle" letter-spacing="6">AJDREW.SITE</text>

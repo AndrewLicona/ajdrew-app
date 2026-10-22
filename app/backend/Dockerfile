@@ -1,6 +1,9 @@
 # Imagen base ligera
 FROM node:20-alpine
 
+# Fuentes TrueType para que Sharp/librsvg renderice texto en SVG
+RUN apk add --no-cache fontconfig ttf-dejavu ttf-liberation
+
 # Crear usuario no root (opcional)
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 

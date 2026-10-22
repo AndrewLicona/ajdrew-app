@@ -22,7 +22,7 @@ RUN pnpm --filter backend build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-RUN apk add --no-cache openssl libc6-compat wget
+RUN apk add --no-cache openssl libc6-compat wget fontconfig ttf-dejavu ttf-liberation
 
 ENV NODE_ENV=production
 ENV PORT=3000

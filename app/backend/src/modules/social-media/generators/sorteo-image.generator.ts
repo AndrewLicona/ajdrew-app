@@ -229,9 +229,9 @@ function buildSorteoSvg(data: SorteoImageData, theme: SorteoTheme): string {
               font-family="sans-serif" font-size="13"
               fill="${theme.textSecondary}">@ajdrew_oficial · #SorteoAJDREW</text>
 
-        <!-- Iconos decorativos -->
-        <text x="100" y="${H - 28}" font-size="20" opacity="0.6">🎮</text>
-        <text x="${W - 100}" y="${H - 28}" font-size="20" opacity="0.6">🎮</text>
+        <!-- Elementos decorativos compatibles con fuentes del servidor -->
+        <text x="100" y="${H - 28}" font-family="sans-serif" font-size="12" font-weight="bold" opacity="0.6">GAME</text>
+        <text x="${W - 100}" y="${H - 28}" font-family="sans-serif" font-size="12" font-weight="bold" opacity="0.6">GAME</text>
     </svg>`;
 }
 

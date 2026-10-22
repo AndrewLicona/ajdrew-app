@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Body,
   Param,
@@ -35,6 +36,19 @@ export class AdminDiscordController {
         isActive: true,
       },
     });
+  }
+
+  @Patch('webhooks/:id')
+  async updateWebhook(
+    @Param('id') id: string,
+    @Body() body: { name?: string; webhookUrl?: string; isActive?: boolean },
+  ) {
+    const data: { name?: string; webhookUrl?: string; isActive?: boolean } = {};
+    if (body.name !== undefined) data.name = body.name;
+    if (body.webhookUrl !== undefined) data.webhookUrl = body.webhookUrl;
+    if (body.isActive !== undefined) data.isActive = body.isActive;
+
+    return this.prisma.discordWebhook.update({ where: { id }, data });
   }
 
   @Delete('webhooks/:id')

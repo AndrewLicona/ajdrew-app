@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Facebook, Plus, Trash2, CheckCircle, Info, ExternalLink, Send, Edit3 } from 'lucide-react';
+import { Facebook, Plus, Trash2, CheckCircle, Info, ExternalLink, Send, Edit3, Power } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 export default function FacebookAdminPage() {
@@ -67,6 +67,14 @@ export default function FacebookAdminPage() {
         } catch (error) {
             Swal.fire('Error', 'Error de conexión con el servidor.', 'error');
         }
+    };
+
+    const handleToggle = async (account: any) => {
+        await fetch(`/api/admin/social/meta/facebook/accounts/${account.id}`, {
+            method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ isActive: !account.isActive }),
+        });
+        fetchAccounts();
     };
 
     const handleDelete = async (id: string) => {
@@ -174,6 +182,13 @@ export default function FacebookAdminPage() {
                                         <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mr-4 ${account.isActive ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
                                             <CheckCircle size={12} /> {account.isActive ? 'Activo' : 'Inactivo'}
                                         </div>
+                                        <button
+                                            onClick={() => handleToggle(account)}
+                                            className={`p-3 rounded-xl transition-all shadow-lg ${account.isActive ? 'bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white' : 'bg-white/5 text-white/30 hover:bg-white/10'}`}
+                                            title={account.isActive ? 'Desactivar' : 'Activar'}
+                                        >
+                                            <Power size={18} />
+                                        </button>
                                         <button
                                             onClick={() => handleEdit(account)}
                                             className="p-3 bg-amber-500/10 text-amber-500 rounded-xl hover:bg-amber-500 hover:text-white transition-all shadow-lg"
