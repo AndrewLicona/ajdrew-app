@@ -57,8 +57,8 @@ services:
       - .env
     environment:
       - DATABASE_URL=${DATABASE_URL}
-      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@eliterankings.com}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - FRONTEND_URL=${FRONTEND_URL:-https://ajdrew.site}
       - BACKEND_URL=${BACKEND_URL:-https://ajdrew.site}
       - GOOGLE_CALLBACK_URL=${GOOGLE_CALLBACK_URL:-https://ajdrew.site/api/auth/google/callback}
