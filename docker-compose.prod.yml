@@ -51,12 +51,14 @@ services:
       - 8.8.8.8
       - 1.1.1.1
     container_name: ajdrew-backend
-    command: sh -c "npx prisma db push --accept-data-loss && node -e \"const {PrismaClient}=require('@prisma/client');const bcrypt=require('bcryptjs');const p=new PrismaClient();async function r(){const h=await bcrypt.hash('admin123',10);await p.usuario.upsert({where:{email:'admin@eliterankings.com'},update:{password:h,rol:'ADMIN'},create:{email:'admin@eliterankings.com',password:h,nombre:'Administrador Elite',rol:'ADMIN'}});console.log('✅ Admin automatico verificado');await p.\$disconnect();}r().catch(console.error);\" && node dist/main.js"
+    command: sh -c "npx prisma db push --accept-data-loss && node -e \"const {PrismaClient}=require('@prisma/client');const bcrypt=require('bcryptjs');const p=new PrismaClient();async function r(){const email=process.env.ADMIN_EMAIL||'admin@eliterankings.com';const pass=process.env.ADMIN_PASSWORD||'admin123';const h=await bcrypt.hash(pass,10);await p.usuario.upsert({where:{email},update:{password:h,rol:'ADMIN'},create:{email,password:h,nombre:'Administrador',rol:'ADMIN'}});console.log('✅ Admin seguro verificado');await p.\$disconnect();}r().catch(console.error);\" && node dist/main.js"
     restart: unless-stopped
     env_file:
       - .env
     environment:
       - DATABASE_URL=${DATABASE_URL}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@eliterankings.com}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
       - FRONTEND_URL=${FRONTEND_URL:-https://ajdrew.site}
       - BACKEND_URL=${BACKEND_URL:-https://ajdrew.site}
       - GOOGLE_CALLBACK_URL=${GOOGLE_CALLBACK_URL:-https://ajdrew.site/api/auth/google/callback}
