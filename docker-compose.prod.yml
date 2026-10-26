@@ -51,7 +51,7 @@ services:
       - 8.8.8.8
       - 1.1.1.1
     container_name: ajdrew-backend
-    command: sh -c "npx prisma db push --accept-data-loss && node dist/main.js"
+    command: sh -c "npx prisma db push --accept-data-loss && (node dist/create-admin.js || node dist/app/backend/create-admin.js || true) && node dist/main.js"
     restart: unless-stopped
     env_file:
       - .env
